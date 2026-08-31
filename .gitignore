@@ -80,6 +80,6 @@ test-results/
 Thumbs.db
 Desktop.ini
 
-# Agent collaboration instructions and memory are intentionally versioned.
-!.agent/
-!.agent/**
+# Agent collaboration instructions and memory
+.agent/
+.agent/**
