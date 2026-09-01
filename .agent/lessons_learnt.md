@@ -58,6 +58,61 @@ Read this file before executing any repository task. Add an entry only after a r
 - **Resolution:** Changed the interpolation to `${branch}:` and reran the complete verification successfully.
 - **Prevention:** Use braced PowerShell variable syntax when punctuation immediately follows an interpolated variable name.
 
+## 2026-09-01 — Round once, at the end, not on each intermediate value
+
+- **Symptom:** A hand-authored test fixture for a "conservative income" figure
+  (`max(0, round(raw_average - raw_stdev))`) was computed as the difference of two already-rounded display
+  values instead, giving 214 instead of the engine's actual 213.
+- **Root cause:** `round(average) - round(stdev)` and `round(average - stdev)` are not the same operation and
+  can differ by 1 whenever the two fractional parts don't cancel out. The fixture was authored by hand/PowerShell
+  before a Python interpreter was available, using the rounded display fields instead of the raw statistics.
+- **Resolution:** Computed the exact value with the real engine (`statistics.mean`/`pstdev`) once Python was
+  installed, corrected the fixture, and reworded the schema/doc description that had implied the two were
+  interchangeable.
+- **Prevention:** When a formula composes multiple rounded quantities, always derive worked examples from the
+  actual implementation (or an equivalent-precision calculation), never by re-deriving from already-rounded
+  display values — and keep a test like `test_fixtures.py` that checks committed examples against the real code.
+
+## 2026-09-01 — Refresh PATH from the registry after a mid-session winget install
+
+- **Symptom:** `python --version` / `node --version` still failed immediately after `winget install` reported
+  success.
+- **Root cause:** Each shell tool call spawns a fresh process whose environment (including `PATH`) is captured
+  at process start; the installer updates the registry but does not update already-running or newly-spawned
+  processes that inherited the pre-install environment snapshot.
+- **Resolution:** Explicitly rebuilt `$env:Path` from `[System.Environment]::GetEnvironmentVariable("Path","Machine"/"User")`
+  at the start of each subsequent command.
+- **Prevention:** After installing anything mid-session via `winget`/`msiexec`/similar, do not assume a "new"
+  shell call will see it — refresh `PATH` from the registry explicitly in that same command.
+
+## 2026-09-01 — Create a package.json before ad hoc `npm install` in a scratch directory
+
+- **Symptom:** After installing `react`/`react-dom` into a directory that already had `typescript`/`@types/*`
+  installed via separate `npm install --no-save` calls, the previously installed packages (including the `tsc`
+  binary) disappeared ("removed 5 packages").
+- **Root cause:** With no `package.json` present, npm has no record of which packages are "wanted," so each
+  ad hoc `install --no-save` call treats everything not in its own argument list as extraneous and prunes it.
+- **Resolution:** Wrote a minimal `package.json` first, then installed every needed package in one command.
+- **Prevention:** For any multi-step ad hoc npm setup in a scratch directory, create a `package.json` before the
+  first install (or install everything needed in a single command) so later installs don't prune earlier ones.
+
+## 2026-09-01 — TypeScript module resolution needs node_modules as a real filesystem ancestor
+
+- **Symptom:** `tsc --noEmit` reported "Cannot find module 'react/jsx-runtime'" for files outside the directory
+  tree containing `node_modules`, even with `react`, `react-dom`, and their `@types` packages correctly
+  installed.
+- **Root cause:** Node/bundler-style module resolution for bare specifiers walks up from the *importing file's*
+  own directory looking for `node_modules`, not from the `tsconfig.json` location. A scratch `node_modules` in
+  an unrelated directory (e.g. a temp scratchpad) is never found for source files living elsewhere.
+- **Resolution:** Placed a temporary `package.json`/`tsconfig.json` directly under the real source directory
+  (`frontend/`) so `node_modules` was an actual ancestor of the checked files, ran the check, then deleted the
+  temporary files and confirmed via `git status` that the directory returned to its prior state.
+- **Prevention:** For ad hoc type-checks of files outside the tool's own working directory, install into an
+  actual ancestor of those files (and clean up afterward), not an unrelated scratch location. Also pin an
+  explicit `typescript` version for such checks — an unpinned "latest" install pulled TypeScript 7.0 (a new
+  major version) whose breaking module-resolution changes (`moduleResolution: "node"` removed) were unrelated
+  noise for a check meant to represent a stable, real project's toolchain.
+
 Use this format for future entries:
 
 ### YYYY-MM-DD — Short title
