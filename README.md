@@ -43,14 +43,26 @@ The stack below reflects the approved proposal. Deployment work is intentionally
 - **Financial logic:** deterministic Python functions with automated tests; AI is excluded from all calculations.
 - **Scheme logic:** versioned structured rules stored as JSON or PostgreSQL records, including official source, effective date, and last-reviewed date.
 - **AI explanation:** an LLM API with retrieval over curated official documents; explanation and navigation only, with safety guardrails.
-- **Database:** PostgreSQL with data minimisation, restricted access, deletion support, and encryption for sensitive fields.
+- **Database:** Supabase-managed PostgreSQL for shared integration and demo data, accessed through FastAPI using a standard `DATABASE_URL`. Local PostgreSQL remains supported for isolated development.
 - **Data intake:** manual entry first; CSV import and Tesseract OCR with per-platform templates as optional prototype enhancements.
 - **Source control:** Git and GitHub.
 - **Future deployment:** containerised hosting is part of the architecture, but is out of scope for the initial feature sprint.
 
+## Repository structure
+
+```text
+frontend/       React and TypeScript PWA, organised by product feature
+backend/        FastAPI application, deterministic engines, and external integrations
+supabase/       Version-controlled PostgreSQL migrations and database tests
+contracts/      Shared API schemas, OpenAPI artifacts, and synthetic fixtures
+documentation/  Architecture, feature decisions, validation, and handoff notes
+```
+
+Frontend and backend feature folders use the same five workstream boundaries so each teammate can build a vertical slice without repeatedly editing shared files. See [`documentation/codebase-structure.md`](documentation/codebase-structure.md) for the complete directory map and ownership rules.
+
 ## Local setup
 
-The repository currently contains the team scaffold, not runnable application packages. The first owner to introduce each app package must keep these commands current and pin the required runtime versions in the repository.
+The repository contains the agreed directory scaffold but not runnable application packages yet. Workstream 1 will add the initial React and FastAPI manifests; the pull request that introduces them must pin runtime versions and replace provisional commands below with verified commands.
 
 ### 1. Clone and read the agent rules
 
@@ -77,12 +89,20 @@ Replace the branch name with the branch assigned to you.
 - Git
 - Node.js and a Node package manager for the React client
 - Python with virtual-environment support for FastAPI and deterministic engines
-- PostgreSQL
+- Access to the team's Supabase project, or local PostgreSQL for isolated development
+- Supabase CLI only when creating, applying, or testing database migrations locally
 - Tesseract only if working on the optional OCR path
 
 ### 4. Configure and run the apps after their scaffolds land
 
-Copy the committed example environment file rather than sharing secrets. The expected workflow is:
+Copy the package-specific example environment files rather than sharing secrets:
+
+```bash
+cp frontend/.env.example frontend/.env
+cp backend/.env.example backend/.env
+```
+
+On PowerShell, use `Copy-Item` instead of `cp`. The provisional application workflow is:
 
 ```bash
 # Frontend package (path and scripts to be finalised by Workstream 1)
@@ -111,6 +131,7 @@ Do not commit `.env`, credentials, user uploads, OCR output, local databases, or
 ## Repository guidance
 
 - [`documentation/initial-scaffold.md`](documentation/initial-scaffold.md) — workstream boundaries, acceptance checks, contracts, and integration order.
+- [`documentation/codebase-structure.md`](documentation/codebase-structure.md) — directory ownership, dependency boundaries, and placement rules.
 - [`.agent/RULES.md`](.agent/RULES.md) — mandatory operating rules for coding agents.
 - [`.agent/session_log.md`](.agent/session_log.md) — concise record of significant agent sessions.
 - [`.agent/lessons_learnt.md`](.agent/lessons_learnt.md) — durable lessons from errors that were actually encountered and resolved.
