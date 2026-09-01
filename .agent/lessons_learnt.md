@@ -44,6 +44,13 @@ Read this file before executing any repository task. Add an entry only after a r
 - **Resolution:** Verified that the sensitive commit, its two unique trees, and six blobs were loose objects; deleted only those nine objects and used reflog stale-fix to remove their broken entries.
 - **Prevention:** Prefer hash-verified object deletion and stale-reflog repair over repository-wide pruning when sensitive data is isolated in loose objects.
 
+## 2026-09-01 — Split large multi-file patches
+
+- **Symptom:** A large folder-scaffold patch applied most files but did not return and had to be terminated before its final documentation file was added.
+- **Root cause:** The patch operation bundled many directory placeholders and a long document into one tool call.
+- **Resolution:** Inspected the partial result, confirmed which files existed, and applied the missing document in a smaller follow-up patch.
+- **Prevention:** Split large scaffolds into bounded patches and verify the filesystem after each batch.
+
 Use this format for future entries:
 
 ### YYYY-MM-DD — Short title
