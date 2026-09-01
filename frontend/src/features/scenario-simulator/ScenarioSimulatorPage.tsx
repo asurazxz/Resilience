@@ -5,6 +5,7 @@
  * results. No financial arithmetic happens in this layer.
  */
 
+import { BaselineEditor } from './components/BaselineEditor';
 import { BufferChart } from './components/BufferChart';
 import { EstimateDisclaimers } from './components/EstimateDisclaimers';
 import { PreparatoryActions } from './components/PreparatoryActions';
@@ -15,13 +16,21 @@ import { useScenarioSimulator } from './useScenarioSimulator';
 import type { BaselineFinancesPayload } from './types';
 
 export interface ScenarioSimulatorPageProps {
-  /** The user's confirmed weekly figures. Falls back to preview data. */
+  /** Starting weekly figures. Editable on the page; falls back to preview data. */
   baseline?: BaselineFinancesPayload;
 }
 
 export function ScenarioSimulatorPage({ baseline }: ScenarioSimulatorPageProps) {
-  const { scenario, result, source, isLoading, error, setScenario } =
-    useScenarioSimulator(baseline);
+  const {
+    baseline: currentBaseline,
+    scenario,
+    result,
+    source,
+    isLoading,
+    error,
+    setScenario,
+    setBaseline,
+  } = useScenarioSimulator(baseline);
 
   return (
     <main className="mx-auto w-full max-w-screen-sm space-y-6 px-4 py-6">
@@ -32,6 +41,12 @@ export function ScenarioSimulatorPage({ baseline }: ScenarioSimulatorPageProps) 
           affect your weekly money and your savings.
         </p>
       </header>
+
+      <BaselineEditor
+        baseline={currentBaseline}
+        summary={result?.baseline ?? null}
+        onChange={setBaseline}
+      />
 
       <ScenarioControls scenario={scenario} onChange={setScenario} />
 

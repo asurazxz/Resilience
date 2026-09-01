@@ -3,32 +3,9 @@
  * an unexpected cost, and how long earnings take to recover.
  */
 
-import { useState } from 'react';
-
-import { dollarsToCents, formatCents } from '../money';
+import { formatCents } from '../money';
 import type { ShockScenarioPayload } from '../types';
-
-/**
- * Keep only digits and a single decimal point of at most two places, and drop
- * leading zeros.
- *
- * The field is a text input rather than type="number" on purpose. React
- * compares a controlled number input's DOM string to the new value loosely, so
- * "0123" tests equal to 123 and the stranded leading zero is never rewritten.
- */
-function sanitiseAmount(raw: string): string {
-  const cleaned = raw.replace(/[^\d.]/g, '');
-  const [whole = '', ...rest] = cleaned.split('.');
-  const trimmedWhole = whole.replace(/^0+(?=\d)/, '');
-  if (rest.length === 0) {
-    return trimmedWhole;
-  }
-  return `${trimmedWhole}.${rest.join('').slice(0, 2)}`;
-}
-
-function centsToDraft(cents: number): string {
-  return cents === 0 ? '' : String(cents / 100);
-}
+import { MoneyField } from './MoneyField';
 
 interface SliderFieldProps {
   id: string;
@@ -82,19 +59,6 @@ export interface ScenarioControlsProps {
 }
 
 export function ScenarioControls({ scenario, onChange }: ScenarioControlsProps) {
-  // The field holds text while being edited so partial entries such as "12."
-  // survive; the scenario keeps the authoritative cent value.
-  const [costDraft, setCostDraft] = useState(() => centsToDraft(scenario.unexpected_cost_cents));
-
-  function handleCostChange(raw: string) {
-    const next = sanitiseAmount(raw);
-    setCostDraft(next);
-    const parsed = Number(next);
-    onChange({
-      unexpected_cost_cents: next === '' || Number.isNaN(parsed) ? 0 : dollarsToCents(parsed),
-    });
-  }
-
   return (
     <section aria-labelledby="scenario-controls-heading" className="space-y-5">
       <div>
@@ -149,30 +113,17 @@ export function ScenarioControls({ scenario, onChange }: ScenarioControlsProps) 
         onChange={(value) => onChange({ recovery_weeks: value })}
       />
 
-      <div className="space-y-1">
-        <label htmlFor="unexpected-cost" className="text-sm font-medium text-slate-700">
-          One-off unexpected cost
-        </label>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-500">S$</span>
-          <input
-            id="unexpected-cost"
-            type="text"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="0"
-            value={costDraft}
-            onChange={(event) => handleCostChange(event.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-base tabular-nums focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-100"
-          />
-        </div>
-        <p className="text-xs text-slate-500">
-          For example a vehicle repair or a medical bill. Applied in the first week
-          {scenario.unexpected_cost_cents > 0
-            ? `: ${formatCents(scenario.unexpected_cost_cents)}.`
-            : '.'}
-        </p>
-      </div>
+      <MoneyField
+        id="unexpected-cost"
+        label="One-off unexpected cost"
+        valueCents={scenario.unexpected_cost_cents}
+        hint={
+          scenario.unexpected_cost_cents > 0
+            ? `For example a vehicle repair or a medical bill. Applied in the first week: ${formatCents(scenario.unexpected_cost_cents)}.`
+            : 'For example a vehicle repair or a medical bill. Applied in the first week.'
+        }
+        onChange={(cents) => onChange({ unexpected_cost_cents: cents })}
+      />
     </section>
   );
 }

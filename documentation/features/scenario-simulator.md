@@ -17,11 +17,17 @@ The user adjusts three things about a possible setback — how far earnings drop
 - preparatory prompts and official Singapore government links;
 - estimate and non-advice notices attached to every result.
 
+A collapsible "Your usual week" panel makes the five baseline figures editable
+on the page, so the simulator can be driven with real numbers before the shared
+data-intake flow exists. The derived net income and surplus shown in that panel
+come from the API response; they are not recalculated in the browser, so those
+figures are only ever worked out in one place.
+
 Time away from work is not a separate control. It is the same model as a 100 percent earnings drop, so the two cannot produce inconsistent figures.
 
 ## Deferred
 
-- Persisting saved scenarios. The endpoint is stateless; the scenario table belongs to Workstream 1's migrations.
+- Persisting saved scenarios and edited baselines. The endpoint is stateless, so edits are lost on refresh; the scenario and entry tables belong to Workstream 1's migrations.
 - Comparing two scenarios side by side.
 - Any AI explanation of the results. The Scenario Simulator is deterministic end to end.
 
@@ -78,6 +84,7 @@ Provisional files added outside this workstream's ownership so the slice can be 
 | `backend/app/main.py` | App shell, CORS, `/health`, router mount |
 | `frontend/package.json`, `vite.config.ts`, `tsconfig.json`, `index.html` | Vite, React 19, Tailwind 4, TypeScript |
 | `frontend/src/main.tsx`, `src/app/App.tsx`, `src/index.css` | Entry point and shell rendering the simulator directly |
+| `frontend/src/features/scenario-simulator/components/BaselineEditor.tsx` | Demo-local baseline entry, superseded by the shared intake flow |
 
 The engine is importable without FastAPI, pydantic, a database, or a network. `__init__.py` deliberately does not re-export `router`, so importing the engine does not require the web framework.
 
