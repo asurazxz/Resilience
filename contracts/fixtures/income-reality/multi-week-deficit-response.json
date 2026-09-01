@@ -1,0 +1,49 @@
+{
+  "weeks": [
+    {
+      "week_start": "2026-08-03",
+      "gross_earnings_cents": 20000,
+      "platform_breakdown": [{ "platform": "Grab", "gross_cents": 20000 }],
+      "work_costs_cents": 3000,
+      "cpf_cents": 1600,
+      "net_income_cents": 15400,
+      "essential_expenses_cents": 15000,
+      "surplus_cents": 400
+    },
+    {
+      "week_start": "2026-08-10",
+      "gross_earnings_cents": 5000,
+      "platform_breakdown": [{ "platform": "Grab", "gross_cents": 5000 }],
+      "work_costs_cents": 8000,
+      "cpf_cents": 400,
+      "net_income_cents": -3400,
+      "essential_expenses_cents": 15000,
+      "surplus_cents": -18400
+    },
+    {
+      "week_start": "2026-08-17",
+      "gross_earnings_cents": 39000,
+      "platform_breakdown": [
+        { "platform": "Grab", "gross_cents": 35000 },
+        { "platform": "Lalamove", "gross_cents": 4000 }
+      ],
+      "work_costs_cents": 4000,
+      "cpf_cents": 3120,
+      "net_income_cents": 31880,
+      "essential_expenses_cents": 15000,
+      "surplus_cents": 16880
+    }
+  ],
+  "trend": {
+    "weeks_considered": 3,
+    "average_net_income_cents": 14627,
+    "min_net_income_cents": -3400,
+    "max_net_income_cents": 31880,
+    "stdev_net_income_cents": 14413,
+    "conservative_weekly_income_cents": 213
+  },
+  "assumptions_applied": {
+    "apply_cpf": true,
+    "cpf_rate_bps": 800
+  }
+}

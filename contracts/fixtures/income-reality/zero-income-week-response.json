@@ -1,0 +1,26 @@
+{
+  "weeks": [
+    {
+      "week_start": "2026-08-31",
+      "gross_earnings_cents": 0,
+      "platform_breakdown": [],
+      "work_costs_cents": 0,
+      "cpf_cents": 0,
+      "net_income_cents": 0,
+      "essential_expenses_cents": 10000,
+      "surplus_cents": -10000
+    }
+  ],
+  "trend": {
+    "weeks_considered": 1,
+    "average_net_income_cents": 0,
+    "min_net_income_cents": 0,
+    "max_net_income_cents": 0,
+    "stdev_net_income_cents": 0,
+    "conservative_weekly_income_cents": 0
+  },
+  "assumptions_applied": {
+    "apply_cpf": false,
+    "cpf_rate_bps": 800
+  }
+}

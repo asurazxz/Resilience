@@ -1,0 +1,29 @@
+{
+  "weeks": [
+    {
+      "week_start": "2026-08-03",
+      "platform_earnings": [{ "platform": "Grab", "gross_cents": 20000 }],
+      "work_costs_cents": 3000,
+      "essential_expenses_cents": 15000
+    },
+    {
+      "week_start": "2026-08-10",
+      "platform_earnings": [{ "platform": "Grab", "gross_cents": 5000 }],
+      "work_costs_cents": 8000,
+      "essential_expenses_cents": 15000
+    },
+    {
+      "week_start": "2026-08-17",
+      "platform_earnings": [
+        { "platform": "Grab", "gross_cents": 35000 },
+        { "platform": "Lalamove", "gross_cents": 4000 }
+      ],
+      "work_costs_cents": 4000,
+      "essential_expenses_cents": 15000
+    }
+  ],
+  "assumptions": {
+    "apply_cpf": true,
+    "cpf_rate_bps": 800
+  }
+}

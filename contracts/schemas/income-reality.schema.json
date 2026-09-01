@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://resilience.local/contracts/income-reality.schema.json",
+  "title": "Income Reality Engine contract",
+  "description": "Request/response shapes for POST /income-reality/breakdown (workstream feature/02-income-reality). Proposed by workstream 2, not unilaterally final - the week_start (Monday-start ISO week) convention in particular should be confirmed against feature/01-foundation-input's persisted entry schema when it lands. Monetary values are integer cents; dates are ISO 8601 strings, per contracts/README.md.",
+  "$defs": {
+    "PlatformEarning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "gross_cents"],
+      "properties": {
+        "platform": { "type": "string", "minLength": 1, "examples": ["Grab", "Foodpanda", "Lalamove"] },
+        "gross_cents": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "WeeklyEntryIn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["week_start"],
+      "properties": {
+        "week_start": {
+          "type": "string",
+          "format": "date",
+          "description": "ISO 8601 date. Must be a Monday under the proposed week-start convention."
+        },
+        "platform_earnings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/PlatformEarning" },
+          "default": []
+        },
+        "work_costs_cents": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Aggregate declared work costs for the week (fuel, tolls, commission, rental, etc.). Itemisation is owned by feature/01-foundation-input's data intake."
+        },
+        "essential_expenses_cents": { "type": "integer", "minimum": 0, "default": 0 }
+      }
+    },
+    "AssumptionsIn": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "apply_cpf": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to deduct the simplified flat-rate CPF/MediSave estimate. Not the real statutory schedule."
+        },
+        "cpf_rate_bps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "default": 800,
+          "description": "Flat contribution rate in basis points (800 = 8.00%), applied to gross earnings when apply_cpf is true. Editable per request."
+        }
+      }
+    },
+    "IncomeRealityRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["weeks"],
+      "properties": {
+        "weeks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/WeeklyEntryIn" },
+          "minItems": 1,
+          "maxItems": 52,
+          "description": "Oldest week first. The engine does not read persisted entries itself - the caller supplies them directly."
+        },
+        "assumptions": { "$ref": "#/$defs/AssumptionsIn" }
+      }
+    },
+    "WeekBreakdownOut": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "week_start",
+        "gross_earnings_cents",
+        "platform_breakdown",
+        "work_costs_cents",
+        "cpf_cents",
+        "net_income_cents",
+        "essential_expenses_cents",
+        "surplus_cents"
+      ],
+      "properties": {
+        "week_start": { "type": "string", "format": "date" },
+        "gross_earnings_cents": { "type": "integer" },
+        "platform_breakdown": { "type": "array", "items": { "$ref": "#/$defs/PlatformEarning" } },
+        "work_costs_cents": { "type": "integer" },
+        "cpf_cents": { "type": "integer", "minimum": 0 },
+        "net_income_cents": {
+          "type": "integer",
+          "description": "gross_earnings_cents - work_costs_cents - cpf_cents. Not floored at zero: a deficit week is reported as a true negative."
+        },
+        "essential_expenses_cents": { "type": "integer" },
+        "surplus_cents": {
+          "type": "integer",
+          "description": "net_income_cents - essential_expenses_cents. Not floored at zero."
+        }
+      }
+    },
+    "TrendSummaryOut": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "weeks_considered",
+        "average_net_income_cents",
+        "min_net_income_cents",
+        "max_net_income_cents",
+        "stdev_net_income_cents",
+        "conservative_weekly_income_cents"
+      ],
+      "properties": {
+        "weeks_considered": { "type": "integer", "minimum": 1 },
+        "average_net_income_cents": { "type": "integer" },
+        "min_net_income_cents": { "type": "integer" },
+        "max_net_income_cents": { "type": "integer" },
+        "stdev_net_income_cents": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Population standard deviation of net_income_cents across the supplied weeks."
+        },
+        "conservative_weekly_income_cents": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "max(0, round(raw_average - raw_stdev)), computed from the unrounded average/stdev and rounded once - NOT average_net_income_cents minus stdev_net_income_cents (those are independently rounded for display and can be off by a cent from this). Never negative."
+        }
+      }
+    },
+    "IncomeRealityResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["weeks", "trend", "assumptions_applied"],
+      "properties": {
+        "weeks": { "type": "array", "items": { "$ref": "#/$defs/WeekBreakdownOut" } },
+        "trend": { "$ref": "#/$defs/TrendSummaryOut" },
+        "assumptions_applied": { "$ref": "#/$defs/AssumptionsIn" }
+      }
+    }
+  }
+}
