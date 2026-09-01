@@ -36,6 +36,9 @@ export function useScenarioSimulator(
   const [error, setError] = useState<string | null>(null);
 
   const controllerRef = useRef<AbortController | null>(null);
+  // Requests are numbered so a slow earlier response can never overwrite the
+  // result of a later edit.
+  const latestRequestRef = useRef(0);
 
   useEffect(() => {
     // Controls are dragged continuously, so wait for a pause before asking the
@@ -44,10 +47,15 @@ export function useScenarioSimulator(
       controllerRef.current?.abort();
       const controller = new AbortController();
       controllerRef.current = controller;
+      const requestId = latestRequestRef.current + 1;
+      latestRequestRef.current = requestId;
       setIsLoading(true);
 
       simulateScenario({ baseline, scenario }, controller.signal)
         .then((outcome) => {
+          if (requestId !== latestRequestRef.current) {
+            return;
+          }
           setResult(outcome.result);
           setSource(outcome.source);
           setError(outcome.error ?? null);
@@ -55,6 +63,9 @@ export function useScenarioSimulator(
         })
         .catch((cause: unknown) => {
           if (cause instanceof DOMException && cause.name === 'AbortError') {
+            return;
+          }
+          if (requestId !== latestRequestRef.current) {
             return;
           }
           setError(cause instanceof Error ? cause.message : 'Something went wrong.');
