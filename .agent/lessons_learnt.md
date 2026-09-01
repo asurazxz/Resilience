@@ -51,6 +51,13 @@ Read this file before executing any repository task. Add an entry only after a r
 - **Resolution:** Inspected the partial result, confirmed which files existed, and applied the missing document in a smaller follow-up patch.
 - **Prevention:** Split large scaffolds into bounded patches and verify the filesystem after each batch.
 
+## 2026-09-01 — Brace PowerShell variables before punctuation
+
+- **Symptom:** The first cross-branch verification script failed to parse a status string containing `$branch:`.
+- **Root cause:** PowerShell interpreted the colon as part of an invalid unbraced variable reference.
+- **Resolution:** Changed the interpolation to `${branch}:` and reran the complete verification successfully.
+- **Prevention:** Use braced PowerShell variable syntax when punctuation immediately follows an interpolated variable name.
+
 Use this format for future entries:
 
 ### YYYY-MM-DD — Short title
