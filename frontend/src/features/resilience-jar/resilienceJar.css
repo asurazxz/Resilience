@@ -1,0 +1,680 @@
+.jar-page {
+  --jar-ink: #17352c;
+  --jar-muted: #5d6f68;
+  --jar-green: #227a5b;
+  --jar-light: #e8f4ed;
+  --jar-border: #c9d8d1;
+  box-sizing: border-box;
+  color: var(--jar-ink);
+  margin: 0 auto;
+  max-width: 72rem;
+  padding: 1rem;
+}
+
+.jar-page *,
+.jar-page *::before,
+.jar-page *::after {
+  box-sizing: inherit;
+}
+
+.jar-page [hidden] {
+  display: none !important;
+}
+
+.jar-heading,
+.jar-overview,
+.jar-card,
+.jar-contribution-form,
+.jar-contribution-list li,
+.jar-inline-form,
+.jar-form-actions,
+.jar-list-actions {
+  display: flex;
+}
+
+.jar-heading {
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.jar-heading h1,
+.jar-card h2 {
+  margin: 0 0 0.35rem;
+}
+
+.jar-heading p,
+.jar-card p {
+  margin-top: 0.25rem;
+}
+
+.jar-eyebrow {
+  color: var(--jar-green);
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.jar-banner,
+.jar-error {
+  border-radius: 0.75rem;
+  margin: 0 0 1rem;
+  padding: 0.8rem 1rem;
+}
+
+.jar-goal-alert {
+  align-items: flex-start;
+  background: #fff8df;
+  border: 1px solid #dfbd59;
+  border-radius: 0.9rem;
+  display: flex;
+  gap: 0.8rem;
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem;
+}
+
+.jar-goal-alert p {
+  margin: 0.3rem 0;
+}
+
+.jar-goal-alert-icon {
+  align-items: center;
+  background: #d89e24;
+  border-radius: 50%;
+  color: #2f260d;
+  display: inline-flex;
+  flex: 0 0 1.75rem;
+  font-weight: 900;
+  height: 1.75rem;
+  justify-content: center;
+}
+
+.jar-alert-action {
+  background: transparent;
+  border: 0;
+  color: #72500d;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  padding: 0.25rem 0;
+  text-decoration: underline;
+  text-underline-offset: 0.18rem;
+}
+
+.jar-goal-alert-guidance {
+  color: #66501d;
+  font-size: 0.9rem;
+}
+
+.jar-banner {
+  background: #fff5cf;
+  border: 1px solid #ead58a;
+}
+
+.jar-error {
+  background: #fff0ed;
+  border: 1px solid #e4afa5;
+  color: #7b2318;
+}
+
+.jar-overview,
+.jar-card {
+  background: #fff;
+  border: 1px solid var(--jar-border);
+  border-radius: 1rem;
+  box-shadow: 0 0.2rem 1rem rgba(25, 61, 48, 0.06);
+}
+
+.jar-overview {
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  padding: 1.25rem;
+}
+
+.jar-visual {
+  align-items: center;
+  border: 0.35rem solid var(--jar-ink);
+  border-radius: 1.4rem 1.4rem 2.2rem 2.2rem;
+  display: flex;
+  flex: 0 0 8rem;
+  height: 10rem;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.jar-visual::before {
+  border: 0.3rem solid var(--jar-ink);
+  border-radius: 0.4rem;
+  content: "";
+  height: 0.8rem;
+  left: 1.1rem;
+  position: absolute;
+  right: 1.1rem;
+  top: -0.35rem;
+  z-index: 2;
+}
+
+.jar-visual-fill {
+  background: repeating-linear-gradient(
+    135deg,
+    #65b88e,
+    #65b88e 0.65rem,
+    #8ccba9 0.65rem,
+    #8ccba9 1.3rem
+  );
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  right: 0;
+  transition: height 180ms ease-out;
+}
+
+.jar-visual span {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 10rem;
+  font-weight: 800;
+  padding: 0.35rem 0.6rem;
+  position: relative;
+  z-index: 1;
+}
+
+.jar-progress-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.jar-progress-metrics {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 0.45rem;
+}
+
+.jar-progress-metrics > div {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.75rem;
+}
+
+.jar-progress-metrics span {
+  color: var(--jar-muted);
+  font-size: 0.8rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.jar-progress-metrics strong {
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  line-height: 1.15;
+}
+
+.jar-goal-amount {
+  background: var(--jar-light);
+  border: 2px solid #65a98a;
+  border-radius: 0.8rem;
+}
+
+.jar-goal-amount small {
+  color: var(--jar-muted);
+}
+
+.jar-goal-passed {
+  color: var(--jar-green);
+  font-weight: 800;
+}
+
+.jar-plan-strip {
+  align-items: center;
+  background: var(--jar-light);
+  border-radius: 0.75rem;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  margin-top: 1rem;
+  padding: 0.75rem;
+}
+
+.jar-plan-strip > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.jar-plan-strip span {
+  color: var(--jar-muted);
+  font-size: 0.78rem;
+}
+
+.jar-plan-strip strong {
+  font-size: 1rem;
+}
+
+.jar-muted {
+  color: var(--jar-muted);
+  font-size: 0.9rem;
+}
+
+.jar-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 1rem;
+}
+
+.jar-card {
+  flex-direction: column;
+  padding: 1.25rem;
+}
+
+.jar-card form,
+.jar-contribution-form label {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.jar-card form {
+  gap: 0.8rem;
+}
+
+.jar-page input,
+.jar-page select {
+  background: #fff;
+  border: 1px solid #8ba49a;
+  border-radius: 0.55rem;
+  color: var(--jar-ink);
+  font: inherit;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.7rem;
+  width: 100%;
+}
+
+.jar-page fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.jar-radio {
+  align-items: center;
+  display: flex;
+  gap: 0.45rem;
+  margin-top: 0.4rem;
+}
+
+.jar-radio input {
+  min-height: auto;
+  width: auto;
+}
+
+.jar-button {
+  background: var(--jar-green);
+  border: 1px solid var(--jar-green);
+  border-radius: 0.6rem;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.9rem;
+}
+
+.jar-button-secondary {
+  background: #fff;
+  color: var(--jar-green);
+}
+
+.jar-back-link,
+.jar-text-link {
+  background: transparent;
+  border: 0;
+  color: var(--jar-green);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 750;
+  padding: 0.45rem;
+  text-decoration: underline;
+  text-underline-offset: 0.18rem;
+}
+
+.jar-back-link {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.35rem;
+  min-height: 2.75rem;
+  text-decoration: none;
+}
+
+.jar-button:disabled,
+.jar-page button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.jar-suggestion {
+  background: var(--jar-light);
+  border-radius: 0.8rem;
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.5rem 0 1rem;
+  padding: 0.9rem;
+}
+
+.jar-suggestion strong {
+  font-size: 1.75rem;
+}
+
+.jar-inline-form,
+.jar-form-actions,
+.jar-list-actions {
+  gap: 0.5rem;
+}
+
+.jar-contributions {
+  gap: 1rem;
+}
+
+.jar-contribution-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.jar-contribution-heading > div {
+  flex: 1;
+}
+
+.jar-button-withdraw {
+  background: #fff8df;
+  border-color: #b77b10;
+  color: #684607;
+}
+
+.jar-disclaimer {
+  background: var(--jar-light);
+  border-left: 0.25rem solid var(--jar-green);
+  padding: 0.7rem;
+}
+
+.jar-contribution-form {
+  align-items: end;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr 1fr 1.4fr auto;
+}
+
+.jar-withdrawal-form {
+  align-items: end;
+  background: #fff8df;
+  border: 1px solid #dfbd59;
+  border-radius: 0.8rem;
+  display: grid !important;
+  gap: 0.75rem !important;
+  grid-template-columns: 1.4fr 1fr 1fr 1.4fr auto;
+  padding: 1rem;
+}
+
+.jar-withdrawal-intro {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.jar-withdrawal-intro span {
+  color: #66501d;
+  font-size: 0.85rem;
+}
+
+.jar-contribution-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.jar-contribution-list li {
+  align-items: center;
+  border-top: 1px solid var(--jar-border);
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 0;
+}
+
+.jar-contribution-list li > div:first-child {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.jar-entry-type {
+  background: var(--jar-light);
+  border-radius: 99rem;
+  color: var(--jar-green);
+  font-size: 0.7rem;
+  font-weight: 800;
+  justify-self: start;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.5rem;
+  text-transform: uppercase;
+}
+
+.jar-entry-withdrawal > div:first-child > strong {
+  color: #8a3d23;
+}
+
+.jar-entry-withdrawal .jar-entry-type {
+  background: #fff0e8;
+  color: #8a3d23;
+}
+
+.jar-list-actions button {
+  background: transparent;
+  border: 0;
+  color: var(--jar-green);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 0.45rem;
+}
+
+.jar-state,
+.jar-empty {
+  padding-block: 3rem;
+  text-align: center;
+}
+
+.jar-insights {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  margin: 0;
+}
+
+.jar-projection-date {
+  font-size: clamp(1.55rem, 4vw, 2.15rem);
+  line-height: 1.15;
+  margin-top: 0.4rem;
+}
+
+.jar-milestones ol {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+
+.jar-milestones li {
+  align-items: center;
+  border: 1px solid var(--jar-border);
+  border-radius: 0.75rem;
+  display: grid;
+  gap: 0.35rem;
+  justify-items: center;
+  padding: 0.75rem 0.45rem;
+  text-align: center;
+}
+
+.jar-milestones li > span {
+  align-items: center;
+  background: #edf2ef;
+  border-radius: 50%;
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 850;
+  height: 2rem;
+  justify-content: center;
+  width: 2rem;
+}
+
+.jar-milestones li > div {
+  display: grid;
+}
+
+.jar-milestones small,
+.jar-milestones em {
+  color: var(--jar-muted);
+  font-size: 0.75rem;
+}
+
+.jar-milestones em {
+  font-style: normal;
+}
+
+.jar-milestones .is-reached {
+  background: var(--jar-light);
+  border-color: #65a98a;
+}
+
+.jar-milestones .is-reached > span {
+  background: var(--jar-green);
+  color: #fff;
+}
+
+.jar-chart-card {
+  margin: 1rem 0;
+}
+
+.jar-chart {
+  margin: 0;
+}
+
+.jar-chart figcaption {
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.jar-chart-canvas {
+  height: 18rem;
+  margin-top: 0.75rem;
+  min-width: 0;
+  width: 100%;
+}
+
+.jar-chart-tooltip {
+  background: #fff;
+  border: 1px solid var(--jar-border);
+  border-radius: 0.7rem;
+  box-shadow: 0 0.35rem 1.2rem rgba(25, 61, 48, 0.14);
+  min-width: 13rem;
+  padding: 0.75rem;
+}
+
+.jar-chart-tooltip dl {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.55rem 0 0;
+}
+
+.jar-chart-tooltip dl > div {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.jar-chart-tooltip dt {
+  color: var(--jar-muted);
+}
+
+.jar-chart-tooltip dd {
+  font-weight: 750;
+  margin: 0;
+}
+
+.jar-tooltip-contribution {
+  color: var(--jar-green);
+}
+
+.jar-tooltip-withdrawal {
+  color: #8a3d23;
+}
+
+.jar-chart-tooltip .jar-tooltip-balance {
+  border-top: 1px solid var(--jar-border);
+  margin-top: 0.15rem;
+  padding-top: 0.45rem;
+}
+
+@media (max-width: 44rem) {
+  .jar-page {
+    padding: 0.85rem;
+  }
+
+  .jar-heading,
+  .jar-overview {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .jar-visual {
+    align-self: center;
+  }
+
+  .jar-grid,
+  .jar-contribution-form,
+  .jar-withdrawal-form,
+  .jar-insights,
+  .jar-progress-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .jar-contribution-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .jar-inline-form,
+  .jar-contribution-list li {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .jar-list-actions {
+    justify-content: flex-end;
+  }
+
+  .jar-plan-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .jar-plan-strip .jar-text-link {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .jar-milestones ol {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .jar-chart-canvas {
+    height: 15rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jar-visual-fill {
+    transition: none;
+  }
+}

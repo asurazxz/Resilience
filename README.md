@@ -62,7 +62,7 @@ Frontend and backend feature folders use the same five workstream boundaries so 
 
 ## Local setup
 
-The repository contains the agreed directory scaffold but not runnable application packages yet. Workstream 1 will add the initial React and FastAPI manifests; the pull request that introduces them must pin runtime versions and replace provisional commands below with verified commands.
+The Resilience Jar frontend is runnable as a local React and Vite demo using synthetic data. The shared FastAPI application and database integration are still pending Workstream 1.
 
 ### 1. Clone and read the agent rules
 
@@ -93,7 +93,19 @@ Replace the branch name with the branch assigned to you.
 - Supabase CLI only when creating, applying, or testing database migrations locally
 - Tesseract only if working on the optional OCR path
 
-### 4. Configure and run the apps after their scaffolds land
+### 4. Install and run the frontend
+
+From the repository root:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://127.0.0.1:5173/resilience-jar` in a browser. Run `npm test` for the feature tests and `npm run build` for a production compilation check.
+
+### 5. Configure future backend integration
 
 Copy the package-specific example environment files rather than sharing secrets:
 
@@ -102,14 +114,9 @@ cp frontend/.env.example frontend/.env
 cp backend/.env.example backend/.env
 ```
 
-On PowerShell, use `Copy-Item` instead of `cp`. The provisional application workflow is:
+On PowerShell, use `Copy-Item` instead of `cp`. The provisional backend workflow is:
 
 ```bash
-# Frontend package (path and scripts to be finalised by Workstream 1)
-cd frontend
-npm install
-npm run dev
-
 # Backend package (from the repository root in a separate terminal)
 python -m venv .venv
 # Activate .venv using the command for your shell
@@ -117,7 +124,7 @@ python -m pip install -r backend/requirements.txt
 fastapi dev backend/app/main.py
 ```
 
-Do not commit `.env`, credentials, user uploads, OCR output, local databases, or real financial data. If the eventual package layout or commands differ, update this README in the same pull request that changes them.
+Do not commit `.env`, credentials, user uploads, OCR output, local databases, or real financial data. The current local frontend intentionally uses a synthetic in-memory adapter and does not need backend credentials.
 
 ## Team workflow
 

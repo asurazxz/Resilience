@@ -7,3 +7,5 @@ This directory holds artifacts consumed by more than one package or workstream.
 - `fixtures/` contains synthetic, non-sensitive examples that let frontend and backend work proceed independently.
 
 Do not duplicate feature-internal models here. A contract belongs here only when at least two packages or workstreams depend on it. Monetary values crossing an API boundary use integer cents, and dates use ISO 8601 strings.
+
+The Resilience Jar summary contract is documented in `schemas/resilience-jar-summary.schema.json` with a synthetic example in `fixtures/resilience-jar-summary.json`.
