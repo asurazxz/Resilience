@@ -2,6 +2,15 @@
 
 Append significant sessions in reverse chronological order. Keep entries concise and factual.
 
+## 2026-09-01 — Shared codebase folder scaffold
+
+- Created mirrored React and FastAPI feature directories for all five workstreams.
+- Added explicit areas for shared contracts, synthetic fixtures, Supabase migrations, database tests, AI/OCR integrations, and feature documentation.
+- Added package-specific environment examples containing placeholders only.
+- Documented Supabase as managed PostgreSQL behind FastAPI, directory ownership, dependency boundaries, and deferred setup work.
+- Validated all 36 expected scaffold files, README links, environment-example trackability, private-context exclusion, and whitespace.
+- Integrated and pushed the shared scaffold to `main` and all five feature branches without rewriting branch history.
+
 ## 2026-09-01 — Purge sensitive objects from local Git storage
 
 - Audited all refs and reflogs and identified the former sensitive scaffold snapshot and its six blobs.
