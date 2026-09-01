@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-01
 
-**Scope:** Shared folder scaffold for the one-week prototype; no application packages or deployment configuration
+**Scope:** Runnable Feature 1 foundation plus shared boundaries for the one-week prototype
 
 ## Decision
 
@@ -80,15 +80,15 @@ Ownership identifies the primary editor, not exclusive access. Changes to `contr
 
 ## Validation performed
 
-- Confirmed every documented directory is represented by a tracked file.
-- Confirmed environment examples contain placeholders only and real `.env` files remain ignored.
-- Confirmed the private root `context/` directory remains ignored and absent from Git history.
-- Confirmed no dependency installation, runnable application code, or deployment configuration was introduced.
+- Built the TypeScript PWA and ran frontend unit tests.
+- Ran FastAPI unit and live local-Postgres integration tests and Ruff checks.
+- Exported OpenAPI and generated the frontend TypeScript contract.
+- Applied the migration and seed to local Supabase, ran 13 pgTAP checks, and linted all schemas without errors.
+- Confirmed environment examples contain local placeholders/defaults only and real `.env` files remain ignored.
 
 ## Deferred work
 
-- React/Vite, Tailwind, PWA, Python, and FastAPI package manifests and runtime pins.
-- FastAPI entry point, health endpoint, database connection, and migration baseline.
-- Generated OpenAPI client/types and executable synthetic fixtures.
-- Supabase project linking and optional Auth, Storage, Realtime, or Edge Functions.
+- Hosted Supabase project linking and migration push.
+- User authentication and corresponding end-user RLS policies.
+- OCR, Storage, Realtime, Edge Functions, AI integrations, and deployment.
 - CI, containers, and hosted application deployment.
