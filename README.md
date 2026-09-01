@@ -9,7 +9,6 @@ This repository contains Team Zephyrries' prototype for the Singapore Management
 > Resilience provides estimates and navigation, not financial advice. Scheme eligibility is determined by maintained rules and confirmed only by the relevant agency. AI may explain results, but it must never calculate finances or decide eligibility.
 
 ## Prototype scope
-
 The one-week prototype follows this user journey:
 
 1. Record weekly platform earnings, work costs, essential expenses, and current emergency savings.
@@ -62,7 +61,7 @@ Frontend and backend feature folders use the same five workstream boundaries so 
 
 ## Local setup
 
-The repository contains the agreed directory scaffold but not runnable application packages yet. Workstream 1 will add the initial React and FastAPI manifests; the pull request that introduces them must pin runtime versions and replace provisional commands below with verified commands.
+The commands below are verified on macOS with Python 3.13.7 and Node 22. The React and FastAPI manifests currently in the tree are **provisional**, added on `feature/05-scenario-simulator` so the Scenario Simulator can be demonstrated; `feature/01-foundation-input` owns the canonical versions and should replace them.
 
 ### 1. Clone and read the agent rules
 
@@ -87,13 +86,13 @@ Replace the branch name with the branch assigned to you.
 ### 3. Install the planned local prerequisites
 
 - Git
-- Node.js and a Node package manager for the React client
-- Python with virtual-environment support for FastAPI and deterministic engines
+- Node.js 20.19+ or 22.12+ and npm 10+ for the React client. Vite 8 refuses older releases, and its Rolldown bundler needs a native binary per platform (see step 4)
+- Python 3.11+ with virtual-environment support for FastAPI and the deterministic engines
 - Access to the team's Supabase project, or local PostgreSQL for isolated development
 - Supabase CLI only when creating, applying, or testing database migrations locally
 - Tesseract only if working on the optional OCR path
 
-### 4. Configure and run the apps after their scaffolds land
+### 4. Configure and run the apps
 
 Copy the package-specific example environment files rather than sharing secrets:
 
@@ -102,19 +101,40 @@ cp frontend/.env.example frontend/.env
 cp backend/.env.example backend/.env
 ```
 
-On PowerShell, use `Copy-Item` instead of `cp`. The provisional application workflow is:
+On PowerShell, use `Copy-Item` instead of `cp`. `frontend/.env` must exist before starting the client: without `VITE_API_BASE_URL` the browser posts to the Vite port and every request returns 404.
+
+Install and run the API from the repository root:
 
 ```bash
-# Frontend package (path and scripts to be finalised by Workstream 1)
-cd frontend
-npm install
-npm run dev
+python3 -m venv .venv && .venv/bin/python -m pip install -r backend/requirements.txt
+```
 
-# Backend package (from the repository root in a separate terminal)
-python -m venv .venv
-# Activate .venv using the command for your shell
-python -m pip install -r backend/requirements.txt
-fastapi dev backend/app/main.py
+```bash
+cd backend && ../.venv/bin/uvicorn app.main:app --reload --port 8000
+```
+
+Install and run the client in a second terminal:
+
+```bash
+cd frontend && npm install
+```
+
+```bash
+cd frontend && npm run dev
+```
+
+The client runs on <http://localhost:5173> and the API on <http://localhost:8000>, with interactive API docs at <http://localhost:8000/docs>.
+
+Run the deterministic backend tests (no third-party packages required):
+
+```bash
+cd backend && PYTHONPATH=. python3 tests/unit/test_scenario_simulator.py
+```
+
+If `npm run dev` fails with `Cannot find module '@rolldown/binding-*'`, npm skipped Vite's optional native binary. Install the one matching your platform, for example on an Intel Mac:
+
+```bash
+cd frontend && npm install --save-dev @rolldown/binding-darwin-x64
 ```
 
 Do not commit `.env`, credentials, user uploads, OCR output, local databases, or real financial data. If the eventual package layout or commands differ, update this README in the same pull request that changes them.
