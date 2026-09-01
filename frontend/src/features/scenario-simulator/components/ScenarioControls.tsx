@@ -3,8 +3,32 @@
  * an unexpected cost, and how long earnings take to recover.
  */
 
+import { useState } from 'react';
+
 import { dollarsToCents, formatCents } from '../money';
 import type { ShockScenarioPayload } from '../types';
+
+/**
+ * Keep only digits and a single decimal point of at most two places, and drop
+ * leading zeros.
+ *
+ * The field is a text input rather than type="number" on purpose. React
+ * compares a controlled number input's DOM string to the new value loosely, so
+ * "0123" tests equal to 123 and the stranded leading zero is never rewritten.
+ */
+function sanitiseAmount(raw: string): string {
+  const cleaned = raw.replace(/[^\d.]/g, '');
+  const [whole = '', ...rest] = cleaned.split('.');
+  const trimmedWhole = whole.replace(/^0+(?=\d)/, '');
+  if (rest.length === 0) {
+    return trimmedWhole;
+  }
+  return `${trimmedWhole}.${rest.join('').slice(0, 2)}`;
+}
+
+function centsToDraft(cents: number): string {
+  return cents === 0 ? '' : String(cents / 100);
+}
 
 interface SliderFieldProps {
   id: string;
@@ -58,6 +82,19 @@ export interface ScenarioControlsProps {
 }
 
 export function ScenarioControls({ scenario, onChange }: ScenarioControlsProps) {
+  // The field holds text while being edited so partial entries such as "12."
+  // survive; the scenario keeps the authoritative cent value.
+  const [costDraft, setCostDraft] = useState(() => centsToDraft(scenario.unexpected_cost_cents));
+
+  function handleCostChange(raw: string) {
+    const next = sanitiseAmount(raw);
+    setCostDraft(next);
+    const parsed = Number(next);
+    onChange({
+      unexpected_cost_cents: next === '' || Number.isNaN(parsed) ? 0 : dollarsToCents(parsed),
+    });
+  }
+
   return (
     <section aria-labelledby="scenario-controls-heading" className="space-y-5">
       <div>
@@ -120,16 +157,12 @@ export function ScenarioControls({ scenario, onChange }: ScenarioControlsProps) 
           <span className="text-sm text-slate-500">S$</span>
           <input
             id="unexpected-cost"
-            type="number"
+            type="text"
             inputMode="decimal"
-            min={0}
-            step={10}
-            value={scenario.unexpected_cost_cents / 100}
-            onChange={(event) =>
-              onChange({
-                unexpected_cost_cents: Math.max(0, dollarsToCents(Number(event.target.value) || 0)),
-              })
-            }
+            autoComplete="off"
+            placeholder="0"
+            value={costDraft}
+            onChange={(event) => handleCostChange(event.target.value)}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-base tabular-nums focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-100"
           />
         </div>
