@@ -71,8 +71,17 @@ average, lowest, highest, variation, and a conservative weekly figure to plan ar
   `pytest` from `backend/` (or `pytest backend/tests` from the repo root), without needing a package install or
   `feature/01-foundation-input`'s eventual dependency manifest.
 - **Frontend:** `frontend/src/features/income-reality/` — `types.ts` (mirrors the contract), `api.ts` (fetch
-  wrapper, not runnable until Vite/`import.meta.env` typing exists), `format.ts`, and bare-bones components
-  `IncomeBreakdownCard`, `RecentTrendSummary`, `AssumptionsEditor`, assembled by `IncomeRealityView`.
+  wrapper), `format.ts`, and bare-bones components `IncomeBreakdownCard`, `RecentTrendSummary`,
+  `AssumptionsEditor`, assembled by `IncomeRealityView`.
+- **Integration seam for Workstream 1:** `useIncomeRealityBreakdown.ts` (fetch/loading/error/assumptions state,
+  keyed off a JSON-serialised `weeks` value so callers don't need to memoise the array) and `IncomeRealityPage.tsx`
+  (the top-level component: takes `weeks: WeeklyEntryIn[]` as its only prop, handles empty/loading/error states,
+  renders `IncomeRealityView` once data arrives). Whoever builds the app route/navigation in `frontend/src/app/`
+  should render `<IncomeRealityPage weeks={...} />` with the user's actual weekly entries once
+  `feature/01-foundation-input`'s manual-entry data exists — `IncomeRealityPage` doesn't know or care where
+  `weeks` came from. If Workstream 1's persisted entry shape differs from `WeeklyEntryIn`, the fix is a small
+  mapping function at the call site; `IncomeRealityPage`/`useIncomeRealityBreakdown`/`engine.py` should not need
+  to change.
 
 ## Tests performed
 
@@ -100,20 +109,29 @@ the following could be actually executed rather than only hand-verified:
   `router.py` had been executed at all.
 - **Total: 15/15 backend tests passing.** Run with `pytest tests/unit/income_reality tests/integration/income_reality -v` from `backend/`.
 - **Frontend:** no test tooling exists yet (owned by Workstream 1 — component tests are meant to land "when the
-  test tooling is selected," per `frontend/README.md`), so no component tests were written. As a substitute
-  sanity check, ran `tsc --noEmit` (TypeScript 5.6.3, `@types/react` 18.3.12, matching the stack's React 18) over
-  every file in `frontend/src/features/income-reality/`, using a temporary `package.json`/`tsconfig.json`/
-  `vite-env.d.ts` placed directly under `frontend/` (required — TypeScript's module resolution needs
-  `node_modules` to be an actual filesystem ancestor of the files being checked, not just present somewhere on
-  disk) and removed immediately afterward. **Result: 0 type errors** across `types.ts`, `format.ts`, `api.ts`,
-  and all four components. This is a type-check only, not a rendered/behavioural test — no Vitest/React Testing
-  Library run has happened.
+  test tooling is selected," per `frontend/README.md`), so no component tests were written. Two things were
+  actually run instead, using a temporary `package.json`/`vite.config.ts`/`tsconfig.json` placed directly under
+  `frontend/` (required — module resolution needs `node_modules` to be an actual filesystem ancestor of the
+  files involved) and removed immediately afterward:
+  - `tsc --noEmit` (TypeScript 5.6.3, `@types/react` 18.3.12, matching the stack's React 18) over the entire
+    `frontend/src` tree, including `useIncomeRealityBreakdown.ts` / `IncomeRealityPage.tsx`. **0 type errors.**
+  - A genuine live end-to-end demo: `uvicorn` serving the real router (`backend/_demo_main.py`, a throwaway
+    `FastAPI()` app identical in shape to the documented mount point) on `localhost:8000`, and a real Vite dev
+    server on `localhost:5173` rendering `IncomeRealityPage` (via a throwaway `src/demo-entry.tsx` that swaps in
+    different `weeks` values to stand in for Workstream 1's eventual manual-entry data). Confirmed both servers
+    started cleanly, the backend returned the exact fixture response for a real HTTP POST, and Vite transformed
+    every new/changed module (`demo-entry.tsx`, `useIncomeRealityBreakdown.ts`, `IncomeRealityPage.tsx`) with no
+    compile errors. This is the first time any of the frontend code actually ran in a browser rather than only
+    type-checking. No automated component/behavioural test (Vitest/RTL) exists yet.
 
 ## Known limitations
 
-- Router is not mounted; API is not callable until `feature/01-foundation-input` lands `app/main.py`.
-- Frontend feature code is not runnable in the browser until `feature/01-foundation-input` lands the real
-  Vite/package.json setup — the `tsc` check above only confirms the TypeScript compiles, not that it renders.
+- Router is not mounted in a committed app; nothing is callable from a real deployment until
+  `feature/01-foundation-input` lands `app/main.py` and the real `frontend/package.json`/Vite setup (the code
+  was verified to actually run via a temporary, uncommitted harness — see Tests performed — not via anything
+  checked into the branch).
+- `IncomeRealityPage` is not yet rendered from anywhere in `frontend/src/app/` (that tree doesn't exist yet) -
+  it is a ready-to-use component, not a mounted route.
 - CPF is a simplified flat-rate estimate, not the statutory schedule.
 - No itemised work-cost breakdown; only an aggregate figure per week.
 - No component-level (Vitest/RTL) frontend tests yet — blocked on Workstream 1 choosing the test tooling.
@@ -123,10 +141,11 @@ the following could be actually executed rather than only hand-verified:
 
 1. Mount the router as documented above once `feature/01-foundation-input` lands `app/main.py`.
 2. Confirm or renegotiate the Monday-start `week_start` convention against the persisted entry schema.
-3. Wire `frontend/src/features/income-reality/api.ts` into an actual page in `frontend/src/app/`, replacing
-   fixture data with a live `fetchIncomeBreakdown` call, once Vite is set up.
+3. Once Workstream 1's manual-entry data and routing exist, render `<IncomeRealityPage weeks={...} />`
+   (`frontend/src/features/income-reality/IncomeRealityPage.tsx`) from a route in `frontend/src/app/`, mapping
+   Workstream 1's entry shape to `WeeklyEntryIn` first if it differs.
 4. Once Workstream 1 picks frontend test tooling, add component tests colocated with the source (per
-   `frontend/README.md`'s placement rule) for `IncomeBreakdownCard`, `RecentTrendSummary`, and
-   `AssumptionsEditor`.
-5. When Workstream 1's persistence lands, add a thin adapter that reads a user's saved entries and builds the
-   `IncomeRealityRequest` — `engine.py` itself should not need to change.
+   `frontend/README.md`'s placement rule) for `IncomeBreakdownCard`, `RecentTrendSummary`, `AssumptionsEditor`,
+   and `IncomeRealityPage`.
+5. When Workstream 1's persistence lands, the entry-shape mapping in step 3 is the only place that should need
+   to change — `engine.py`, the router, and `IncomeRealityPage` itself should not.
