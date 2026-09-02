@@ -13,7 +13,7 @@ The one-week prototype follows this user journey:
 
 1. Record weekly platform earnings, work costs, essential expenses, and current emergency savings.
 2. See estimated net work income, available surplus, and recent income variation.
-3. Set an adjustable savings target and track progress in the Resilience Jar.
+3. Build an adjustable emergency fund and track its essential-expense coverage.
 4. Answer a short questionnaire to find potentially relevant support schemes and official application links.
 5. Simulate an income interruption or unexpected cost and see estimated cash-flow and buffer impact.
 
@@ -27,7 +27,7 @@ Each area is a full-stack vertical slice with its own UI, API integration, deter
 |---|---|---|
 | 1 | **Foundation & data intake** — `feature/01-foundation-input` | Responsive PWA shell, navigation and onboarding; editable manual-entry flows; shared TypeScript/API contracts; PostgreSQL schema and migrations for user-approved entries, goals, scenarios, and rule versions. CSV/OCR review flow is stretch scope. |
 | 2 | **Income Reality Engine** — `feature/02-income-reality` | Tested Python calculations for net weekly work income and available surplus; FastAPI endpoints; transparent breakdown and week-to-week trend UI; editable assumptions. |
-| 3 | **Habit Builder & Resilience Jar** — `feature/03-resilience-jar` | Tested, adjustable weekly savings recommendation; goal and contribution APIs; progress in days/weeks of essential expenses; pause/edit controls and jar visualisation. The app tracks money but never holds or transfers it. |
+| 3 | **Emergency Fund** — `feature/03-resilience-jar` | Tested, adjustable weekly/monthly contribution recommendation; emergency-fund goal and ledger APIs; progress in days/weeks of essential expenses; pause/edit controls and fund visualisation. The app tracks money but never holds or transfers it. |
 | 4 | **Scheme Navigator & AI explainer** — `feature/04-scheme-navigator` | Versioned scheme-rule schema and deterministic evaluator; questionnaire and result UI; official sources and missing-information states; grounded plain-language explanation. The LLM must not determine eligibility. |
 | 5 | **Scenario Simulator** — `feature/05-scenario-simulator` | Tested cash-flow and buffer-runway calculations; adjustable income reduction, time-off, and unexpected-cost inputs; results UI with preparatory actions, relevant official resources, and clear estimate disclaimers. |
 
@@ -62,6 +62,7 @@ Frontend and backend feature folders use the same five workstream boundaries so 
 ## Local setup
 
 The commands below are verified on macOS with Python 3.13.7 and Node 22. The React and FastAPI manifests currently in the tree are **provisional**, added on `feature/05-scenario-simulator` so the Scenario Simulator can be demonstrated; `feature/01-foundation-input` owns the canonical versions and should replace them.
+The Emergency Fund frontend is runnable as a local React and Vite demo using synthetic data. The shared FastAPI application and database integration are still pending Workstream 1. Existing `/resilience-jar` paths remain unchanged for compatibility.
 
 ### 1. Clone and read the agent rules
 
@@ -93,6 +94,19 @@ Replace the branch name with the branch assigned to you.
 - Tesseract only if working on the optional OCR path
 
 ### 4. Configure and run the apps
+### 4. Install and run the frontend
+
+From the repository root:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://127.0.0.1:5173/resilience-jar` in a browser. Run `npm test` for the feature tests and `npm run build` for a production compilation check.
+
+### 5. Configure future backend integration
 
 Copy the package-specific example environment files rather than sharing secrets:
 
@@ -135,9 +149,17 @@ If `npm run dev` fails with `Cannot find module '@rolldown/binding-*'`, npm skip
 
 ```bash
 cd frontend && npm install --save-dev @rolldown/binding-darwin-x64
+On PowerShell, use `Copy-Item` instead of `cp`. The provisional backend workflow is:
+
+```bash
+# Backend package (from the repository root in a separate terminal)
+python -m venv .venv
+# Activate .venv using the command for your shell
+python -m pip install -r backend/requirements.txt
+fastapi dev backend/app/main.py
 ```
 
-Do not commit `.env`, credentials, user uploads, OCR output, local databases, or real financial data. If the eventual package layout or commands differ, update this README in the same pull request that changes them.
+Do not commit `.env`, credentials, user uploads, OCR output, local databases, or real financial data. The current local frontend intentionally uses a synthetic in-memory adapter and does not need backend credentials.
 
 ## Team workflow
 

@@ -12,3 +12,13 @@ This directory will contain the Python and FastAPI service. Product logic is gro
 - Put fast deterministic tests in `tests/unit/` and tests crossing API/database boundaries in `tests/integration/`.
 
 The initial FastAPI package, dependency manifest, and application entry point are owned by `feature/01-foundation-input`.
+
+## Current feature checks
+
+The Emergency Fund deterministic core, retained under the `resilience_jar` integration module, uses only the Python standard library and can be checked before the shared FastAPI manifest lands:
+
+```bash
+python3 -m unittest discover -s backend/tests -p 'test_*.py' -v
+```
+
+Its FastAPI route tests skip automatically until Workstream 1 supplies FastAPI and the application test dependencies.
