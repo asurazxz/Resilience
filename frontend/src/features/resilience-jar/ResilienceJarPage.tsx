@@ -210,7 +210,9 @@ export function ResilienceJarPage({
     const confirmation =
       goal.mode === "amount"
         ? `Goal updated to ${formatMoney(goal.amount_cents)}.`
-        : `Goal updated to ${goal.weeks} weeks of essential expenses.`;
+        : summary?.weekly_essential_expenses_cents
+          ? `Goal updated to ${goal.weeks} weeks of essential expenses (${formatMoney(summary.weekly_essential_expenses_cents * goal.weeks)}).`
+          : `Goal updated to ${goal.weeks} weeks of essential expenses.`;
     await runMutation(async () => client.patchPlan({ goal }), confirmation);
   }
 
@@ -351,6 +353,16 @@ export function ResilienceJarPage({
   const isPaused = summary.plan.status === "paused";
   const isOverGoal = (progress.progress_percent ?? 0) > 100;
   const mutationsDisabled = saving || offline;
+  const parsedGoalWeeks = Number(goalWeeks);
+  const coverageGoalPreview =
+    goalMode === "coverage" &&
+    Number.isInteger(parsedGoalWeeks) &&
+    parsedGoalWeeks >= 1 &&
+    parsedGoalWeeks <= 52 &&
+    summary.weekly_essential_expenses_cents !== null &&
+    summary.weekly_essential_expenses_cents > 0
+      ? summary.weekly_essential_expenses_cents * parsedGoalWeeks
+      : null;
   const goalNeedsReview = summary.goal_review.status === "expenses_changed";
   const previousMonthlyExpenses =
     summary.goal_review.previous_weekly_expenses_cents === null
@@ -683,16 +695,24 @@ export function ResilienceJarPage({
               </label>
             </fieldset>
             {goalMode === "coverage" ? (
-              <label>
-                Whole weeks
-                <input
-                  type="number"
-                  min="1"
-                  max="52"
-                  value={goalWeeks}
-                  onChange={(event) => setGoalWeeks(event.target.value)}
-                />
-              </label>
+              <>
+                <label>
+                  Whole weeks
+                  <input
+                    type="number"
+                    min="1"
+                    max="52"
+                    value={goalWeeks}
+                    onChange={(event) => setGoalWeeks(event.target.value)}
+                  />
+                </label>
+                {coverageGoalPreview !== null && (
+                  <p className="jar-goal-preview" aria-live="polite">
+                    <span>Goal amount using your latest expenses</span>
+                    <strong>{formatMoney(coverageGoalPreview)}</strong>
+                  </p>
+                )}
+              </>
             ) : (
               <label>
                 Goal amount (SGD)

@@ -32,8 +32,10 @@ The feature currently runs against in-memory backend repositories and a typed fr
 - The compact fund summary links to a separate Emergency Fund Settings view containing recommendation method, target acceptance/editing, and coverage-goal configuration.
 - Plan Settings lets users preview and save either a weekly or monthly target. Recommendation cards and confirmations follow the selected cadence, while the underlying recommendation formula remains weekly.
 - Successful recommendation acceptance, manual target saves, and goal saves produce a brief accessible confirmation containing the updated target amount or goal basis. Failed saves continue to use the existing error alert and never show a success confirmation.
+- Coverage-goal settings show the derived dollar amount from the latest essential expenses before save. The save confirmation repeats that amount so the result is explicit.
 - An actionable alert appears on both views when essential expenses differ from the last saved goal baseline. It shows approximate previous and current monthly amounts and directs the user to review the goal.
 - Client-side history navigation keeps the same API adapter instance, so moving between views does not reset accepted targets or contributions.
+- The local demo hydrates its fixture adapter from the last successful browser cache, so reviewed goals and other demo changes survive a refresh in the same browser origin.
 - Direct visits and browser back/forward navigation work for both routes without adding a routing dependency.
 
 ## Interfaces
@@ -80,7 +82,7 @@ Tests cover both formulas, cent rounding, weak/negative weeks, insufficient hist
 
 ## Limitations and follow-up
 
-- The local React shell uses synthetic in-memory data and resets after a page refresh. It is an integration aid, not the final shared application shell.
+- The local React shell uses synthetic data backed only by that browser origin's local cache. Clearing site data, changing browser/origin, or an incompatible future fixture shape resets the demo; this is not a replacement for shared database persistence.
 - The FastAPI package manifest and app entry point remain owned by Workstream 1.
 - The HTTP route tests are ready but skipped until FastAPI is installed. React Testing Library coverage must be added after the frontend test stack lands; dependency-free model and fixture-adapter tests run now.
 - In-memory repositories reset on process restart. PostgreSQL adapters and any coordinated migration are required before shared integration.

@@ -2,12 +2,16 @@ import { useEffect, useMemo, useState, type MouseEvent } from "react";
 
 import {
   FixtureResilienceJarApi,
+  readCachedSummary,
   ResilienceJarPage,
 } from "../features/resilience-jar/index.ts";
 import { resolveAppRoute } from "./routing.ts";
 
 export function App() {
-  const fixtureApi = useMemo(() => new FixtureResilienceJarApi(), []);
+  const fixtureApi = useMemo(
+    () => new FixtureResilienceJarApi(readCachedSummary()),
+    [],
+  );
   const [pathname, setPathname] = useState(window.location.pathname);
   const route = resolveAppRoute(pathname);
 

@@ -96,9 +96,10 @@ const initialFixture: JarSummary = {
 };
 
 export class FixtureResilienceJarApi implements ResilienceJarApi {
-  private summary = clone(initialFixture);
+  private summary: JarSummary;
 
-  constructor() {
+  constructor(startingSummary?: JarSummary | null) {
+    this.summary = clone(startingSummary ?? initialFixture);
     this.recalculateProgress();
   }
 

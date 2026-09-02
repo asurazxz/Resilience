@@ -58,6 +58,19 @@ test("expense-change alert clears only when the goal is reviewed and saved", asy
   assert.equal(reviewed.plan.goal_expense_baseline_cents, 70_000);
 });
 
+test("a reviewed goal can hydrate a new demo session without reopening the alert", async () => {
+  const firstSession = new FixtureResilienceJarApi();
+  const reviewed = await firstSession.patchPlan({
+    goal: { mode: "coverage", weeks: 4 },
+  });
+  const nextSession = new FixtureResilienceJarApi(reviewed);
+  const restored = await nextSession.getSummary();
+
+  assert.equal(restored.goal_review.status, "up_to_date");
+  assert.equal(restored.progress.goal_target_cents, 280_000);
+  assert.equal(restored.plan.goal_expense_baseline_cents, 70_000);
+});
+
 test("a later expense update reopens the goal review alert", async () => {
   const api = new FixtureResilienceJarApi();
   await api.patchPlan({ goal: { mode: "amount", amount_cents: 300_000 } });

@@ -280,6 +280,26 @@
   font-size: 0.9rem;
 }
 
+.jar-goal-preview {
+  background: var(--jar-light);
+  border: 1px solid #65a98a;
+  border-radius: 0.7rem;
+  display: grid;
+  gap: 0.2rem;
+  margin: 0 !important;
+  padding: 0.75rem;
+}
+
+.jar-goal-preview span {
+  color: var(--jar-muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.jar-goal-preview strong {
+  font-size: 1.5rem;
+}
+
 .jar-grid {
   display: grid;
   gap: 1rem;
