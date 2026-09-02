@@ -69,7 +69,13 @@ export function ScenarioSummary({ baseline, scenario }: ScenarioSummaryProps) {
       <Stat
         label="Savings low point"
         value={formatCents(scenario.lowest_buffer_cents)}
-        detail={`In week ${scenario.lowest_buffer_week}, from ${formatCents(baseline.emergency_savings_cents)}`}
+        detail={
+          // "from today's savings" would imply a fall, which is wrong whenever
+          // the weakest projected week still sits above what they hold now.
+          scenario.lowest_buffer_cents < baseline.emergency_savings_cents
+            ? `In week ${scenario.lowest_buffer_week}, down from ${formatCents(baseline.emergency_savings_cents)}`
+            : `In week ${scenario.lowest_buffer_week}, never below today's ${formatCents(baseline.emergency_savings_cents)}`
+        }
         tone={scenario.lowest_buffer_cents === 0 ? 'bad' : 'plain'}
       />
     </div>

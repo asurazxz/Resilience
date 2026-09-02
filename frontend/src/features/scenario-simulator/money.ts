@@ -14,23 +14,12 @@ const AMOUNT = new Intl.NumberFormat('en-SG', {
   maximumFractionDigits: 2,
 });
 
-const WHOLE_AMOUNT = new Intl.NumberFormat('en-SG', { maximumFractionDigits: 0 });
-
 export function formatCents(cents: number): string {
   return `${cents < 0 ? '-' : ''}S$${AMOUNT.format(Math.abs(cents) / 100)}`;
 }
 
-/** Whole-dollar form for dense readouts such as chart axis labels. */
-export function formatCentsCompact(cents: number): string {
-  return `${cents < 0 ? '-' : ''}S$${WHOLE_AMOUNT.format(Math.abs(cents) / 100)}`;
-}
-
 export function dollarsToCents(dollars: number): number {
   return Math.round(dollars * 100);
-}
-
-export function centsToDollars(cents: number): number {
-  return cents / 100;
 }
 
 export function formatWeeks(count: number): string {

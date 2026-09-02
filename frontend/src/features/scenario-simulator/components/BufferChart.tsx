@@ -13,7 +13,7 @@
 
 import { useState } from 'react';
 
-import { formatCents, formatCentsCompact } from '../money';
+import { formatCents } from '../money';
 import type { WeekProjection } from '../types';
 
 export interface BufferChartProps {
@@ -82,7 +82,7 @@ export function BufferChart({ weeks }: BufferChartProps) {
           Estimated savings by week
         </figcaption>
         <span className="shrink-0 text-xs tabular-nums text-slate-500">
-          Top {formatCentsCompact(peak)}
+          Top {formatCents(peak)}
         </span>
       </div>
 
@@ -97,10 +97,18 @@ export function BufferChart({ weeks }: BufferChartProps) {
             </p>
             {active.week ? (
               <p className="text-slate-600">
-                {active.week.net_cash_flow_cents < 0 ? 'Down ' : 'Up '}
-                <span className="tabular-nums">
-                  {formatCents(Math.abs(active.week.net_cash_flow_cents))}
-                </span>{' '}
+                {active.week.net_cash_flow_cents === 0
+                  ? 'No change'
+                  : active.week.net_cash_flow_cents < 0
+                    ? 'Down'
+                    : 'Up'}{' '}
+                {active.week.net_cash_flow_cents === 0 ? null : (
+                  <>
+                    <span className="tabular-nums">
+                      {formatCents(Math.abs(active.week.net_cash_flow_cents))}
+                    </span>{' '}
+                  </>
+                )}
                 that week, from work income of{' '}
                 <span className="tabular-nums">
                   {formatCents(active.week.net_work_income_cents)}
@@ -151,8 +159,8 @@ export function BufferChart({ weeks }: BufferChartProps) {
           role="img"
           aria-label={
             firstShortfall
-              ? `Savings start at ${formatCentsCompact(startingCents)} and fall to zero in week ${firstShortfall.week} of ${weeks.length}.`
-              : `Savings start at ${formatCentsCompact(startingCents)} and end at ${formatCentsCompact(endingCents)} after ${weeks.length} weeks, without reaching zero.`
+              ? `Savings start at ${formatCents(startingCents)} and fall to zero in week ${firstShortfall.week} of ${weeks.length}.`
+              : `Savings start at ${formatCents(startingCents)} and end at ${formatCents(endingCents)} after ${weeks.length} weeks, without reaching zero.`
           }
           className="h-32 w-full"
         >
@@ -226,7 +234,7 @@ export function BufferChart({ weeks }: BufferChartProps) {
 
       <p className="text-xs text-slate-500">
         Each bar is what you would have saved at the end of that week. The dashed line is where you
-        started, {formatCentsCompact(startingCents)}, and the bottom of the chart is zero.
+        started, {formatCents(startingCents)}, and the bottom of the chart is zero.
       </p>
     </figure>
   );
