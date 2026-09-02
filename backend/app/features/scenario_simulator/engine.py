@@ -39,8 +39,10 @@ def _income_factor(week: int, scenario: ShockScenario) -> tuple[int, int]:
     if week <= scenario.weeks_affected:
         return (100 - reduction, 100)
 
+    # Recovery only follows an actual disruption. Without one there is nothing
+    # to climb back from, and a recovery period must not reduce earnings.
     recovery_index = week - scenario.weeks_affected
-    if reduction > 0 and recovery_index <= scenario.recovery_weeks:
+    if reduction > 0 and scenario.weeks_affected > 0 and recovery_index <= scenario.recovery_weeks:
         span = scenario.recovery_weeks + 1
         return ((100 - reduction) * span + reduction * recovery_index, 100 * span)
 

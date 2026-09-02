@@ -192,6 +192,14 @@ class RecoveryTests(unittest.TestCase):
         result = simulate(WORKER, ShockScenario(50, 2, recovery_weeks=2))
         self.assertEqual(result.scenario.full_income_resumes_week, 5)
 
+    def test_recovery_without_affected_weeks_leaves_earnings_untouched(self):
+        # "For: 0 weeks" means nothing was disrupted, so a recovery period has
+        # nothing to climb back from and must not reduce earnings.
+        weeks = project_weeks(WORKER, ShockScenario(50, 0, recovery_weeks=3))
+        for week in weeks:
+            self.assertEqual(week.gross_earnings_cents, 90_000)
+            self.assertEqual(week.net_cash_flow_cents, WORKER.weekly_surplus_cents)
+
     def test_no_resume_week_without_a_shock(self):
         result = simulate(WORKER, ShockScenario(0, 0))
         self.assertIsNone(result.scenario.full_income_resumes_week)
