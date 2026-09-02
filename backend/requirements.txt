@@ -6,3 +6,13 @@ httpx==0.27.2
 groq==1.7.0
 python-dotenv==1.2.3
 truststore==0.10.4
+# Provisional backend manifest.
+#
+# feature/01-foundation-input owns the canonical manifest. This file exists so
+# the Scenario Simulator endpoint can be run and demonstrated; replace it when
+# the Workstream 1 version lands.
+
+fastapi==0.141.1
+httpx2==2.0.0
+pydantic==2.13.5
+uvicorn[standard]==0.52.4

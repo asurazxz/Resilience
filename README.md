@@ -9,12 +9,11 @@ This repository contains Team Zephyrries' prototype for the Singapore Management
 > Resilience provides estimates and navigation, not financial advice. Scheme eligibility is determined by maintained rules and confirmed only by the relevant agency. AI may explain results, but it must never calculate finances or decide eligibility.
 
 ## Prototype scope
-
 The one-week prototype follows this user journey:
 
 1. Record weekly platform earnings, work costs, essential expenses, and current emergency savings.
 2. See estimated net work income, available surplus, and recent income variation.
-3. Set an adjustable savings target and track progress in the Resilience Jar.
+3. Build an adjustable emergency fund and track its essential-expense coverage.
 4. Answer a short questionnaire to find potentially relevant support schemes and official application links.
 5. Simulate an income interruption or unexpected cost and see estimated cash-flow and buffer impact.
 
@@ -28,7 +27,7 @@ Each area is a full-stack vertical slice with its own UI, API integration, deter
 |---|---|---|
 | 1 | **Foundation & data intake** — `feature/01-foundation-input` | Responsive PWA shell, navigation and onboarding; editable manual-entry flows; shared TypeScript/API contracts; PostgreSQL schema and migrations for user-approved entries, goals, scenarios, and rule versions. CSV/OCR review flow is stretch scope. |
 | 2 | **Income Reality Engine** — `feature/02-income-reality` | Tested Python calculations for net weekly work income and available surplus; FastAPI endpoints; transparent breakdown and week-to-week trend UI; editable assumptions. |
-| 3 | **Habit Builder & Resilience Jar** — `feature/03-resilience-jar` | Tested, adjustable weekly savings recommendation; goal and contribution APIs; progress in days/weeks of essential expenses; pause/edit controls and jar visualisation. The app tracks money but never holds or transfers it. |
+| 3 | **Emergency Fund** — `feature/03-resilience-jar` | Tested, adjustable weekly/monthly contribution recommendation; emergency-fund goal and ledger APIs; progress in days/weeks of essential expenses; pause/edit controls and fund visualisation. The app tracks money but never holds or transfers it. |
 | 4 | **Scheme Navigator & AI explainer** — `feature/04-scheme-navigator` | Versioned scheme-rule schema and deterministic evaluator; questionnaire and result UI; official sources and missing-information states; grounded plain-language explanation. The LLM must not determine eligibility. |
 | 5 | **Scenario Simulator** — `feature/05-scenario-simulator` | Tested cash-flow and buffer-runway calculations; adjustable income reduction, time-off, and unexpected-cost inputs; results UI with preparatory actions, relevant official resources, and clear estimate disclaimers. |
 
@@ -62,7 +61,7 @@ Frontend and backend feature folders use the same five workstream boundaries so 
 
 ## Local setup
 
-The repository contains the agreed directory scaffold but not runnable application packages yet. Workstream 1 will add the initial React and FastAPI manifests; the pull request that introduces them must pin runtime versions and replace provisional commands below with verified commands.
+The merged development app runs the Emergency Fund and Scenario Simulator in one React shell. The Emergency Fund still uses a browser-local synthetic adapter; the Scenario Simulator calls the local FastAPI service.
 
 ### 1. Clone and read the agent rules
 
@@ -84,40 +83,62 @@ git switch feature/01-foundation-input
 
 Replace the branch name with the branch assigned to you.
 
-### 3. Install the planned local prerequisites
+### 3. Install prerequisites
 
 - Git
-- Node.js and a Node package manager for the React client
-- Python with virtual-environment support for FastAPI and deterministic engines
+- Node.js 20.19+ or 22.12+ and npm 10+ for the React client. Vite 8 refuses older releases, and its Rolldown bundler needs a native binary per platform (see step 4)
+- Python 3.11+ with virtual-environment support for FastAPI and the deterministic engines
 - Access to the team's Supabase project, or local PostgreSQL for isolated development
 - Supabase CLI only when creating, applying, or testing database migrations locally
 - Tesseract only if working on the optional OCR path
 
-### 4. Configure and run the apps after their scaffolds land
+### 4. Configure the local environment
 
-Copy the package-specific example environment files rather than sharing secrets:
+Copy the package-specific examples rather than sharing secrets:
 
 ```bash
 cp frontend/.env.example frontend/.env
 cp backend/.env.example backend/.env
 ```
 
-On PowerShell, use `Copy-Item` instead of `cp`. The provisional application workflow is:
+On PowerShell, use `Copy-Item` instead of `cp`. The example frontend configuration points the simulator to the local API on port 8000.
+
+### 5. Install dependencies
+
+Install and run the API from the repository root:
 
 ```bash
-# Frontend package (path and scripts to be finalised by Workstream 1)
-cd frontend
-npm install
-npm run dev
-
-# Backend package (from the repository root in a separate terminal)
-python -m venv .venv
-# Activate .venv using the command for your shell
-python -m pip install -r backend/requirements.txt
-fastapi dev backend/app/main.py
+python3 -m venv .venv && .venv/bin/python -m pip install -r backend/requirements.txt
 ```
 
-Do not commit `.env`, credentials, user uploads, OCR output, local databases, or real financial data. If the eventual package layout or commands differ, update this README in the same pull request that changes them.
+```bash
+cd frontend && npm install
+```
+
+### 6. Run both apps
+
+Start the API from the repository root:
+
+```bash
+cd backend && ../.venv/bin/python -m uvicorn app.main:app --reload --port 8000
+```
+
+Start the client in a second terminal:
+
+```bash
+cd frontend && npm run dev
+```
+
+Open <http://localhost:5173/resilience-jar> for the Emergency Fund or <http://localhost:5173/scenario-simulator> for the Setback Planner. API documentation is available at <http://localhost:8000/docs>.
+
+Run the complete checks from the repository root:
+
+```bash
+PYTHONPATH=backend:. .venv/bin/python -m unittest discover -s backend/tests -p 'test_*.py'
+cd frontend && npm test && npm run build
+```
+
+Do not commit `.env`, credentials, user uploads, OCR output, local databases, or real financial data.
 
 ## Team workflow
 

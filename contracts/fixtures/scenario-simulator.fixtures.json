@@ -1,0 +1,1130 @@
+{
+  "description": "Synthetic Scenario Simulator fixtures generated from the deterministic engine. Values are integer cents in SGD. No real user data.",
+  "generated_by": "backend/app/features/scenario_simulator/engine.py",
+  "fixtures": [
+    {
+      "name": "earnings-drop-with-recovery",
+      "description": "Platform earnings fall by half for four weeks, then recover over three weeks.",
+      "request": {
+        "baseline": {
+          "weekly_gross_earnings_cents": 90000,
+          "weekly_variable_work_costs_cents": 15000,
+          "weekly_fixed_work_costs_cents": 25000,
+          "weekly_essential_expenses_cents": 40000,
+          "emergency_savings_cents": 120000
+        },
+        "scenario": {
+          "income_reduction_percent": 50,
+          "weeks_affected": 4,
+          "recovery_weeks": 3
+        }
+      },
+      "response": {
+        "baseline": {
+          "weekly_gross_earnings_cents": 90000,
+          "weekly_work_costs_cents": 40000,
+          "weekly_net_work_income_cents": 50000,
+          "weekly_essential_expenses_cents": 40000,
+          "weekly_surplus_cents": 10000,
+          "emergency_savings_cents": 120000,
+          "emergency_savings_weeks_of_essentials": 3,
+          "runway_weeks": null
+        },
+        "scenario": {
+          "horizon_weeks": 11,
+          "weeks_affected": 4,
+          "recovery_weeks": 3,
+          "weekly_net_work_income_during_shock_cents": 12500,
+          "weekly_net_cash_flow_during_shock_cents": -27500,
+          "unexpected_cost_cents": 0,
+          "total_income_lost_cents": 206250,
+          "lowest_buffer_cents": 0,
+          "lowest_buffer_week": 5,
+          "buffer_runway_weeks": 4,
+          "first_shortfall_week": 5,
+          "total_shortfall_cents": 16875,
+          "buffer_at_horizon_cents": 40625,
+          "buffer_holds_through_horizon": false,
+          "full_income_resumes_week": 8
+        },
+        "weeks": [
+          {
+            "week": 1,
+            "gross_earnings_cents": 45000,
+            "work_costs_cents": 32500,
+            "net_work_income_cents": 12500,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -27500,
+            "buffer_open_cents": 120000,
+            "buffer_close_cents": 92500,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 2,
+            "gross_earnings_cents": 45000,
+            "work_costs_cents": 32500,
+            "net_work_income_cents": 12500,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -27500,
+            "buffer_open_cents": 92500,
+            "buffer_close_cents": 65000,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 3,
+            "gross_earnings_cents": 45000,
+            "work_costs_cents": 32500,
+            "net_work_income_cents": 12500,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -27500,
+            "buffer_open_cents": 65000,
+            "buffer_close_cents": 37500,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 4,
+            "gross_earnings_cents": 45000,
+            "work_costs_cents": 32500,
+            "net_work_income_cents": 12500,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -27500,
+            "buffer_open_cents": 37500,
+            "buffer_close_cents": 10000,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 5,
+            "gross_earnings_cents": 56250,
+            "work_costs_cents": 34375,
+            "net_work_income_cents": 21875,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -18125,
+            "buffer_open_cents": 10000,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 8125
+          },
+          {
+            "week": 6,
+            "gross_earnings_cents": 67500,
+            "work_costs_cents": 36250,
+            "net_work_income_cents": 31250,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -8750,
+            "buffer_open_cents": 0,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 8750
+          },
+          {
+            "week": 7,
+            "gross_earnings_cents": 78750,
+            "work_costs_cents": 38125,
+            "net_work_income_cents": 40625,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 625,
+            "buffer_open_cents": 0,
+            "buffer_close_cents": 625,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 8,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 625,
+            "buffer_close_cents": 10625,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 9,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 10625,
+            "buffer_close_cents": 20625,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 10,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 20625,
+            "buffer_close_cents": 30625,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 11,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 30625,
+            "buffer_close_cents": 40625,
+            "shortfall_cents": 0
+          }
+        ],
+        "actions": [
+          {
+            "id": "buffer-runs-out-after-shock",
+            "title": "Savings run out while income is recovering",
+            "detail": "Your savings are estimated to cover the disruption itself but run out in week 5, before earnings return to their usual level.",
+            "severity": "attention",
+            "resource_ids": [
+              "supportgowhere"
+            ]
+          },
+          {
+            "id": "fixed-work-costs-continue",
+            "title": "Fixed work costs continue",
+            "detail": "S$250.00 of weekly work costs are treated as fixed, so they continue even in a week with reduced earnings. It is worth checking whether rental, insurance, or subscription costs can be paused or reduced.",
+            "severity": "info",
+            "resource_ids": []
+          },
+          {
+            "id": "check-support-schemes",
+            "title": "Check which support you could apply for",
+            "detail": "The Scheme Navigator can pre-screen you against maintained scheme rules. Only the relevant agency can confirm eligibility.",
+            "severity": "info",
+            "resource_ids": [
+              "supportgowhere",
+              "msf",
+              "mom",
+              "cpf"
+            ]
+          }
+        ],
+        "resources": [
+          {
+            "id": "supportgowhere",
+            "name": "SupportGoWhere",
+            "description": "Government directory of Singapore support schemes, with an eligibility checker.",
+            "url": "https://supportgowhere.life.gov.sg",
+            "last_reviewed": "2026-09-01"
+          },
+          {
+            "id": "msf",
+            "name": "Ministry of Social and Family Development",
+            "description": "ComCare short-to-medium-term assistance, administered through Social Service Offices.",
+            "url": "https://www.msf.gov.sg",
+            "last_reviewed": "2026-09-01"
+          },
+          {
+            "id": "mom",
+            "name": "Ministry of Manpower",
+            "description": "Platform worker protections, including work injury compensation.",
+            "url": "https://www.mom.gov.sg",
+            "last_reviewed": "2026-09-01"
+          },
+          {
+            "id": "cpf",
+            "name": "Central Provident Fund Board",
+            "description": "MediSave and CPF information for self-employed and platform workers.",
+            "url": "https://www.cpf.gov.sg",
+            "last_reviewed": "2026-09-01"
+          }
+        ],
+        "disclaimers": [
+          "These figures are estimates calculated from the values you entered. They are not a prediction of what will happen.",
+          "Resilience does not provide financial advice and does not hold or transfer your money.",
+          "The estimate assumes your essential expenses and fixed work costs stay the same during the scenario.",
+          "Support scheme eligibility is decided only by the relevant government agency."
+        ]
+      }
+    },
+    {
+      "name": "injury-time-off",
+      "description": "No earnings for three weeks while vehicle rental continues.",
+      "request": {
+        "baseline": {
+          "weekly_gross_earnings_cents": 90000,
+          "weekly_variable_work_costs_cents": 15000,
+          "weekly_fixed_work_costs_cents": 25000,
+          "weekly_essential_expenses_cents": 40000,
+          "emergency_savings_cents": 120000
+        },
+        "scenario": {
+          "income_reduction_percent": 100,
+          "weeks_affected": 3,
+          "recovery_weeks": 2
+        }
+      },
+      "response": {
+        "baseline": {
+          "weekly_gross_earnings_cents": 90000,
+          "weekly_work_costs_cents": 40000,
+          "weekly_net_work_income_cents": 50000,
+          "weekly_essential_expenses_cents": 40000,
+          "weekly_surplus_cents": 10000,
+          "emergency_savings_cents": 120000,
+          "emergency_savings_weeks_of_essentials": 3,
+          "runway_weeks": null
+        },
+        "scenario": {
+          "horizon_weeks": 9,
+          "weeks_affected": 3,
+          "recovery_weeks": 2,
+          "weekly_net_work_income_during_shock_cents": -25000,
+          "weekly_net_cash_flow_during_shock_cents": -65000,
+          "unexpected_cost_cents": 0,
+          "total_income_lost_cents": 300000,
+          "lowest_buffer_cents": 0,
+          "lowest_buffer_week": 2,
+          "buffer_runway_weeks": 1,
+          "first_shortfall_week": 2,
+          "total_shortfall_cents": 130000,
+          "buffer_at_horizon_cents": 40000,
+          "buffer_holds_through_horizon": false,
+          "full_income_resumes_week": 6
+        },
+        "weeks": [
+          {
+            "week": 1,
+            "gross_earnings_cents": 0,
+            "work_costs_cents": 25000,
+            "net_work_income_cents": -25000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -65000,
+            "buffer_open_cents": 120000,
+            "buffer_close_cents": 55000,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 2,
+            "gross_earnings_cents": 0,
+            "work_costs_cents": 25000,
+            "net_work_income_cents": -25000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -65000,
+            "buffer_open_cents": 55000,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 10000
+          },
+          {
+            "week": 3,
+            "gross_earnings_cents": 0,
+            "work_costs_cents": 25000,
+            "net_work_income_cents": -25000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -65000,
+            "buffer_open_cents": 0,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 65000
+          },
+          {
+            "week": 4,
+            "gross_earnings_cents": 30000,
+            "work_costs_cents": 30000,
+            "net_work_income_cents": 0,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -40000,
+            "buffer_open_cents": 0,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 40000
+          },
+          {
+            "week": 5,
+            "gross_earnings_cents": 60000,
+            "work_costs_cents": 35000,
+            "net_work_income_cents": 25000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -15000,
+            "buffer_open_cents": 0,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 15000
+          },
+          {
+            "week": 6,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 0,
+            "buffer_close_cents": 10000,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 7,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 10000,
+            "buffer_close_cents": 20000,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 8,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 20000,
+            "buffer_close_cents": 30000,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 9,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 30000,
+            "buffer_close_cents": 40000,
+            "shortfall_cents": 0
+          }
+        ],
+        "actions": [
+          {
+            "id": "buffer-runs-out-during-shock",
+            "title": "Savings run out before the scenario ends",
+            "detail": "This estimate has your savings covering 1 week of a 3 weeks disruption, with an estimated S$1,300.00 not covered over the period shown.",
+            "severity": "attention",
+            "resource_ids": [
+              "supportgowhere",
+              "msf"
+            ]
+          },
+          {
+            "id": "fixed-work-costs-continue",
+            "title": "Fixed work costs continue",
+            "detail": "S$250.00 of weekly work costs are treated as fixed, so they continue even in a week with reduced earnings. It is worth checking whether rental, insurance, or subscription costs can be paused or reduced.",
+            "severity": "info",
+            "resource_ids": []
+          },
+          {
+            "id": "check-support-schemes",
+            "title": "Check which support you could apply for",
+            "detail": "The Scheme Navigator can pre-screen you against maintained scheme rules. Only the relevant agency can confirm eligibility.",
+            "severity": "info",
+            "resource_ids": [
+              "supportgowhere",
+              "msf",
+              "mom",
+              "cpf"
+            ]
+          }
+        ],
+        "resources": [
+          {
+            "id": "supportgowhere",
+            "name": "SupportGoWhere",
+            "description": "Government directory of Singapore support schemes, with an eligibility checker.",
+            "url": "https://supportgowhere.life.gov.sg",
+            "last_reviewed": "2026-09-01"
+          },
+          {
+            "id": "msf",
+            "name": "Ministry of Social and Family Development",
+            "description": "ComCare short-to-medium-term assistance, administered through Social Service Offices.",
+            "url": "https://www.msf.gov.sg",
+            "last_reviewed": "2026-09-01"
+          },
+          {
+            "id": "mom",
+            "name": "Ministry of Manpower",
+            "description": "Platform worker protections, including work injury compensation.",
+            "url": "https://www.mom.gov.sg",
+            "last_reviewed": "2026-09-01"
+          },
+          {
+            "id": "cpf",
+            "name": "Central Provident Fund Board",
+            "description": "MediSave and CPF information for self-employed and platform workers.",
+            "url": "https://www.cpf.gov.sg",
+            "last_reviewed": "2026-09-01"
+          }
+        ],
+        "disclaimers": [
+          "These figures are estimates calculated from the values you entered. They are not a prediction of what will happen.",
+          "Resilience does not provide financial advice and does not hold or transfer your money.",
+          "The estimate assumes your essential expenses and fixed work costs stay the same during the scenario.",
+          "Support scheme eligibility is decided only by the relevant government agency."
+        ]
+      }
+    },
+    {
+      "name": "unexpected-repair-cost",
+      "description": "A one-off S$2,000 vehicle repair with no change to earnings.",
+      "request": {
+        "baseline": {
+          "weekly_gross_earnings_cents": 90000,
+          "weekly_variable_work_costs_cents": 15000,
+          "weekly_fixed_work_costs_cents": 25000,
+          "weekly_essential_expenses_cents": 40000,
+          "emergency_savings_cents": 120000
+        },
+        "scenario": {
+          "income_reduction_percent": 0,
+          "weeks_affected": 0,
+          "unexpected_cost_cents": 200000
+        }
+      },
+      "response": {
+        "baseline": {
+          "weekly_gross_earnings_cents": 90000,
+          "weekly_work_costs_cents": 40000,
+          "weekly_net_work_income_cents": 50000,
+          "weekly_essential_expenses_cents": 40000,
+          "weekly_surplus_cents": 10000,
+          "emergency_savings_cents": 120000,
+          "emergency_savings_weeks_of_essentials": 3,
+          "runway_weeks": null
+        },
+        "scenario": {
+          "horizon_weeks": 8,
+          "weeks_affected": 0,
+          "recovery_weeks": 0,
+          "weekly_net_work_income_during_shock_cents": 50000,
+          "weekly_net_cash_flow_during_shock_cents": 10000,
+          "unexpected_cost_cents": 200000,
+          "total_income_lost_cents": 0,
+          "lowest_buffer_cents": 0,
+          "lowest_buffer_week": 1,
+          "buffer_runway_weeks": 0,
+          "first_shortfall_week": 1,
+          "total_shortfall_cents": 70000,
+          "buffer_at_horizon_cents": 70000,
+          "buffer_holds_through_horizon": false,
+          "full_income_resumes_week": null
+        },
+        "weeks": [
+          {
+            "week": 1,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 200000,
+            "net_cash_flow_cents": -190000,
+            "buffer_open_cents": 120000,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 70000
+          },
+          {
+            "week": 2,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 0,
+            "buffer_close_cents": 10000,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 3,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 10000,
+            "buffer_close_cents": 20000,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 4,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 20000,
+            "buffer_close_cents": 30000,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 5,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 30000,
+            "buffer_close_cents": 40000,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 6,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 40000,
+            "buffer_close_cents": 50000,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 7,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 50000,
+            "buffer_close_cents": 60000,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 8,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 60000,
+            "buffer_close_cents": 70000,
+            "shortfall_cents": 0
+          }
+        ],
+        "actions": [
+          {
+            "id": "savings-run-out-without-income-change",
+            "title": "Savings run out even with earnings unchanged",
+            "detail": "Your earnings stay the same in this scenario, but your savings are still estimated to run out in week 1, leaving about S$700.00 uncovered over the period shown.",
+            "severity": "attention",
+            "resource_ids": [
+              "supportgowhere",
+              "msf"
+            ]
+          },
+          {
+            "id": "one-off-cost-exceeds-buffer",
+            "title": "The one-off cost is larger than your savings",
+            "detail": "The S$2,000.00 cost is more than your current S$1,200.00 in savings, so part of it is unfunded from week 1 in this estimate.",
+            "severity": "attention",
+            "resource_ids": [
+              "supportgowhere",
+              "msf"
+            ]
+          },
+          {
+            "id": "check-support-schemes",
+            "title": "Check which support you could apply for",
+            "detail": "The Scheme Navigator can pre-screen you against maintained scheme rules. Only the relevant agency can confirm eligibility.",
+            "severity": "info",
+            "resource_ids": [
+              "supportgowhere",
+              "msf",
+              "mom",
+              "cpf"
+            ]
+          }
+        ],
+        "resources": [
+          {
+            "id": "supportgowhere",
+            "name": "SupportGoWhere",
+            "description": "Government directory of Singapore support schemes, with an eligibility checker.",
+            "url": "https://supportgowhere.life.gov.sg",
+            "last_reviewed": "2026-09-01"
+          },
+          {
+            "id": "msf",
+            "name": "Ministry of Social and Family Development",
+            "description": "ComCare short-to-medium-term assistance, administered through Social Service Offices.",
+            "url": "https://www.msf.gov.sg",
+            "last_reviewed": "2026-09-01"
+          },
+          {
+            "id": "mom",
+            "name": "Ministry of Manpower",
+            "description": "Platform worker protections, including work injury compensation.",
+            "url": "https://www.mom.gov.sg",
+            "last_reviewed": "2026-09-01"
+          },
+          {
+            "id": "cpf",
+            "name": "Central Provident Fund Board",
+            "description": "MediSave and CPF information for self-employed and platform workers.",
+            "url": "https://www.cpf.gov.sg",
+            "last_reviewed": "2026-09-01"
+          }
+        ],
+        "disclaimers": [
+          "These figures are estimates calculated from the values you entered. They are not a prediction of what will happen.",
+          "Resilience does not provide financial advice and does not hold or transfer your money.",
+          "The estimate assumes your essential expenses and fixed work costs stay the same during the scenario.",
+          "Support scheme eligibility is decided only by the relevant government agency."
+        ]
+      }
+    },
+    {
+      "name": "modest-drop-buffer-holds",
+      "description": "Earnings fall by a quarter for three weeks and savings absorb it.",
+      "request": {
+        "baseline": {
+          "weekly_gross_earnings_cents": 90000,
+          "weekly_variable_work_costs_cents": 15000,
+          "weekly_fixed_work_costs_cents": 25000,
+          "weekly_essential_expenses_cents": 40000,
+          "emergency_savings_cents": 120000
+        },
+        "scenario": {
+          "income_reduction_percent": 25,
+          "weeks_affected": 3,
+          "recovery_weeks": 1
+        }
+      },
+      "response": {
+        "baseline": {
+          "weekly_gross_earnings_cents": 90000,
+          "weekly_work_costs_cents": 40000,
+          "weekly_net_work_income_cents": 50000,
+          "weekly_essential_expenses_cents": 40000,
+          "weekly_surplus_cents": 10000,
+          "emergency_savings_cents": 120000,
+          "emergency_savings_weeks_of_essentials": 3,
+          "runway_weeks": null
+        },
+        "scenario": {
+          "horizon_weeks": 8,
+          "weeks_affected": 3,
+          "recovery_weeks": 1,
+          "weekly_net_work_income_during_shock_cents": 31250,
+          "weekly_net_cash_flow_during_shock_cents": -8750,
+          "unexpected_cost_cents": 0,
+          "total_income_lost_cents": 65625,
+          "lowest_buffer_cents": 93750,
+          "lowest_buffer_week": 3,
+          "buffer_runway_weeks": null,
+          "first_shortfall_week": null,
+          "total_shortfall_cents": 0,
+          "buffer_at_horizon_cents": 134375,
+          "buffer_holds_through_horizon": true,
+          "full_income_resumes_week": 5
+        },
+        "weeks": [
+          {
+            "week": 1,
+            "gross_earnings_cents": 67500,
+            "work_costs_cents": 36250,
+            "net_work_income_cents": 31250,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -8750,
+            "buffer_open_cents": 120000,
+            "buffer_close_cents": 111250,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 2,
+            "gross_earnings_cents": 67500,
+            "work_costs_cents": 36250,
+            "net_work_income_cents": 31250,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -8750,
+            "buffer_open_cents": 111250,
+            "buffer_close_cents": 102500,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 3,
+            "gross_earnings_cents": 67500,
+            "work_costs_cents": 36250,
+            "net_work_income_cents": 31250,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -8750,
+            "buffer_open_cents": 102500,
+            "buffer_close_cents": 93750,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 4,
+            "gross_earnings_cents": 78750,
+            "work_costs_cents": 38125,
+            "net_work_income_cents": 40625,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 625,
+            "buffer_open_cents": 93750,
+            "buffer_close_cents": 94375,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 5,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 94375,
+            "buffer_close_cents": 104375,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 6,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 104375,
+            "buffer_close_cents": 114375,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 7,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 114375,
+            "buffer_close_cents": 124375,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 8,
+            "gross_earnings_cents": 90000,
+            "work_costs_cents": 40000,
+            "net_work_income_cents": 50000,
+            "essential_expenses_cents": 40000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 10000,
+            "buffer_open_cents": 124375,
+            "buffer_close_cents": 134375,
+            "shortfall_cents": 0
+          }
+        ],
+        "actions": [
+          {
+            "id": "buffer-holds",
+            "title": "Savings cover this scenario",
+            "detail": "Your savings are estimated to last through all 8 weeks shown, ending at about S$1,343.75, with a low point of S$937.50 in week 3.",
+            "severity": "info",
+            "resource_ids": [
+              "supportgowhere"
+            ]
+          },
+          {
+            "id": "fixed-work-costs-continue",
+            "title": "Fixed work costs continue",
+            "detail": "S$250.00 of weekly work costs are treated as fixed, so they continue even in a week with reduced earnings. It is worth checking whether rental, insurance, or subscription costs can be paused or reduced.",
+            "severity": "info",
+            "resource_ids": []
+          }
+        ],
+        "resources": [
+          {
+            "id": "supportgowhere",
+            "name": "SupportGoWhere",
+            "description": "Government directory of Singapore support schemes, with an eligibility checker.",
+            "url": "https://supportgowhere.life.gov.sg",
+            "last_reviewed": "2026-09-01"
+          }
+        ],
+        "disclaimers": [
+          "These figures are estimates calculated from the values you entered. They are not a prediction of what will happen.",
+          "Resilience does not provide financial advice and does not hold or transfer your money.",
+          "The estimate assumes your essential expenses and fixed work costs stay the same during the scenario.",
+          "Support scheme eligibility is decided only by the relevant government agency."
+        ]
+      }
+    },
+    {
+      "name": "thin-buffer-runs-out",
+      "description": "A worker with a small buffer loses 60 percent of earnings for six weeks.",
+      "request": {
+        "baseline": {
+          "weekly_gross_earnings_cents": 72000,
+          "weekly_variable_work_costs_cents": 12000,
+          "weekly_fixed_work_costs_cents": 22000,
+          "weekly_essential_expenses_cents": 38000,
+          "emergency_savings_cents": 15000
+        },
+        "scenario": {
+          "income_reduction_percent": 60,
+          "weeks_affected": 6,
+          "recovery_weeks": 2
+        }
+      },
+      "response": {
+        "baseline": {
+          "weekly_gross_earnings_cents": 72000,
+          "weekly_work_costs_cents": 34000,
+          "weekly_net_work_income_cents": 38000,
+          "weekly_essential_expenses_cents": 38000,
+          "weekly_surplus_cents": 0,
+          "emergency_savings_cents": 15000,
+          "emergency_savings_weeks_of_essentials": 0,
+          "runway_weeks": null
+        },
+        "scenario": {
+          "horizon_weeks": 12,
+          "weeks_affected": 6,
+          "recovery_weeks": 2,
+          "weekly_net_work_income_during_shock_cents": 2000,
+          "weekly_net_cash_flow_during_shock_cents": -36000,
+          "unexpected_cost_cents": 0,
+          "total_income_lost_cents": 252000,
+          "lowest_buffer_cents": 0,
+          "lowest_buffer_week": 1,
+          "buffer_runway_weeks": 0,
+          "first_shortfall_week": 1,
+          "total_shortfall_cents": 237000,
+          "buffer_at_horizon_cents": 0,
+          "buffer_holds_through_horizon": false,
+          "full_income_resumes_week": 9
+        },
+        "weeks": [
+          {
+            "week": 1,
+            "gross_earnings_cents": 28800,
+            "work_costs_cents": 26800,
+            "net_work_income_cents": 2000,
+            "essential_expenses_cents": 38000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -36000,
+            "buffer_open_cents": 15000,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 21000
+          },
+          {
+            "week": 2,
+            "gross_earnings_cents": 28800,
+            "work_costs_cents": 26800,
+            "net_work_income_cents": 2000,
+            "essential_expenses_cents": 38000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -36000,
+            "buffer_open_cents": 0,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 36000
+          },
+          {
+            "week": 3,
+            "gross_earnings_cents": 28800,
+            "work_costs_cents": 26800,
+            "net_work_income_cents": 2000,
+            "essential_expenses_cents": 38000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -36000,
+            "buffer_open_cents": 0,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 36000
+          },
+          {
+            "week": 4,
+            "gross_earnings_cents": 28800,
+            "work_costs_cents": 26800,
+            "net_work_income_cents": 2000,
+            "essential_expenses_cents": 38000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -36000,
+            "buffer_open_cents": 0,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 36000
+          },
+          {
+            "week": 5,
+            "gross_earnings_cents": 28800,
+            "work_costs_cents": 26800,
+            "net_work_income_cents": 2000,
+            "essential_expenses_cents": 38000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -36000,
+            "buffer_open_cents": 0,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 36000
+          },
+          {
+            "week": 6,
+            "gross_earnings_cents": 28800,
+            "work_costs_cents": 26800,
+            "net_work_income_cents": 2000,
+            "essential_expenses_cents": 38000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -36000,
+            "buffer_open_cents": 0,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 36000
+          },
+          {
+            "week": 7,
+            "gross_earnings_cents": 43200,
+            "work_costs_cents": 29200,
+            "net_work_income_cents": 14000,
+            "essential_expenses_cents": 38000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -24000,
+            "buffer_open_cents": 0,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 24000
+          },
+          {
+            "week": 8,
+            "gross_earnings_cents": 57600,
+            "work_costs_cents": 31600,
+            "net_work_income_cents": 26000,
+            "essential_expenses_cents": 38000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": -12000,
+            "buffer_open_cents": 0,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 12000
+          },
+          {
+            "week": 9,
+            "gross_earnings_cents": 72000,
+            "work_costs_cents": 34000,
+            "net_work_income_cents": 38000,
+            "essential_expenses_cents": 38000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 0,
+            "buffer_open_cents": 0,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 10,
+            "gross_earnings_cents": 72000,
+            "work_costs_cents": 34000,
+            "net_work_income_cents": 38000,
+            "essential_expenses_cents": 38000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 0,
+            "buffer_open_cents": 0,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 11,
+            "gross_earnings_cents": 72000,
+            "work_costs_cents": 34000,
+            "net_work_income_cents": 38000,
+            "essential_expenses_cents": 38000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 0,
+            "buffer_open_cents": 0,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 0
+          },
+          {
+            "week": 12,
+            "gross_earnings_cents": 72000,
+            "work_costs_cents": 34000,
+            "net_work_income_cents": 38000,
+            "essential_expenses_cents": 38000,
+            "one_off_cost_cents": 0,
+            "net_cash_flow_cents": 0,
+            "buffer_open_cents": 0,
+            "buffer_close_cents": 0,
+            "shortfall_cents": 0
+          }
+        ],
+        "actions": [
+          {
+            "id": "buffer-runs-out-during-shock",
+            "title": "Savings run out before the scenario ends",
+            "detail": "This estimate has your savings covering 0 weeks of a 6 weeks disruption, with an estimated S$2,370.00 not covered over the period shown.",
+            "severity": "attention",
+            "resource_ids": [
+              "supportgowhere",
+              "msf"
+            ]
+          },
+          {
+            "id": "fixed-work-costs-continue",
+            "title": "Fixed work costs continue",
+            "detail": "S$220.00 of weekly work costs are treated as fixed, so they continue even in a week with reduced earnings. It is worth checking whether rental, insurance, or subscription costs can be paused or reduced.",
+            "severity": "info",
+            "resource_ids": []
+          },
+          {
+            "id": "check-support-schemes",
+            "title": "Check which support you could apply for",
+            "detail": "The Scheme Navigator can pre-screen you against maintained scheme rules. Only the relevant agency can confirm eligibility.",
+            "severity": "info",
+            "resource_ids": [
+              "supportgowhere",
+              "msf",
+              "mom",
+              "cpf"
+            ]
+          }
+        ],
+        "resources": [
+          {
+            "id": "supportgowhere",
+            "name": "SupportGoWhere",
+            "description": "Government directory of Singapore support schemes, with an eligibility checker.",
+            "url": "https://supportgowhere.life.gov.sg",
+            "last_reviewed": "2026-09-01"
+          },
+          {
+            "id": "msf",
+            "name": "Ministry of Social and Family Development",
+            "description": "ComCare short-to-medium-term assistance, administered through Social Service Offices.",
+            "url": "https://www.msf.gov.sg",
+            "last_reviewed": "2026-09-01"
+          },
+          {
+            "id": "mom",
+            "name": "Ministry of Manpower",
+            "description": "Platform worker protections, including work injury compensation.",
+            "url": "https://www.mom.gov.sg",
+            "last_reviewed": "2026-09-01"
+          },
+          {
+            "id": "cpf",
+            "name": "Central Provident Fund Board",
+            "description": "MediSave and CPF information for self-employed and platform workers.",
+            "url": "https://www.cpf.gov.sg",
+            "last_reviewed": "2026-09-01"
+          }
+        ],
+        "disclaimers": [
+          "These figures are estimates calculated from the values you entered. They are not a prediction of what will happen.",
+          "Resilience does not provide financial advice and does not hold or transfer your money.",
+          "The estimate assumes your essential expenses and fixed work costs stay the same during the scenario.",
+          "Support scheme eligibility is decided only by the relevant government agency."
+        ]
+      }
+    }
+  ]
+}

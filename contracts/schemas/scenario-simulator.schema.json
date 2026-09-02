@@ -1,0 +1,373 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://resilience.local/contracts/scenario-simulator.schema.json",
+  "title": "Scenario Simulator",
+  "description": "Request and response contract for POST /scenario-simulator/simulate. All monetary values are integer cents in SGD. All periods are whole weeks, week 1 being the first week of the simulated shock.",
+  "$defs": {
+    "BaselineFinancesPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "weekly_gross_earnings_cents": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "weekly_variable_work_costs_cents": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "weekly_fixed_work_costs_cents": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "weekly_essential_expenses_cents": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "emergency_savings_cents": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "weekly_gross_earnings_cents",
+        "weekly_variable_work_costs_cents",
+        "weekly_fixed_work_costs_cents",
+        "weekly_essential_expenses_cents",
+        "emergency_savings_cents"
+      ]
+    },
+    "ShockScenarioPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "income_reduction_percent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "weeks_affected": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unexpected_cost_cents": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "recovery_weeks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "horizon_weeks": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        }
+      },
+      "required": [
+        "income_reduction_percent",
+        "weeks_affected"
+      ]
+    },
+    "SimulationRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "baseline": {
+          "$ref": "#/$defs/BaselineFinancesPayload"
+        },
+        "scenario": {
+          "$ref": "#/$defs/ShockScenarioPayload"
+        }
+      },
+      "required": [
+        "baseline",
+        "scenario"
+      ]
+    },
+    "WeekProjectionResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "week": {
+          "type": "integer"
+        },
+        "gross_earnings_cents": {
+          "type": "integer"
+        },
+        "work_costs_cents": {
+          "type": "integer"
+        },
+        "net_work_income_cents": {
+          "type": "integer"
+        },
+        "essential_expenses_cents": {
+          "type": "integer"
+        },
+        "one_off_cost_cents": {
+          "type": "integer"
+        },
+        "net_cash_flow_cents": {
+          "type": "integer"
+        },
+        "buffer_open_cents": {
+          "type": "integer"
+        },
+        "buffer_close_cents": {
+          "type": "integer"
+        },
+        "shortfall_cents": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "week",
+        "gross_earnings_cents",
+        "work_costs_cents",
+        "net_work_income_cents",
+        "essential_expenses_cents",
+        "one_off_cost_cents",
+        "net_cash_flow_cents",
+        "buffer_open_cents",
+        "buffer_close_cents",
+        "shortfall_cents"
+      ]
+    },
+    "BaselineSummaryResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "weekly_gross_earnings_cents": {
+          "type": "integer"
+        },
+        "weekly_work_costs_cents": {
+          "type": "integer"
+        },
+        "weekly_net_work_income_cents": {
+          "type": "integer"
+        },
+        "weekly_essential_expenses_cents": {
+          "type": "integer"
+        },
+        "weekly_surplus_cents": {
+          "type": "integer"
+        },
+        "emergency_savings_cents": {
+          "type": "integer"
+        },
+        "emergency_savings_weeks_of_essentials": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "runway_weeks": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "weekly_gross_earnings_cents",
+        "weekly_work_costs_cents",
+        "weekly_net_work_income_cents",
+        "weekly_essential_expenses_cents",
+        "weekly_surplus_cents",
+        "emergency_savings_cents",
+        "emergency_savings_weeks_of_essentials",
+        "runway_weeks"
+      ]
+    },
+    "ScenarioSummaryResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "horizon_weeks": {
+          "type": "integer"
+        },
+        "weeks_affected": {
+          "type": "integer"
+        },
+        "recovery_weeks": {
+          "type": "integer"
+        },
+        "weekly_net_work_income_during_shock_cents": {
+          "type": "integer"
+        },
+        "weekly_net_cash_flow_during_shock_cents": {
+          "type": "integer"
+        },
+        "unexpected_cost_cents": {
+          "type": "integer"
+        },
+        "total_income_lost_cents": {
+          "type": "integer"
+        },
+        "lowest_buffer_cents": {
+          "type": "integer"
+        },
+        "lowest_buffer_week": {
+          "type": "integer"
+        },
+        "buffer_runway_weeks": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "first_shortfall_week": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "total_shortfall_cents": {
+          "type": "integer"
+        },
+        "buffer_at_horizon_cents": {
+          "type": "integer"
+        },
+        "buffer_holds_through_horizon": {
+          "type": "boolean"
+        },
+        "full_income_resumes_week": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "horizon_weeks",
+        "weeks_affected",
+        "recovery_weeks",
+        "weekly_net_work_income_during_shock_cents",
+        "weekly_net_cash_flow_during_shock_cents",
+        "unexpected_cost_cents",
+        "total_income_lost_cents",
+        "lowest_buffer_cents",
+        "lowest_buffer_week",
+        "buffer_runway_weeks",
+        "first_shortfall_week",
+        "total_shortfall_cents",
+        "buffer_at_horizon_cents",
+        "buffer_holds_through_horizon",
+        "full_income_resumes_week"
+      ]
+    },
+    "PreparatoryActionResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string"
+        },
+        "resource_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "detail",
+        "severity",
+        "resource_ids"
+      ]
+    },
+    "OfficialResourceResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "last_reviewed": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "url",
+        "last_reviewed"
+      ]
+    },
+    "ScenarioResultResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "baseline": {
+          "$ref": "#/$defs/BaselineSummaryResponse"
+        },
+        "scenario": {
+          "$ref": "#/$defs/ScenarioSummaryResponse"
+        },
+        "weeks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WeekProjectionResponse"
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PreparatoryActionResponse"
+          }
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OfficialResourceResponse"
+          }
+        },
+        "disclaimers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "baseline",
+        "scenario",
+        "weeks",
+        "actions",
+        "resources",
+        "disclaimers"
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/SimulationRequest"
+    },
+    {
+      "$ref": "#/$defs/ScenarioResultResponse"
+    }
+  ]
+}

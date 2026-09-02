@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "resilience-jar-summary.schema.json",
+  "title": "Resilience Jar summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "plan",
+    "recommendation",
+    "progress",
+    "goal_review",
+    "completion_projection",
+    "milestones",
+    "weekly_essential_expenses_cents",
+    "contributions"
+  ],
+  "properties": {
+    "plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recommendation_method",
+        "target_frequency",
+        "target_amount_cents",
+        "weekly_target_cents",
+        "status",
+        "goal",
+        "goal_expense_baseline_cents",
+        "updated_at"
+      ],
+      "properties": {
+        "recommendation_method": {
+          "enum": ["conservative_4_week", "latest_week"]
+        },
+        "target_frequency": { "enum": ["weekly", "monthly"] },
+        "target_amount_cents": { "type": "integer", "minimum": 0 },
+        "weekly_target_cents": { "type": "integer", "minimum": 0 },
+        "status": { "enum": ["active", "paused"] },
+        "goal": { "$ref": "#/$defs/goal" },
+        "goal_expense_baseline_cents": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "updated_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        }
+      }
+    },
+    "recommendation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "method",
+        "amount_cents",
+        "latest_surplus_cents",
+        "history_weeks_used",
+        "as_of_week_start",
+        "rationale_code"
+      ],
+      "properties": {
+        "status": { "enum": ["ready", "insufficient_data"] },
+        "method": {
+          "enum": ["conservative_4_week", "latest_week"]
+        },
+        "amount_cents": { "type": ["integer", "null"], "minimum": 0 },
+        "latest_surplus_cents": { "type": ["integer", "null"] },
+        "history_weeks_used": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "as_of_week_start": { "type": ["string", "null"], "format": "date" },
+        "rationale_code": { "type": "string" }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contribution_total_cents",
+        "goal_target_cents",
+        "progress_percent",
+        "coverage_days",
+        "coverage_weeks"
+      ],
+      "properties": {
+        "contribution_total_cents": { "type": "integer", "minimum": 0 },
+        "goal_target_cents": { "type": ["integer", "null"], "minimum": 1 },
+        "progress_percent": { "type": ["number", "null"], "minimum": 0 },
+        "coverage_days": { "type": ["number", "null"], "minimum": 0 },
+        "coverage_weeks": { "type": ["number", "null"], "minimum": 0 }
+      }
+    },
+    "goal_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "previous_weekly_expenses_cents",
+        "current_weekly_expenses_cents",
+        "expense_change_cents"
+      ],
+      "properties": {
+        "status": {
+          "enum": ["up_to_date", "expenses_changed", "unavailable"]
+        },
+        "previous_weekly_expenses_cents": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "current_weekly_expenses_cents": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "expense_change_cents": { "type": ["integer", "null"] }
+      }
+    },
+    "completion_projection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "projected_date", "weeks_remaining", "remaining_cents"],
+      "properties": {
+        "status": {
+          "enum": ["projected", "complete", "paused", "no_weekly_target", "unavailable"]
+        },
+        "projected_date": { "type": ["string", "null"], "format": "date" },
+        "weeks_remaining": { "type": ["integer", "null"], "minimum": 0 },
+        "remaining_cents": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "milestones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["percentage", "target_cents", "reached"],
+        "properties": {
+          "percentage": { "enum": [25, 50, 75, 100] },
+          "target_cents": { "type": "integer", "minimum": 1 },
+          "reached": { "type": "boolean" }
+        }
+      }
+    },
+    "weekly_essential_expenses_cents": {
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "contributions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/contribution" }
+    }
+  },
+  "$defs": {
+    "goal": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "amount_cents"],
+          "properties": {
+            "mode": { "const": "amount" },
+            "amount_cents": { "type": "integer", "minimum": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "weeks"],
+          "properties": {
+            "mode": { "const": "coverage" },
+            "weeks": { "type": "integer", "minimum": 1, "maximum": 52 }
+          }
+        }
+      ]
+    },
+    "contribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "entry_type",
+        "amount_cents",
+        "contribution_date",
+        "note",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "entry_type": { "enum": ["deposit", "withdrawal"] },
+        "amount_cents": { "type": "integer", "minimum": 1 },
+        "contribution_date": { "type": "string", "format": "date" },
+        "note": { "type": ["string", "null"], "maxLength": 200 },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

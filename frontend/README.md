@@ -1,6 +1,24 @@
 # Frontend
 
-This directory will contain the React, TypeScript, Tailwind CSS, and PWA client. It is organised by product feature so each workstream owns an isolated vertical slice.
+This directory contains the integrated React, TypeScript, Vite, and Tailwind client for the Emergency Fund and Scenario Simulator. The Emergency Fund uses synthetic browser-local data; the Scenario Simulator calls the local FastAPI service. Full PWA support remains deferred.
+
+## Run locally
+
+Use Node.js 24 and npm 11. From this directory:
+
+```bash
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173/resilience-jar` to track the emergency fund, `http://localhost:5173/resilience-jar/plan` for its settings, or `http://localhost:5173/scenario-simulator` to plan for a setback. The shared header provides client-side navigation, and browser back/forward navigation is supported.
+
+Available checks:
+
+```bash
+npm test
+npm run build
+```
 
 ## Placement rules
 
@@ -11,4 +29,4 @@ This directory will contain the React, TypeScript, Tailwind CSS, and PWA client.
 - Put genuinely cross-feature TypeScript types in `src/types/`; feature-only types stay with their feature.
 - Put browser and end-to-end tests in `tests/`; colocate focused component tests with their source when the test tooling is selected.
 
-The initial package manifest and verified run commands are owned by `feature/01-foundation-input`.
+The shell is deliberately small and uses feature-owned CSS rather than introducing a shared design system. Workstream 1 can later replace the fixture adapter and extend the app composition without changing the feature component.
