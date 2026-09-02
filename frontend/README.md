@@ -1,6 +1,6 @@
 # Frontend
 
-This directory contains a runnable React, TypeScript, and Vite client. The current shell mounts the Emergency Fund with synthetic in-memory data so it can run before the shared API and database foundations land. The existing `resilience-jar` module and routes remain stable integration identifiers. Tailwind CSS and full PWA support remain deferred.
+This directory contains the integrated React, TypeScript, Vite, and Tailwind client for the Emergency Fund and Scenario Simulator. The Emergency Fund uses synthetic browser-local data; the Scenario Simulator calls the local FastAPI service. Full PWA support remains deferred.
 
 ## Run locally
 
@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173/resilience-jar` to track the emergency fund. Plan and goal settings are available at `http://127.0.0.1:5173/resilience-jar/plan`. Navigation between the two views preserves the current local demo state. The root URL shows the Emergency Fund, and unknown paths show a small not-found page.
+Open `http://localhost:5173/resilience-jar` to track the emergency fund, `http://localhost:5173/resilience-jar/plan` for its settings, or `http://localhost:5173/scenario-simulator` to plan for a setback. The shared header provides client-side navigation, and browser back/forward navigation is supported.
 
 Available checks:
 

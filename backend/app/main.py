@@ -11,6 +11,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.features.resilience_jar.routes import create_demo_router
 from app.features.scenario_simulator.router import router as scenario_simulator_router
 
 app = FastAPI(title="Resilience API", version="0.1.0")
@@ -19,7 +20,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")],
     allow_credentials=False,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
     allow_headers=["Content-Type"],
 )
 
@@ -30,3 +31,4 @@ def health() -> dict[str, str]:
 
 
 app.include_router(scenario_simulator_router)
+app.include_router(create_demo_router())

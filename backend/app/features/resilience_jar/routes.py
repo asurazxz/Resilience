@@ -13,7 +13,7 @@ def create_router(
     user_id_provider: Callable[[], str],
 ):
     """Create the feature router without coupling it to shared app composition."""
-    from fastapi import APIRouter, Depends, Response
+    from fastapi import APIRouter, Body, Depends, Response
     from fastapi.responses import JSONResponse
 
     router = APIRouter(prefix="/api/v1/resilience-jar", tags=["resilience-jar"])
@@ -30,7 +30,8 @@ def create_router(
 
     @router.patch("/plan")
     def patch_plan(
-        payload: Any, user_id: str = Depends(user_id_provider)
+        payload: dict[str, Any] = Body(...),
+        user_id: str = Depends(user_id_provider),
     ):
         try:
             return summary_dict(service.patch_plan(user_id, payload))
@@ -39,7 +40,8 @@ def create_router(
 
     @router.post("/contributions", status_code=201)
     def create_contribution(
-        payload: Any, user_id: str = Depends(user_id_provider)
+        payload: dict[str, Any] = Body(...),
+        user_id: str = Depends(user_id_provider),
     ):
         try:
             return contribution_dict(service.create_contribution(user_id, payload))
@@ -48,7 +50,8 @@ def create_router(
 
     @router.post("/withdrawals", status_code=201)
     def create_withdrawal(
-        payload: Any, user_id: str = Depends(user_id_provider)
+        payload: dict[str, Any] = Body(...),
+        user_id: str = Depends(user_id_provider),
     ):
         try:
             return contribution_dict(service.create_withdrawal(user_id, payload))
@@ -58,7 +61,7 @@ def create_router(
     @router.patch("/contributions/{contribution_id}")
     def update_contribution(
         contribution_id: str,
-        payload: Any,
+        payload: dict[str, Any] = Body(...),
         user_id: str = Depends(user_id_provider),
     ):
         try:

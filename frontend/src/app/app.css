@@ -65,6 +65,27 @@ a:focus-visible {
   padding: 0.3rem 0.6rem;
 }
 
+.app-nav {
+  align-items: center;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.app-nav a {
+  border-radius: 10rem;
+  color: #d8f0e3;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 0.45rem 0.7rem;
+  text-decoration: none;
+}
+
+.app-nav a:hover,
+.app-nav a[aria-current="page"] {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
 .app-not-found {
   margin: 12vh auto;
   max-width: 32rem;
@@ -82,4 +103,21 @@ a:focus-visible {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+@media (max-width: 42rem) {
+  .app-header {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .app-nav {
+    order: 3;
+    width: 100%;
+  }
+
+  .app-nav a {
+    flex: 1;
+    text-align: center;
+  }
 }

@@ -1,6 +1,6 @@
 # Backend
 
-This directory will contain the Python and FastAPI service. Product logic is grouped by feature, while cross-cutting infrastructure and external services have explicit boundaries.
+This directory contains the provisional FastAPI service. Its application shell mounts both the Scenario Simulator router and the synthetic Emergency Fund router while the shared database and authentication foundations remain pending.
 
 ## Placement rules
 
@@ -13,12 +13,18 @@ This directory will contain the Python and FastAPI service. Product logic is gro
 
 The initial FastAPI package, dependency manifest, and application entry point are owned by `feature/01-foundation-input`.
 
-## Current feature checks
+## Run and check
 
-The Emergency Fund deterministic core, retained under the `resilience_jar` integration module, uses only the Python standard library and can be checked before the shared FastAPI manifest lands:
+From the repository root:
 
 ```bash
-python3 -m unittest discover -s backend/tests -p 'test_*.py' -v
+python3 -m venv .venv
+.venv/bin/python -m pip install -r backend/requirements.txt
+cd backend && ../.venv/bin/python -m uvicorn app.main:app --reload --port 8000
 ```
 
-Its FastAPI route tests skip automatically until Workstream 1 supplies FastAPI and the application test dependencies.
+Run all backend tests from the repository root with:
+
+```bash
+PYTHONPATH=backend:. .venv/bin/python -m unittest discover -s backend/tests -p 'test_*.py'
+```

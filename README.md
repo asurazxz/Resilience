@@ -61,8 +61,7 @@ Frontend and backend feature folders use the same five workstream boundaries so 
 
 ## Local setup
 
-The commands below are verified on macOS with Python 3.13.7 and Node 22. The React and FastAPI manifests currently in the tree are **provisional**, added on `feature/05-scenario-simulator` so the Scenario Simulator can be demonstrated; `feature/01-foundation-input` owns the canonical versions and should replace them.
-The Emergency Fund frontend is runnable as a local React and Vite demo using synthetic data. The shared FastAPI application and database integration are still pending Workstream 1. Existing `/resilience-jar` paths remain unchanged for compatibility.
+The merged development app runs the Emergency Fund and Scenario Simulator in one React shell. The Emergency Fund still uses a browser-local synthetic adapter; the Scenario Simulator calls the local FastAPI service.
 
 ### 1. Clone and read the agent rules
 
@@ -84,7 +83,7 @@ git switch feature/01-foundation-input
 
 Replace the branch name with the branch assigned to you.
 
-### 3. Install the planned local prerequisites
+### 3. Install prerequisites
 
 - Git
 - Node.js 20.19+ or 22.12+ and npm 10+ for the React client. Vite 8 refuses older releases, and its Rolldown bundler needs a native binary per platform (see step 4)
@@ -93,29 +92,18 @@ Replace the branch name with the branch assigned to you.
 - Supabase CLI only when creating, applying, or testing database migrations locally
 - Tesseract only if working on the optional OCR path
 
-### 4. Configure and run the apps
-### 4. Install and run the frontend
+### 4. Configure the local environment
 
-From the repository root:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Open `http://127.0.0.1:5173/resilience-jar` in a browser. Run `npm test` for the feature tests and `npm run build` for a production compilation check.
-
-### 5. Configure future backend integration
-
-Copy the package-specific example environment files rather than sharing secrets:
+Copy the package-specific examples rather than sharing secrets:
 
 ```bash
 cp frontend/.env.example frontend/.env
 cp backend/.env.example backend/.env
 ```
 
-On PowerShell, use `Copy-Item` instead of `cp`. `frontend/.env` must exist before starting the client: without `VITE_API_BASE_URL` the browser posts to the Vite port and every request returns 404.
+On PowerShell, use `Copy-Item` instead of `cp`. The example frontend configuration points the simulator to the local API on port 8000.
+
+### 5. Install dependencies
 
 Install and run the API from the repository root:
 
@@ -124,42 +112,33 @@ python3 -m venv .venv && .venv/bin/python -m pip install -r backend/requirements
 ```
 
 ```bash
-cd backend && ../.venv/bin/uvicorn app.main:app --reload --port 8000
-```
-
-Install and run the client in a second terminal:
-
-```bash
 cd frontend && npm install
 ```
+
+### 6. Run both apps
+
+Start the API from the repository root:
+
+```bash
+cd backend && ../.venv/bin/python -m uvicorn app.main:app --reload --port 8000
+```
+
+Start the client in a second terminal:
 
 ```bash
 cd frontend && npm run dev
 ```
 
-The client runs on <http://localhost:5173> and the API on <http://localhost:8000>, with interactive API docs at <http://localhost:8000/docs>.
+Open <http://localhost:5173/resilience-jar> for the Emergency Fund or <http://localhost:5173/scenario-simulator> for the Setback Planner. API documentation is available at <http://localhost:8000/docs>.
 
-Run the deterministic backend tests (no third-party packages required):
+Run the complete checks from the repository root:
 
 ```bash
-cd backend && PYTHONPATH=. python3 tests/unit/test_scenario_simulator.py
+PYTHONPATH=backend:. .venv/bin/python -m unittest discover -s backend/tests -p 'test_*.py'
+cd frontend && npm test && npm run build
 ```
 
-If `npm run dev` fails with `Cannot find module '@rolldown/binding-*'`, npm skipped Vite's optional native binary. Install the one matching your platform, for example on an Intel Mac:
-
-```bash
-cd frontend && npm install --save-dev @rolldown/binding-darwin-x64
-On PowerShell, use `Copy-Item` instead of `cp`. The provisional backend workflow is:
-
-```bash
-# Backend package (from the repository root in a separate terminal)
-python -m venv .venv
-# Activate .venv using the command for your shell
-python -m pip install -r backend/requirements.txt
-fastapi dev backend/app/main.py
-```
-
-Do not commit `.env`, credentials, user uploads, OCR output, local databases, or real financial data. The current local frontend intentionally uses a synthetic in-memory adapter and does not need backend credentials.
+Do not commit `.env`, credentials, user uploads, OCR output, local databases, or real financial data.
 
 ## Team workflow
 
