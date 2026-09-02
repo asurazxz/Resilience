@@ -102,7 +102,7 @@ export function ScenarioSimulatorPage({ baseline }: ScenarioSimulatorPageProps) 
             <HeadlineAnswer scenario={result.scenario} />
             <ScenarioSummary baseline={result.baseline} scenario={result.scenario} />
             <ResultDetails weeks={result.weeks} />
-            <PreparatoryActions actions={result.actions} resources={result.resources} />
+            <PreparatoryActions actions={result.actions} />
             <EstimateDisclaimers disclaimers={result.disclaimers} />
           </div>
         ) : (

@@ -1,19 +1,23 @@
 /**
- * Preparatory prompts and official links.
+ * Preparatory prompts.
  *
  * All wording arrives from the deterministic backend rules. This component
  * renders it and adds no guidance of its own.
+ *
+ * The API still returns official source links alongside these prompts, and
+ * they are deliberately not rendered here: feature/04-scheme-navigator owns the
+ * curated source registry, including each entry's effective and last-reviewed
+ * dates.
  */
 
-import type { OfficialResource, PreparatoryAction } from '../types';
+import type { PreparatoryAction } from '../types';
 
 export interface PreparatoryActionsProps {
   actions: PreparatoryAction[];
-  resources: OfficialResource[];
 }
 
-export function PreparatoryActions({ actions, resources }: PreparatoryActionsProps) {
-  if (actions.length === 0 && resources.length === 0) {
+export function PreparatoryActions({ actions }: PreparatoryActionsProps) {
+  if (actions.length === 0) {
     return null;
   }
 
@@ -38,30 +42,6 @@ export function PreparatoryActions({ actions, resources }: PreparatoryActionsPro
           </li>
         ))}
       </ul>
-
-      {resources.length > 0 ? (
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-slate-900">Official sources</h3>
-          <ul className="space-y-2">
-            {resources.map((resource) => (
-              <li key={resource.id} className="rounded-xl border border-slate-200 bg-white p-4">
-                <a
-                  href={resource.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-semibold text-teal-700 underline underline-offset-2"
-                >
-                  {resource.name}
-                </a>
-                <p className="mt-1 text-sm text-slate-700">{resource.description}</p>
-                <p className="mt-1 text-xs text-slate-500">
-                  Link last reviewed {resource.last_reviewed}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
     </section>
   );
 }

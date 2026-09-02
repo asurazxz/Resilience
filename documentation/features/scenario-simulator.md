@@ -130,7 +130,8 @@ After the provisional manifests landed, the remaining layers were verified by ru
 
 Still not verified:
 
-- The official resource URLs were **not** fetched. They are well-known Singapore government entry points recorded with a `last_reviewed` date, but they need confirming before the demo.
+- The official source links are **no longer shown on the screen**, at the user's request. The API still returns them with each result, and `feature/04-scheme-navigator` owns the curated source registry including effective and last-reviewed dates, so that slice is where they should reappear. Note this removes "relevant official resources" from the Workstream 5 acceptance checks in `initial-scaffold.md`.
+- Those URLs were never fetched to confirm they resolve.
 - No automated frontend tests. `frontend/tests/` is still empty and the test runner is not chosen.
 - PWA behaviour, offline caching, and the service worker. These belong to Workstream 1 and are absent.
 
