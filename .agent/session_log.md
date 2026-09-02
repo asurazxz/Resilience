@@ -2,6 +2,27 @@
 
 Append significant sessions in reverse chronological order. Keep entries concise and factual.
 
+## 2026-09-01 — Income Reality Engine (workstream 2) integration seam and live demo
+
+- User asked how to test/run the frontend now that it existed. Ran a genuine live end-to-end demo instead of
+  only a type-check: a real `uvicorn`-served FastAPI app (`backend/_demo_main.py`, temporary) mounting the
+  actual router on `localhost:8000`, and a real Vite dev server (temporary `package.json`/`vite.config.ts`/
+  `index.html` under `frontend/`) on `localhost:5173`. Verified the backend returned the exact fixture response
+  over real HTTP, and Vite transformed every module with no compile errors. Both ports confirmed listening, then
+  stopped by PID after the user was done looking; all temporary files removed and `git status` confirmed clean.
+- User pointed out the demo only used mock scenario data with no defined path for `feature/01-foundation-input`'s
+  future manual-entry data to flow in. Added the integration seam, scoped to Workstream 2's own ownership
+  boundary (not touching `frontend/src/app/`, which doesn't exist yet and is Workstream 1's):
+  `useIncomeRealityBreakdown.ts` (fetch/loading/error/assumptions state, keyed off a JSON-serialised `weeks`
+  value so callers don't need to memoise the array) and `IncomeRealityPage.tsx` (takes `weeks: WeeklyEntryIn[]`
+  as its only prop; handles empty/loading/error states). Whoever builds routing later renders
+  `<IncomeRealityPage weeks={...} />` with real entries - documented as the exact seam in
+  `documentation/features/income-reality.md`.
+- Rewired the temporary demo to go through `IncomeRealityPage` instead of ad hoc fetch logic, confirmed via the
+  live servers that the new hook/page still transform and respond correctly, and ran a full `tsc --noEmit` over
+  all of `frontend/src` (0 errors) before tearing the demo down.
+- Committed as `f2f1ca7` and pushed.
+
 ## 2026-09-01 — Income Reality Engine (workstream 2) test execution follow-up
 
 - Follow-up to the initial-implementation entry below, in the same session: user asked how the written tests
