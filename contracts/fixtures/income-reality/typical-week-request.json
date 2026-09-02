@@ -1,0 +1,17 @@
+{
+  "weeks": [
+    {
+      "week_start": "2026-08-24",
+      "platform_earnings": [
+        { "platform": "Grab", "gross_cents": 45000 },
+        { "platform": "Foodpanda", "gross_cents": 12000 }
+      ],
+      "work_costs_cents": 8000,
+      "essential_expenses_cents": 30000
+    }
+  ],
+  "assumptions": {
+    "apply_cpf": false,
+    "cpf_rate_bps": 800
+  }
+}

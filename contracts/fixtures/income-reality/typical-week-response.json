@@ -1,0 +1,29 @@
+{
+  "weeks": [
+    {
+      "week_start": "2026-08-24",
+      "gross_earnings_cents": 57000,
+      "platform_breakdown": [
+        { "platform": "Grab", "gross_cents": 45000 },
+        { "platform": "Foodpanda", "gross_cents": 12000 }
+      ],
+      "work_costs_cents": 8000,
+      "cpf_cents": 0,
+      "net_income_cents": 49000,
+      "essential_expenses_cents": 30000,
+      "surplus_cents": 19000
+    }
+  ],
+  "trend": {
+    "weeks_considered": 1,
+    "average_net_income_cents": 49000,
+    "min_net_income_cents": 49000,
+    "max_net_income_cents": 49000,
+    "stdev_net_income_cents": 0,
+    "conservative_weekly_income_cents": 49000
+  },
+  "assumptions_applied": {
+    "apply_cpf": false,
+    "cpf_rate_bps": 800
+  }
+}

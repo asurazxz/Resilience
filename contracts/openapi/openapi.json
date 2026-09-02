@@ -1,0 +1,1839 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Resilience API",
+    "description": "Deterministic application boundary for the Resilience prototype.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/foundation/bootstrap": {
+      "get": {
+        "tags": [
+          "foundation-input"
+        ],
+        "summary": "Bootstrap",
+        "operationId": "bootstrap_api_v1_foundation_bootstrap_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoundationBootstrap"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/foundation/onboarding": {
+      "put": {
+        "tags": [
+          "foundation-input"
+        ],
+        "summary": "Onboarding",
+        "operationId": "onboarding_api_v1_foundation_onboarding_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnboardingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoundationBootstrap"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/foundation/profile": {
+      "patch": {
+        "tags": [
+          "foundation-input"
+        ],
+        "summary": "Profile Update",
+        "operationId": "profile_update_api_v1_foundation_profile_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/foundation/recurring-work-costs/{item_id}": {
+      "put": {
+        "tags": [
+          "foundation-input"
+        ],
+        "summary": "Recurring Put",
+        "operationId": "recurring_put_api_v1_foundation_recurring_work_costs__item_id__put",
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecurringWorkCostInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringWorkCostResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "foundation-input"
+        ],
+        "summary": "Recurring Delete",
+        "operationId": "recurring_delete_api_v1_foundation_recurring_work_costs__item_id__delete",
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/foundation/essential-expenses/{item_id}": {
+      "put": {
+        "tags": [
+          "foundation-input"
+        ],
+        "summary": "Essential Put",
+        "operationId": "essential_put_api_v1_foundation_essential_expenses__item_id__put",
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EssentialExpenseInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EssentialExpenseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "foundation-input"
+        ],
+        "summary": "Essential Delete",
+        "operationId": "essential_delete_api_v1_foundation_essential_expenses__item_id__delete",
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/foundation/weeks": {
+      "get": {
+        "tags": [
+          "foundation-input"
+        ],
+        "summary": "Weeks List",
+        "operationId": "weeks_list_api_v1_foundation_weeks_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WeeklyEntryResponse"
+                  },
+                  "title": "Response Weeks List Api V1 Foundation Weeks Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/foundation/weeks/{week_start}": {
+      "get": {
+        "tags": [
+          "foundation-input"
+        ],
+        "summary": "Week Get",
+        "operationId": "week_get_api_v1_foundation_weeks__week_start__get",
+        "parameters": [
+          {
+            "name": "week_start",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Week Start"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeeklyEntryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "foundation-input"
+        ],
+        "summary": "Week Put",
+        "operationId": "week_put_api_v1_foundation_weeks__week_start__put",
+        "parameters": [
+          {
+            "name": "week_start",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Week Start"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeeklyEntryUpsert"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeeklyEntryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "foundation-input"
+        ],
+        "summary": "Week Delete",
+        "operationId": "week_delete_api_v1_foundation_weeks__week_start__delete",
+        "parameters": [
+          {
+            "name": "week_start",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Week Start"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/foundation/imports/csv/template": {
+      "get": {
+        "tags": [
+          "foundation-input"
+        ],
+        "summary": "Csv Template",
+        "operationId": "csv_template_api_v1_foundation_imports_csv_template_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/foundation/imports/csv/preview": {
+      "post": {
+        "tags": [
+          "foundation-input"
+        ],
+        "summary": "Csv Preview",
+        "operationId": "csv_preview_api_v1_foundation_imports_csv_preview_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_csv_preview_api_v1_foundation_imports_csv_preview_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsvPreviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/foundation/data": {
+      "delete": {
+        "tags": [
+          "foundation-input"
+        ],
+        "summary": "Data Reset",
+        "operationId": "data_reset_api_v1_foundation_data_delete",
+        "parameters": [
+          {
+            "name": "X-Confirm-Reset",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Confirm-Reset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoundationBootstrap"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/income-reality/breakdown": {
+      "post": {
+        "tags": [
+          "income-reality"
+        ],
+        "summary": "Post Breakdown",
+        "operationId": "post_breakdown_api_v1_income_reality_breakdown_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IncomeRealityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncomeRealityResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Ready",
+        "operationId": "ready_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Ready Ready Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AssumptionsIn": {
+        "properties": {
+          "apply_cpf": {
+            "type": "boolean",
+            "title": "Apply Cpf",
+            "default": false
+          },
+          "cpf_rate_bps": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Cpf Rate Bps",
+            "default": 800
+          }
+        },
+        "type": "object",
+        "title": "AssumptionsIn"
+      },
+      "Body_csv_preview_api_v1_foundation_imports_csv_preview_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_csv_preview_api_v1_foundation_imports_csv_preview_post"
+      },
+      "CsvPreviewResponse": {
+        "properties": {
+          "fileName": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "fileSha256": {
+            "type": "string",
+            "title": "Filesha256"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/CsvPreviewRow"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "validCount": {
+            "type": "integer",
+            "title": "Validcount"
+          },
+          "invalidCount": {
+            "type": "integer",
+            "title": "Invalidcount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fileName",
+          "fileSha256",
+          "rows",
+          "validCount",
+          "invalidCount"
+        ],
+        "title": "CsvPreviewResponse"
+      },
+      "CsvPreviewRow": {
+        "properties": {
+          "rowNumber": {
+            "type": "integer",
+            "title": "Rownumber"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "valid",
+              "invalid"
+            ],
+            "title": "Status"
+          },
+          "weekStart": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekstart"
+          },
+          "recordType": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "earning",
+                  "variable_work_cost"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recordtype"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "amountCents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amountcents"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rowNumber",
+          "status"
+        ],
+        "title": "CsvPreviewRow"
+      },
+      "EarningInput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "platformCode": {
+            "type": "string",
+            "enum": [
+              "grab",
+              "gojek",
+              "tada",
+              "deliveroo",
+              "foodpanda",
+              "lalamove",
+              "other"
+            ],
+            "title": "Platformcode"
+          },
+          "platformLabel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Platformlabel"
+          },
+          "amountCents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Amountcents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "platformCode",
+          "amountCents"
+        ],
+        "title": "EarningInput"
+      },
+      "EssentialExpenseInput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "housing",
+              "food",
+              "transport",
+              "utilities",
+              "healthcare",
+              "caregiving",
+              "debt",
+              "other"
+            ],
+            "title": "Category"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "amountCents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Amountcents"
+          },
+          "cadence": {
+            "type": "string",
+            "enum": [
+              "weekly",
+              "monthly"
+            ],
+            "title": "Cadence"
+          },
+          "isActive": {
+            "type": "boolean",
+            "title": "Isactive",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "label",
+          "amountCents",
+          "cadence"
+        ],
+        "title": "EssentialExpenseInput"
+      },
+      "EssentialExpenseResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "housing",
+              "food",
+              "transport",
+              "utilities",
+              "healthcare",
+              "caregiving",
+              "debt",
+              "other"
+            ],
+            "title": "Category"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "amountCents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Amountcents"
+          },
+          "cadence": {
+            "type": "string",
+            "enum": [
+              "weekly",
+              "monthly"
+            ],
+            "title": "Cadence"
+          },
+          "isActive": {
+            "type": "boolean",
+            "title": "Isactive",
+            "default": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "label",
+          "amountCents",
+          "cadence",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "EssentialExpenseResponse"
+      },
+      "FoundationBootstrap": {
+        "properties": {
+          "profile": {
+            "$ref": "#/components/schemas/ProfileResponse"
+          },
+          "recurringWorkCosts": {
+            "items": {
+              "$ref": "#/components/schemas/RecurringWorkCostResponse"
+            },
+            "type": "array",
+            "title": "Recurringworkcosts"
+          },
+          "essentialExpenses": {
+            "items": {
+              "$ref": "#/components/schemas/EssentialExpenseResponse"
+            },
+            "type": "array",
+            "title": "Essentialexpenses"
+          },
+          "weeklyEntries": {
+            "items": {
+              "$ref": "#/components/schemas/WeeklyEntryResponse"
+            },
+            "type": "array",
+            "title": "Weeklyentries"
+          },
+          "syncedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Syncedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profile",
+          "recurringWorkCosts",
+          "essentialExpenses",
+          "weeklyEntries",
+          "syncedAt"
+        ],
+        "title": "FoundationBootstrap"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "IncomeRealityRequest": {
+        "properties": {
+          "weeks": {
+            "items": {
+              "$ref": "#/components/schemas/WeeklyEntryIn"
+            },
+            "type": "array",
+            "maxItems": 52,
+            "minItems": 1,
+            "title": "Weeks"
+          },
+          "assumptions": {
+            "$ref": "#/components/schemas/AssumptionsIn"
+          }
+        },
+        "type": "object",
+        "required": [
+          "weeks"
+        ],
+        "title": "IncomeRealityRequest"
+      },
+      "IncomeRealityResponse": {
+        "properties": {
+          "weeks": {
+            "items": {
+              "$ref": "#/components/schemas/WeekBreakdownOut"
+            },
+            "type": "array",
+            "title": "Weeks"
+          },
+          "trend": {
+            "$ref": "#/components/schemas/TrendSummaryOut"
+          },
+          "assumptions_applied": {
+            "$ref": "#/components/schemas/AssumptionsIn"
+          }
+        },
+        "type": "object",
+        "required": [
+          "weeks",
+          "trend",
+          "assumptions_applied"
+        ],
+        "title": "IncomeRealityResponse"
+      },
+      "InputSnapshot": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "sourceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourceid"
+          },
+          "inputKind": {
+            "type": "string",
+            "enum": [
+              "recurring_work_cost",
+              "essential_expense"
+            ],
+            "title": "Inputkind"
+          },
+          "category": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Category"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "amountCents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Amountcents"
+          },
+          "cadence": {
+            "type": "string",
+            "enum": [
+              "weekly",
+              "monthly"
+            ],
+            "title": "Cadence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "inputKind",
+          "category",
+          "label",
+          "amountCents",
+          "cadence"
+        ],
+        "title": "InputSnapshot"
+      },
+      "OnboardingRequest": {
+        "properties": {
+          "emergencySavingsCents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Emergencysavingscents"
+          },
+          "recurringWorkCosts": {
+            "items": {
+              "$ref": "#/components/schemas/RecurringWorkCostInput"
+            },
+            "type": "array",
+            "maxItems": 30,
+            "title": "Recurringworkcosts"
+          },
+          "essentialExpenses": {
+            "items": {
+              "$ref": "#/components/schemas/EssentialExpenseInput"
+            },
+            "type": "array",
+            "maxItems": 30,
+            "title": "Essentialexpenses"
+          },
+          "firstWeekStart": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Firstweekstart"
+          },
+          "firstWeek": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WeeklyEntryUpsert"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "emergencySavingsCents"
+        ],
+        "title": "OnboardingRequest"
+      },
+      "PlatformEarningIn": {
+        "properties": {
+          "platform": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Platform"
+          },
+          "gross_cents": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Gross Cents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "platform",
+          "gross_cents"
+        ],
+        "title": "PlatformEarningIn"
+      },
+      "PlatformEarningOut": {
+        "properties": {
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "gross_cents": {
+            "type": "integer",
+            "title": "Gross Cents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "platform",
+          "gross_cents"
+        ],
+        "title": "PlatformEarningOut"
+      },
+      "ProfileResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone"
+          },
+          "onboardingCompleted": {
+            "type": "boolean",
+            "title": "Onboardingcompleted"
+          },
+          "latestEmergencySavingsCents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Latestemergencysavingscents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "currency",
+          "timezone",
+          "onboardingCompleted",
+          "latestEmergencySavingsCents"
+        ],
+        "title": "ProfileResponse"
+      },
+      "ProfileUpdate": {
+        "properties": {
+          "latestEmergencySavingsCents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Latestemergencysavingscents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "latestEmergencySavingsCents"
+        ],
+        "title": "ProfileUpdate"
+      },
+      "RecurringWorkCostInput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "vehicle_rental",
+              "insurance",
+              "subscription",
+              "equipment",
+              "other"
+            ],
+            "title": "Category"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "amountCents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Amountcents"
+          },
+          "cadence": {
+            "type": "string",
+            "enum": [
+              "weekly",
+              "monthly"
+            ],
+            "title": "Cadence"
+          },
+          "isActive": {
+            "type": "boolean",
+            "title": "Isactive",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "label",
+          "amountCents",
+          "cadence"
+        ],
+        "title": "RecurringWorkCostInput"
+      },
+      "RecurringWorkCostResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "vehicle_rental",
+              "insurance",
+              "subscription",
+              "equipment",
+              "other"
+            ],
+            "title": "Category"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "amountCents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Amountcents"
+          },
+          "cadence": {
+            "type": "string",
+            "enum": [
+              "weekly",
+              "monthly"
+            ],
+            "title": "Cadence"
+          },
+          "isActive": {
+            "type": "boolean",
+            "title": "Isactive",
+            "default": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "label",
+          "amountCents",
+          "cadence",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "RecurringWorkCostResponse"
+      },
+      "TrendSummaryOut": {
+        "properties": {
+          "weeks_considered": {
+            "type": "integer",
+            "title": "Weeks Considered"
+          },
+          "average_net_income_cents": {
+            "type": "integer",
+            "title": "Average Net Income Cents"
+          },
+          "min_net_income_cents": {
+            "type": "integer",
+            "title": "Min Net Income Cents"
+          },
+          "max_net_income_cents": {
+            "type": "integer",
+            "title": "Max Net Income Cents"
+          },
+          "stdev_net_income_cents": {
+            "type": "integer",
+            "title": "Stdev Net Income Cents"
+          },
+          "conservative_weekly_income_cents": {
+            "type": "integer",
+            "title": "Conservative Weekly Income Cents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "weeks_considered",
+          "average_net_income_cents",
+          "min_net_income_cents",
+          "max_net_income_cents",
+          "stdev_net_income_cents",
+          "conservative_weekly_income_cents"
+        ],
+        "title": "TrendSummaryOut"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VariableCostInput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "fuel",
+              "charging",
+              "tolls",
+              "parking",
+              "repairs",
+              "platform_fees",
+              "cpf",
+              "other"
+            ],
+            "title": "Category"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "amountCents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Amountcents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "label",
+          "amountCents"
+        ],
+        "title": "VariableCostInput"
+      },
+      "WeekBreakdownOut": {
+        "properties": {
+          "week_start": {
+            "type": "string",
+            "title": "Week Start"
+          },
+          "gross_earnings_cents": {
+            "type": "integer",
+            "title": "Gross Earnings Cents"
+          },
+          "platform_breakdown": {
+            "items": {
+              "$ref": "#/components/schemas/PlatformEarningOut"
+            },
+            "type": "array",
+            "title": "Platform Breakdown"
+          },
+          "work_costs_cents": {
+            "type": "integer",
+            "title": "Work Costs Cents"
+          },
+          "cpf_cents": {
+            "type": "integer",
+            "title": "Cpf Cents"
+          },
+          "net_income_cents": {
+            "type": "integer",
+            "title": "Net Income Cents"
+          },
+          "essential_expenses_cents": {
+            "type": "integer",
+            "title": "Essential Expenses Cents"
+          },
+          "surplus_cents": {
+            "type": "integer",
+            "title": "Surplus Cents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "week_start",
+          "gross_earnings_cents",
+          "platform_breakdown",
+          "work_costs_cents",
+          "cpf_cents",
+          "net_income_cents",
+          "essential_expenses_cents",
+          "surplus_cents"
+        ],
+        "title": "WeekBreakdownOut"
+      },
+      "WeeklyEntryIn": {
+        "properties": {
+          "week_start": {
+            "type": "string",
+            "title": "Week Start",
+            "description": "ISO 8601 date, Monday of the week"
+          },
+          "platform_earnings": {
+            "items": {
+              "$ref": "#/components/schemas/PlatformEarningIn"
+            },
+            "type": "array",
+            "title": "Platform Earnings"
+          },
+          "work_costs_cents": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Work Costs Cents",
+            "default": 0
+          },
+          "essential_expenses_cents": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Essential Expenses Cents",
+            "default": 0
+          },
+          "recorded_cpf_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded Cpf Cents",
+            "description": "Actual recorded CPF/MediSave amount; overrides the estimate for this week"
+          }
+        },
+        "type": "object",
+        "required": [
+          "week_start"
+        ],
+        "title": "WeeklyEntryIn"
+      },
+      "WeeklyEntryResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "weekStart": {
+            "type": "string",
+            "format": "date",
+            "title": "Weekstart"
+          },
+          "hadNoIncome": {
+            "type": "boolean",
+            "title": "Hadnoincome"
+          },
+          "emergencySavingsCents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Emergencysavingscents"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "confirmed"
+            ],
+            "title": "Status"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "earnings": {
+            "items": {
+              "$ref": "#/components/schemas/EarningInput"
+            },
+            "type": "array",
+            "title": "Earnings"
+          },
+          "variableCosts": {
+            "items": {
+              "$ref": "#/components/schemas/VariableCostInput"
+            },
+            "type": "array",
+            "title": "Variablecosts"
+          },
+          "inputSnapshots": {
+            "items": {
+              "$ref": "#/components/schemas/InputSnapshot"
+            },
+            "type": "array",
+            "title": "Inputsnapshots"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "weekStart",
+          "hadNoIncome",
+          "emergencySavingsCents",
+          "status",
+          "revision",
+          "earnings",
+          "variableCosts",
+          "inputSnapshots",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "WeeklyEntryResponse"
+      },
+      "WeeklyEntryUpsert": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "expectedRevision": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectedrevision"
+          },
+          "hadNoIncome": {
+            "type": "boolean",
+            "title": "Hadnoincome",
+            "default": false
+          },
+          "emergencySavingsCents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Emergencysavingscents"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "confirmed"
+            ],
+            "title": "Status",
+            "default": "confirmed"
+          },
+          "earnings": {
+            "items": {
+              "$ref": "#/components/schemas/EarningInput"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Earnings"
+          },
+          "variableCosts": {
+            "items": {
+              "$ref": "#/components/schemas/VariableCostInput"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Variablecosts"
+          },
+          "inputSnapshots": {
+            "items": {
+              "$ref": "#/components/schemas/InputSnapshot"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Inputsnapshots"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "emergencySavingsCents"
+        ],
+        "title": "WeeklyEntryUpsert"
+      }
+    }
+  }
+}

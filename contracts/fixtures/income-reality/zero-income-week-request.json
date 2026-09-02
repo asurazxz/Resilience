@@ -1,0 +1,14 @@
+{
+  "weeks": [
+    {
+      "week_start": "2026-08-31",
+      "platform_earnings": [],
+      "work_costs_cents": 0,
+      "essential_expenses_cents": 10000
+    }
+  ],
+  "assumptions": {
+    "apply_cpf": false,
+    "cpf_rate_bps": 800
+  }
+}

@@ -4,7 +4,7 @@
 
 Resilience is a mobile-first progressive web application for Singapore platform workers whose earnings change from week to week. It turns earnings, work costs, essential expenses, and existing savings into a transparent financial-resilience plan: understand actual income, set a flexible savings target, find potentially relevant government support, and prepare for financial shocks.
 
-This repository contains Team Zephyrries' prototype for the Singapore Management University Ellipsis Tech Series 2026 Hackathon. The current `main` branch is the collaboration scaffold; product code will be developed on the five workstream branches below.
+This repository contains Team Zephyrries' prototype for the Singapore Management University Ellipsis Tech Series 2026 Hackathon. Feature 1 now provides the runnable PWA, API, database baseline, generated contracts, and local developer workflow used by the other workstreams.
 
 > Resilience provides estimates and navigation, not financial advice. Scheme eligibility is determined by maintained rules and confirmed only by the relevant agency. AI may explain results, but it must never calculate finances or decide eligibility.
 
@@ -17,7 +17,7 @@ The one-week prototype follows this user journey:
 4. Answer a short questionnaire to find potentially relevant support schemes and official application links.
 5. Simulate an income interruption or unexpected cost and see estimated cash-flow and buffer impact.
 
-Manual entry is the primary input path. CSV import and template-based OCR are stretch integrations and must not block the core journey.
+Manual entry is the primary input path. A strict, review-before-save CSV import is included; OCR remains deferred and must not block the core journey.
 
 ## Five development areas
 
@@ -37,13 +37,13 @@ The detailed ownership boundaries, shared contracts, acceptance checks, and merg
 
 The stack below reflects the approved proposal. Deployment work is intentionally deferred until the product flow is working.
 
-- **Client:** React, TypeScript, Tailwind CSS, Progressive Web App capabilities, responsive mobile-first UI, and offline access for manual entry and cached views.
-- **API:** Python and FastAPI.
+- **Client:** Node.js 24, React 19, TypeScript 5.9, Vite 8, Tailwind CSS 4, Dexie-backed offline queueing, and PWA service-worker support.
+- **API:** Python 3.12 or 3.13, FastAPI, Pydantic, SQLAlchemy, and psycopg.
 - **Financial logic:** deterministic Python functions with automated tests; AI is excluded from all calculations.
 - **Scheme logic:** versioned structured rules stored as JSON or PostgreSQL records, including official source, effective date, and last-reviewed date.
 - **AI explanation:** an LLM API with retrieval over curated official documents; explanation and navigation only, with safety guardrails.
 - **Database:** Supabase-managed PostgreSQL for shared integration and demo data, accessed through FastAPI using a standard `DATABASE_URL`. Local PostgreSQL remains supported for isolated development.
-- **Data intake:** manual entry first; CSV import and Tesseract OCR with per-platform templates as optional prototype enhancements.
+- **Data intake:** manual entry plus strict CSV preview/import. OCR is deferred.
 - **Source control:** Git and GitHub.
 - **Future deployment:** containerised hosting is part of the architecture, but is out of scope for the initial feature sprint.
 
@@ -62,6 +62,7 @@ Frontend and backend feature folders use the same five workstream boundaries so 
 ## Local setup
 
 The merged development app runs the Emergency Fund, Scenario Simulator, and Scheme Navigator in one React shell. The Emergency Fund still uses a browser-local synthetic adapter; the Scenario Simulator and Scheme Navigator call the local FastAPI service. The Scheme Navigator chatbot remains available across all routes.
+All commands below are verified on Windows with Node.js 24.13, npm 11.6, Python 3.13, Docker Desktop 29.1, and the repository-pinned Supabase CLI 2.116.0. Python 3.12 is also supported. macOS/Linux users can use the equivalent activation and copy commands.
 
 ### 1. Clone and read the agent rules
 
@@ -95,10 +96,23 @@ Replace the branch name with the branch assigned to you.
 ### 4. Configure the local environment
 
 Copy the package-specific examples rather than sharing secrets:
+- Node.js 24.x and npm 11+
+- Python 3.12 or 3.13 (do not use Python 3.14 for this pinned dependency set)
+- Docker Desktop (for local Supabase)
+- Access to the shared Supabase project only when working against the hosted integration database
 
-```bash
-cp frontend/.env.example frontend/.env
-cp backend/.env.example backend/.env
+The Supabase CLI is installed by `npm install`; do not install a different global version.
+
+### 4. Install and configure
+
+From the repository root:
+
+```powershell
+npm install
+py -3.13 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r backend\requirements-dev.txt
+Copy-Item frontend\.env.example frontend\.env
+Copy-Item backend\.env.example backend\.env
 ```
 
 On PowerShell, use `Copy-Item` instead of `cp`. The example frontend configuration points the simulator to the local API on port 8000.
@@ -139,6 +153,47 @@ cd frontend && npm test && npm run build
 ```
 
 Do not commit `.env`, credentials, user uploads, OCR output, local databases, or real financial data.
+The committed examples work unchanged with local Supabase. Never commit either real `.env` file.
+
+If your machine has only Python 3.12, replace `-3.13` with `-3.12`. If an existing `.venv` was created with Python 3.14, leave it alone and create a compatible replacement such as `.venv313` with `py -3.13 -m venv .venv313`, then use that directory in the API commands. The currently pinned `psycopg-binary`, `pydantic-core`, and Uvicorn optional dependencies do not provide compatible wheels for the local Python 3.14/MINGW environment used during Feature 1 verification.
+
+### 5. Start the local stack
+
+```powershell
+npm run db:start
+npm run db:reset
+```
+
+Run the API and client in separate terminals from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --reload --port 8000
+npm run dev:frontend
+```
+
+Open `http://localhost:5173`. The API documentation is at `http://localhost:8000/docs`; Supabase Studio is at `http://127.0.0.1:54323`.
+
+To stop the local stack, press `Ctrl+C` in the API and frontend terminals, then run `npm run db:stop` when you no longer need the database containers.
+
+### 6. Verify changes
+
+```powershell
+npm run test:frontend
+npm run build:frontend
+.\.venv\Scripts\python.exe -m pytest backend\tests -q
+.\.venv\Scripts\python.exe -m ruff check backend
+npm run db:test
+npm run db:lint
+```
+
+After changing FastAPI schemas, regenerate the shared contract before committing:
+
+```powershell
+.\.venv\Scripts\python.exe -m backend.scripts.export_openapi
+npm run generate:api
+```
+
+Do not commit `.env`, credentials, user uploads, local databases, or real financial data. See [`documentation/features/foundation-input.md`](documentation/features/foundation-input.md) for the complete contract and teammate handoff.
 
 ## Team workflow
 

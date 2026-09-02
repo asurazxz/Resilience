@@ -1,0 +1,30 @@
+{
+  "name": "resilience",
+  "private": true,
+  "version": "0.1.0",
+  "engines": {
+    "node": "24.x",
+    "npm": ">=11"
+  },
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:test": "supabase test db",
+    "db:lint": "supabase db lint",
+    "db:status": "supabase status",
+    "db:migrations": "supabase migration list",
+    "dev:frontend": "npm run dev --workspace frontend",
+    "build:frontend": "npm run build --workspace frontend",
+    "test:frontend": "npm run test --workspace frontend",
+    "test:integration": "npm run test:integration --workspace frontend",
+    "generate:api": "npm run generate:api --workspace frontend"
+  },
+  "devDependencies": {
+    "jsdom": "29.0.0",
+    "supabase": "2.116.0"
+  }
+}
