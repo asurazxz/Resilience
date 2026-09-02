@@ -2,6 +2,41 @@
 
 Read this file before executing any repository task. Add an entry only after a real error has been encountered and resolved.
 
+## 2026-09-02 — Use Python 3.12 or 3.13 for the pinned backend dependencies
+
+- **Symptom:** The existing Python 3.14/MINGW virtual environment could not install the pinned `psycopg-binary` wheel; Uvicorn's optional dependencies and `pydantic-core` also attempted unsupported source builds.
+- **Root cause:** The pinned dependencies provide Windows wheels for Python 3.12/3.13, but not for this Python 3.14/MINGW runtime.
+- **Resolution:** Created a separate Python 3.13 virtual environment, installed the unchanged `backend/requirements.txt`, then started and health-checked FastAPI successfully.
+- **Prevention:** Create the project environment with Python 3.12 or 3.13 and do not attempt to make the application run on 3.14 unless dependency pins and wheel availability are reviewed together.
+
+## 2026-09-02 — Complete Supabase authentication in the user's terminal when agent login crashes
+
+- **Symptom:** The bundled Windows Supabase CLI crashed after browser verification and did not persist its access token from the coding-agent session.
+- **Root cause:** The CLI's bundled Bun runtime failed during the agent-driven login flow, outside the repository's code.
+- **Resolution:** The user completed authentication and project linking from their own terminal; subsequent agent-run dry-run, push, queries, and advisors authenticated successfully.
+- **Prevention:** If interactive Supabase login crashes inside the agent environment, do not repeat verification-code attempts; have the user run `npx supabase login` and `npx supabase link` in their terminal, then resume non-interactive verification.
+
+## 2026-09-02 — Check tool peer ranges before choosing newest versions
+
+- **Symptom:** `npm install` rejected TypeScript 7 because the pinned OpenAPI TypeScript generator supports TypeScript 5.x.
+- **Root cause:** Individually current versions were selected before verifying their peer-dependency intersection.
+- **Resolution:** Pinned TypeScript 5.9.3 and regenerated the lockfile; installation and API type generation then passed.
+- **Prevention:** Check peer ranges across build/code-generation tools before pinning a newly released major version.
+
+## 2026-09-02 — Use worker threads for Vitest on this Windows workspace
+
+- **Symptom:** Vitest's default fork pool timed out before a test file started.
+- **Root cause:** Child-process workers did not respond reliably in this Windows desktop execution environment.
+- **Resolution:** Configured a single worker-thread pool; the frontend tests then completed normally.
+- **Prevention:** Keep the repository's explicit Vitest pool settings unless verified in all supported team environments.
+
+## 2026-09-02 — Place environment dependencies where hoisted tools resolve them
+
+- **Symptom:** Hoisted Vitest could not resolve jsdom even though jsdom was declared in the frontend workspace.
+- **Root cause:** npm placed Vitest at the monorepo root and jsdom inside the workspace, outside Vitest's package-resolution path.
+- **Resolution:** Added the same exact jsdom version to root development tooling so npm hoisted it beside Vitest.
+- **Prevention:** In npm workspaces, verify runtime resolution from the hoisted tool's location, especially for optional test environments.
+
 ## 2026-09-01 — Replace existing files with update patches
 
 - **Symptom:** The initial scaffold patch was rejected before changing any files.

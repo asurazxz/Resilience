@@ -2,6 +2,22 @@
 
 Append significant sessions in reverse chronological order. Keep entries concise and factual.
 
+## 2026-09-02 — Verify live local Feature 1 stack and document the handoff
+
+- Started the existing local Supabase database, PWA, and FastAPI service; API readiness returned `{"status":"ready"}` and the PWA root returned HTTP 200.
+- Opened the locally running PWA in Codex's integrated browser at `http://localhost:5173`.
+- Diagnosed the Python 3.14 dependency-wheel incompatibility and ran the unchanged backend requirements successfully in a separate Python 3.13 environment.
+- Updated root, backend, Supabase, and Feature 1 documentation with supported Python versions, exact local run/stop commands, project-reference handoff, and secret-sharing boundaries; ignored versioned local virtual environments.
+
+## 2026-09-02 — Implement Feature 1 foundation input
+
+- Built the React/TypeScript/Tailwind PWA shell, onboarding, editable weekly/assumption flows, strict CSV preview/import, IndexedDB cache and ordered offline mutation queue, and visible sync conflict controls.
+- Built the FastAPI/Pydantic/SQLAlchemy foundation API with consistent errors, idempotent revisioned weekly writes, CSV validation, reset protection, readiness checks, and generated OpenAPI/TypeScript contracts.
+- Added a private Supabase PostgreSQL schema with constraints, indexes, RLS posture, immutable weekly snapshots, integration envelopes for goals/scenarios/scheme rules, synthetic seed data, and pgTAP tests.
+- Pinned Node, npm package, Python package, and Supabase CLI versions; added verified local setup commands and teammate environment/secret handoff documentation.
+- Verified frontend tests/build, backend unit/integration tests and Ruff, local migration/seed, 13 database tests, schema lint, and npm audit.
+- After the user authenticated and linked the project, dry-ran and pushed only the foundation migration without roles or seed data; verified migration parity, 13/13 tables with RLS, denied direct Data API role privileges, and clean remote security/performance advisors.
+
 ## 2026-09-01 — Income Reality Engine (workstream 2) integration seam and live demo
 
 - User asked how to test/run the frontend now that it existed. Ran a genuine live end-to-end demo instead of
