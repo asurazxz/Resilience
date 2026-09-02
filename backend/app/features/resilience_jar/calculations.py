@@ -15,8 +15,25 @@ from .models import (
     Progress,
     Recommendation,
     RecommendationMethod,
+    TargetFrequency,
     WeeklySurplus,
 )
+
+
+def target_amount_to_weekly_cents(
+    amount_cents: int, frequency: TargetFrequency
+) -> int:
+    if frequency is TargetFrequency.WEEKLY:
+        return amount_cents
+    return amount_cents * 12 // 52
+
+
+def weekly_cents_to_target_amount(
+    weekly_cents: int, frequency: TargetFrequency
+) -> int:
+    if frequency is TargetFrequency.WEEKLY:
+        return weekly_cents
+    return weekly_cents * 52 // 12
 
 
 def _median(values: list[int]) -> Fraction:

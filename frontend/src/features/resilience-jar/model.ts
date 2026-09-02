@@ -28,6 +28,14 @@ export function weeklyToMonthlyCents(weeklyCents: number): number {
   return Math.round((weeklyCents * 52) / 12);
 }
 
+export function weeklyTargetToMonthlyCents(weeklyCents: number): number {
+  return Math.floor((weeklyCents * 52) / 12);
+}
+
+export function monthlyTargetToWeeklyCents(monthlyCents: number): number {
+  return Math.floor((monthlyCents * 12) / 52);
+}
+
 export interface BalanceChartPoint {
   date: string;
   balance_cents: number;

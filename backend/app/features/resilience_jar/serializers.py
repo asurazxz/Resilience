@@ -22,6 +22,8 @@ def goal_dict(goal: Goal) -> dict[str, object]:
 def plan_dict(plan: JarPlan) -> dict[str, object]:
     return {
         "recommendation_method": plan.recommendation_method.value,
+        "target_frequency": plan.target_frequency.value,
+        "target_amount_cents": plan.target_amount_cents,
         "weekly_target_cents": plan.weekly_target_cents,
         "status": plan.status.value,
         "goal": goal_dict(plan.goal),

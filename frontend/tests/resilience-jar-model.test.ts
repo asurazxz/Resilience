@@ -6,10 +6,12 @@ import {
   buildBalanceTimeline,
   centsToDollars,
   dollarsToCents,
+  monthlyTargetToWeeklyCents,
   recommendationExplanation,
   singaporeToday,
   visualFillPercent,
   weeklyToMonthlyCents,
+  weeklyTargetToMonthlyCents,
 } from "../src/features/resilience-jar/model.ts";
 import type { Contribution } from "../src/features/resilience-jar/types.ts";
 
@@ -44,6 +46,12 @@ test("contribution dates use the Singapore calendar day", () => {
 
 test("weekly expenses convert to an approximate monthly amount", () => {
   assert.equal(weeklyToMonthlyCents(70_000), 303_333);
+});
+
+test("weekly and monthly targets convert through a weekly canonical amount", () => {
+  assert.equal(weeklyTargetToMonthlyCents(9_000), 39_000);
+  assert.equal(monthlyTargetToWeeklyCents(39_000), 9_000);
+  assert.equal(monthlyTargetToWeeklyCents(10_001), 2_307);
 });
 
 test("projection dates add whole calendar days without timezone drift", () => {

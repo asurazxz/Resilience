@@ -1,5 +1,10 @@
 import { writeCachedSummary, type ResilienceJarApi } from "./api.ts";
-import { addDaysToIsoDate, singaporeToday } from "./model.ts";
+import {
+  addDaysToIsoDate,
+  monthlyTargetToWeeklyCents,
+  singaporeToday,
+  weeklyTargetToMonthlyCents,
+} from "./model.ts";
 import type {
   Contribution,
   ContributionWrite,
@@ -16,6 +21,8 @@ const fixtureRecommendationAmounts: Record<RecommendationMethod, number> = {
 const initialFixture: JarSummary = {
   plan: {
     recommendation_method: "conservative_4_week",
+    target_frequency: "weekly",
+    target_amount_cents: 9_000,
     weekly_target_cents: 9_000,
     status: "active",
     goal: { mode: "coverage", weeks: 4 },
@@ -101,9 +108,34 @@ export class FixtureResilienceJarApi implements ResilienceJarApi {
 
   async patchPlan(patch: PlanPatch): Promise<JarSummary> {
     const goalWasUpdated = patch.goal !== undefined;
+    const targetFrequency =
+      patch.target_frequency ?? this.summary.plan.target_frequency;
+    let targetAmountCents =
+      patch.target_amount_cents ?? this.summary.plan.target_amount_cents;
+    let weeklyTargetCents =
+      patch.weekly_target_cents ?? this.summary.plan.weekly_target_cents;
+    if (patch.target_amount_cents !== undefined) {
+      weeklyTargetCents =
+        targetFrequency === "monthly"
+          ? monthlyTargetToWeeklyCents(patch.target_amount_cents)
+          : patch.target_amount_cents;
+    } else if (patch.weekly_target_cents !== undefined) {
+      targetAmountCents =
+        targetFrequency === "monthly"
+          ? weeklyTargetToMonthlyCents(patch.weekly_target_cents)
+          : patch.weekly_target_cents;
+    } else if (patch.target_frequency !== undefined) {
+      targetAmountCents =
+        targetFrequency === "monthly"
+          ? weeklyTargetToMonthlyCents(weeklyTargetCents)
+          : weeklyTargetCents;
+    }
     this.summary.plan = {
       ...this.summary.plan,
       ...patch,
+      target_frequency: targetFrequency,
+      target_amount_cents: targetAmountCents,
+      weekly_target_cents: weeklyTargetCents,
       goal_expense_baseline_cents: goalWasUpdated
         ? this.summary.weekly_essential_expenses_cents
         : this.summary.plan.goal_expense_baseline_cents,

@@ -9,6 +9,8 @@ from .calculations import (
     calculate_milestones,
     calculate_progress,
     recommend_weekly_savings,
+    target_amount_to_weekly_cents,
+    weekly_cents_to_target_amount,
 )
 from .models import (
     AmountGoal,
@@ -19,6 +21,7 @@ from .models import (
     JarSummary,
     PlanStatus,
     RecommendationMethod,
+    TargetFrequency,
 )
 from .repositories import (
     ContributionRepository,
@@ -102,6 +105,8 @@ class ResilienceJarService:
         self._require_object(payload)
         allowed_fields = {
             "recommendation_method",
+            "target_frequency",
+            "target_amount_cents",
             "weekly_target_cents",
             "status",
             "goal",
@@ -123,9 +128,30 @@ class ResilienceJarService:
                 payload["recommendation_method"],
                 "recommendation_method",
             )
-        if "weekly_target_cents" in payload:
-            changes["weekly_target_cents"] = self._non_negative_integer(
+        if "target_frequency" in payload:
+            changes["target_frequency"] = self._parse_enum(
+                TargetFrequency, payload["target_frequency"], "target_frequency"
+            )
+        target_frequency = changes.get("target_frequency", plan.target_frequency)
+        if "target_amount_cents" in payload:
+            target_amount_cents = self._non_negative_integer(
+                payload["target_amount_cents"], "target_amount_cents"
+            )
+            changes["target_amount_cents"] = target_amount_cents
+            changes["weekly_target_cents"] = target_amount_to_weekly_cents(
+                target_amount_cents, target_frequency
+            )
+        elif "weekly_target_cents" in payload:
+            weekly_target_cents = self._non_negative_integer(
                 payload["weekly_target_cents"], "weekly_target_cents"
+            )
+            changes["weekly_target_cents"] = weekly_target_cents
+            changes["target_amount_cents"] = weekly_cents_to_target_amount(
+                weekly_target_cents, target_frequency
+            )
+        elif "target_frequency" in payload:
+            changes["target_amount_cents"] = weekly_cents_to_target_amount(
+                plan.weekly_target_cents, target_frequency
             )
         if "status" in payload:
             changes["status"] = self._parse_enum(

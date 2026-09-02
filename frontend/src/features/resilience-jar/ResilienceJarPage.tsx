@@ -10,10 +10,12 @@ import {
   centsToDollars,
   dollarsToCents,
   formatMoney,
+  monthlyTargetToWeeklyCents,
   recommendationExplanation,
   singaporeToday,
   visualFillPercent,
   weeklyToMonthlyCents,
+  weeklyTargetToMonthlyCents,
 } from "./model.ts";
 import { ProgressLineChart } from "./ProgressLineChart.tsx";
 import type {
@@ -21,6 +23,7 @@ import type {
   Goal,
   JarSummary,
   RecommendationMethod,
+  TargetFrequency,
 } from "./types.ts";
 import "./resilienceJar.css";
 
@@ -40,10 +43,13 @@ export function ResilienceJarPage({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [offline, setOffline] = useState(
     typeof navigator !== "undefined" && !navigator.onLine,
   );
-  const [weeklyTarget, setWeeklyTarget] = useState("0.00");
+  const [targetAmount, setTargetAmount] = useState("0.00");
+  const [targetFrequency, setTargetFrequency] =
+    useState<TargetFrequency>("weekly");
   const [goalMode, setGoalMode] = useState<Goal["mode"]>("coverage");
   const [goalAmount, setGoalAmount] = useState("1000.00");
   const [goalWeeks, setGoalWeeks] = useState("4");
@@ -112,14 +118,37 @@ export function ResilienceJarPage({
     };
   }, [client]);
 
+  useEffect(() => {
+    if (!successMessage) return;
+    const timeoutId = window.setTimeout(() => setSuccessMessage(null), 4_000);
+    return () => window.clearTimeout(timeoutId);
+  }, [successMessage]);
+
   function syncPlanForms(next: JarSummary) {
-    setWeeklyTarget(centsToDollars(next.plan.weekly_target_cents));
+    setTargetAmount(centsToDollars(next.plan.target_amount_cents));
+    setTargetFrequency(next.plan.target_frequency);
     setGoalMode(next.plan.goal.mode);
     if (next.plan.goal.mode === "amount") {
       setGoalAmount(centsToDollars(next.plan.goal.amount_cents));
     } else {
       setGoalWeeks(String(next.plan.goal.weeks));
     }
+  }
+
+  function previewTargetFrequency(nextFrequency: TargetFrequency) {
+    const enteredCents = dollarsToCents(targetAmount);
+    if (enteredCents !== null) {
+      const weeklyEquivalent =
+        targetFrequency === "monthly"
+          ? monthlyTargetToWeeklyCents(enteredCents)
+          : enteredCents;
+      const nextAmount =
+        nextFrequency === "monthly"
+          ? weeklyTargetToMonthlyCents(weeklyEquivalent)
+          : weeklyEquivalent;
+      setTargetAmount(centsToDollars(nextAmount));
+    }
+    setTargetFrequency(nextFrequency);
   }
 
   async function updateMethod(method: RecommendationMethod) {
@@ -129,17 +158,35 @@ export function ResilienceJarPage({
   async function acceptRecommendation() {
     const amount = summary?.recommendation.amount_cents;
     if (amount === null || amount === undefined) return;
-    await runMutation(async () => client.patchPlan({ weekly_target_cents: amount }));
+    const selectedAmount =
+      targetFrequency === "monthly"
+        ? weeklyTargetToMonthlyCents(amount)
+        : amount;
+    await runMutation(
+      async () =>
+        client.patchPlan({
+          target_frequency: targetFrequency,
+          target_amount_cents: selectedAmount,
+        }),
+      `${targetFrequency === "monthly" ? "Monthly" : "Weekly"} target updated to ${formatMoney(selectedAmount)}.`,
+    );
   }
 
-  async function saveWeeklyTarget(event: FormEvent) {
+  async function saveTarget(event: FormEvent) {
     event.preventDefault();
-    const cents = dollarsToCents(weeklyTarget);
+    const cents = dollarsToCents(targetAmount);
     if (cents === null) {
-      setError("Enter a weekly target with no more than two decimal places.");
+      setError("Enter a target with no more than two decimal places.");
       return;
     }
-    await runMutation(async () => client.patchPlan({ weekly_target_cents: cents }));
+    await runMutation(
+      async () =>
+        client.patchPlan({
+          target_frequency: targetFrequency,
+          target_amount_cents: cents,
+        }),
+      `${targetFrequency === "monthly" ? "Monthly" : "Weekly"} target updated to ${formatMoney(cents)}.`,
+    );
   }
 
   async function saveGoal(event: FormEvent) {
@@ -160,7 +207,11 @@ export function ResilienceJarPage({
       }
       goal = { mode: "coverage", weeks };
     }
-    await runMutation(async () => client.patchPlan({ goal }));
+    const confirmation =
+      goal.mode === "amount"
+        ? `Goal updated to ${formatMoney(goal.amount_cents)}.`
+        : `Goal updated to ${goal.weeks} weeks of essential expenses.`;
+    await runMutation(async () => client.patchPlan({ goal }), confirmation);
   }
 
   async function togglePause() {
@@ -251,7 +302,11 @@ export function ResilienceJarPage({
     setContributionNote("");
   }
 
-  async function runMutation(action: () => Promise<JarSummary>) {
+  async function runMutation(
+    action: () => Promise<JarSummary>,
+    confirmation?: string,
+  ) {
+    setSuccessMessage(null);
     if (offline) {
       setError("Changes are online-only. Reconnect before updating your Jar.");
       return;
@@ -262,6 +317,7 @@ export function ResilienceJarPage({
       const next = await action();
       setSummary(next);
       syncPlanForms(next);
+      if (confirmation) setSuccessMessage(confirmation);
     } catch (requestError) {
       setError(errorMessage(requestError));
     } finally {
@@ -283,6 +339,14 @@ export function ResilienceJarPage({
   }
 
   const progress = summary.progress;
+  const activeTargetLabel =
+    summary.plan.target_frequency === "monthly" ? "Monthly target" : "Weekly target";
+  const recommendationAmount =
+    summary.recommendation.amount_cents === null
+      ? null
+      : targetFrequency === "monthly"
+        ? weeklyTargetToMonthlyCents(summary.recommendation.amount_cents)
+        : summary.recommendation.amount_cents;
   const fillPercent = visualFillPercent(progress.progress_percent);
   const isPaused = summary.plan.status === "paused";
   const isOverGoal = (progress.progress_percent ?? 0) > 100;
@@ -343,6 +407,12 @@ export function ResilienceJarPage({
       {isPaused && (
         <p className="jar-banner" role="status">
           Your weekly prompts are paused. Your target, goal, and contribution history are unchanged.
+        </p>
+      )}
+      {successMessage && (
+        <p className="jar-success" role="status" aria-live="polite">
+          <span aria-hidden="true">✓</span>
+          {successMessage}
         </p>
       )}
       {error && (
@@ -444,8 +514,8 @@ export function ResilienceJarPage({
           <p className="jar-muted">Existing emergency savings are not included here.</p>
           <div className="jar-plan-strip">
             <div>
-              <span>Weekly target</span>
-              <strong>{formatMoney(summary.plan.weekly_target_cents)}</strong>
+              <span>{activeTargetLabel}</span>
+              <strong>{formatMoney(summary.plan.target_amount_cents)}</strong>
             </div>
             <div>
               <span>Goal</span>
@@ -501,7 +571,7 @@ export function ResilienceJarPage({
 
       <div className="jar-grid" hidden={view !== "plan"}>
         <section className="jar-card" aria-labelledby="jar-suggestion-title">
-          <h2 id="jar-suggestion-title">Weekly suggestion</h2>
+          <h2 id="jar-suggestion-title">Savings suggestion</h2>
           <label htmlFor="jar-method">Calculation method</label>
           <select
             id="jar-method"
@@ -517,6 +587,34 @@ export function ResilienceJarPage({
           <p className="jar-muted">
             {recommendationExplanation(summary.plan.recommendation_method)}
           </p>
+          <fieldset className="jar-target-frequency">
+            <legend>Target frequency</legend>
+            <div>
+              <label className="jar-radio">
+                <input
+                  checked={targetFrequency === "weekly"}
+                  name="target-frequency"
+                  type="radio"
+                  onChange={() => previewTargetFrequency("weekly")}
+                />
+                Weekly
+              </label>
+              <label className="jar-radio">
+                <input
+                  checked={targetFrequency === "monthly"}
+                  name="target-frequency"
+                  type="radio"
+                  onChange={() => previewTargetFrequency("monthly")}
+                />
+                Monthly
+              </label>
+            </div>
+          </fieldset>
+          {targetFrequency === "monthly" && (
+            <p className="jar-muted">
+              The monthly suggestion is the equivalent of the weekly formula.
+            </p>
+          )}
           {isPaused ? (
             <p role="status">
               Recommendation prompts are paused. Resume when you want a new weekly prompt.
@@ -527,8 +625,8 @@ export function ResilienceJarPage({
             </p>
           ) : (
             <div className="jar-suggestion">
-              <span>Suggested</span>
-              <strong>{formatMoney(summary.recommendation.amount_cents)}</strong>
+              <span>Suggested {targetFrequency} target</span>
+              <strong>{formatMoney(recommendationAmount)}</strong>
               <button
                 className="jar-button"
                 type="button"
@@ -540,14 +638,16 @@ export function ResilienceJarPage({
             </div>
           )}
 
-          <form onSubmit={(event) => void saveWeeklyTarget(event)}>
-            <label htmlFor="jar-weekly-target">Your active weekly target (SGD)</label>
+          <form onSubmit={(event) => void saveTarget(event)}>
+            <label htmlFor="jar-target-amount">
+              Your {targetFrequency} target (SGD)
+            </label>
             <div className="jar-inline-form">
               <input
-                id="jar-weekly-target"
+                id="jar-target-amount"
                 inputMode="decimal"
-                value={weeklyTarget}
-                onChange={(event) => setWeeklyTarget(event.target.value)}
+                value={targetAmount}
+                onChange={(event) => setTargetAmount(event.target.value)}
               />
               <button className="jar-button" disabled={mutationsDisabled} type="submit">
                 Save target
@@ -783,7 +883,7 @@ function ProjectionCopy({ summary }: { summary: JarSummary }) {
       <>
         <strong className="jar-projection-date">{formatDate(projection.projected_date)}</strong>
         <p>
-          About {projection.weeks_remaining} {projection.weeks_remaining === 1 ? "week" : "weeks"} away at your current weekly target.
+          About {projection.weeks_remaining} {projection.weeks_remaining === 1 ? "week" : "weeks"} away at your current {summary.plan.target_frequency} target.
         </p>
         <p className="jar-muted">{formatMoney(projection.remaining_cents)} left to reach your goal.</p>
       </>
@@ -796,7 +896,7 @@ function ProjectionCopy({ summary }: { summary: JarSummary }) {
     return <><strong className="jar-projection-date">Projection paused</strong><p>Resume your plan to calculate a completion date.</p></>;
   }
   if (projection.status === "no_weekly_target") {
-    return <><strong className="jar-projection-date">Target needed</strong><p>Set a weekly target to calculate a completion date.</p></>;
+    return <><strong className="jar-projection-date">Target needed</strong><p>Set a weekly or monthly target to calculate a completion date.</p></>;
   }
   return <><strong className="jar-projection-date">Not available</strong><p>Add essential-expense data or use an amount goal to calculate a date.</p></>;
 }

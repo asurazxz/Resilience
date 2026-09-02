@@ -1,6 +1,8 @@
 {
   "plan": {
     "recommendation_method": "conservative_4_week",
+    "target_frequency": "weekly",
+    "target_amount_cents": 9000,
     "weekly_target_cents": 9000,
     "status": "active",
     "goal": {

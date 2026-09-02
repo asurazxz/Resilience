@@ -16,6 +16,11 @@ class PlanStatus(StrEnum):
     PAUSED = "paused"
 
 
+class TargetFrequency(StrEnum):
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+
+
 @dataclass(frozen=True)
 class AmountGoal:
     amount_cents: int
@@ -43,6 +48,8 @@ class JarPlan:
     recommendation_method: RecommendationMethod = (
         RecommendationMethod.CONSERVATIVE_FOUR_WEEK
     )
+    target_frequency: TargetFrequency = TargetFrequency.WEEKLY
+    target_amount_cents: int = 0
     weekly_target_cents: int = 0
     status: PlanStatus = PlanStatus.ACTIVE
     goal: Goal = CoverageGoal(weeks=4)

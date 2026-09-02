@@ -7,6 +7,8 @@ from backend.app.features.resilience_jar.calculations import (
     calculate_completion_projection,
     calculate_milestones,
     calculate_progress,
+    target_amount_to_weekly_cents,
+    weekly_cents_to_target_amount,
     recommend_weekly_savings,
 )
 from backend.app.features.resilience_jar.models import (
@@ -16,6 +18,7 @@ from backend.app.features.resilience_jar.models import (
     PlanStatus,
     Progress,
     RecommendationMethod,
+    TargetFrequency,
     WeeklySurplus,
 )
 
@@ -122,6 +125,16 @@ class ProgressTests(unittest.TestCase):
 
 
 class ProjectionAndMilestoneTests(unittest.TestCase):
+    def test_monthly_target_converts_through_a_weekly_equivalent(self) -> None:
+        self.assertEqual(
+            9_000,
+            target_amount_to_weekly_cents(39_000, TargetFrequency.MONTHLY),
+        )
+        self.assertEqual(
+            39_000,
+            weekly_cents_to_target_amount(9_000, TargetFrequency.MONTHLY),
+        )
+
     def test_projection_rounds_remaining_amount_up_to_complete_weeks(self) -> None:
         projection = calculate_completion_projection(
             JarPlan(user_id="user", weekly_target_cents=15_000),

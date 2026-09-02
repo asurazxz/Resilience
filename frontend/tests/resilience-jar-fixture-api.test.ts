@@ -12,6 +12,18 @@ test("switching recommendation method does not change the active target", async 
   assert.equal(switched.recommendation.method, "latest_week");
 });
 
+test("monthly target preference preserves its amount and weekly equivalent", async () => {
+  const api = new FixtureResilienceJarApi();
+  const updated = await api.patchPlan({
+    target_frequency: "monthly",
+    target_amount_cents: 39_000,
+  });
+
+  assert.equal(updated.plan.target_frequency, "monthly");
+  assert.equal(updated.plan.target_amount_cents, 39_000);
+  assert.equal(updated.plan.weekly_target_cents, 9_000);
+});
+
 test("fixture contribution CRUD recalculates contribution-only progress", async () => {
   const api = new FixtureResilienceJarApi();
   const created = await api.createContribution({

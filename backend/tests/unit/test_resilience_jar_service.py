@@ -38,6 +38,7 @@ class ServiceTestCase(unittest.TestCase):
         summary = self.service.get_summary(self.user_id)
 
         self.assertEqual("conservative_4_week", summary.plan.recommendation_method)
+        self.assertEqual("weekly", summary.plan.target_frequency)
         self.assertEqual("coverage", summary.plan.goal.mode)
         self.assertEqual(4, summary.plan.goal.weeks)
         self.assertEqual(70_000, summary.plan.goal_expense_baseline_cents)
@@ -62,6 +63,16 @@ class ServiceTestCase(unittest.TestCase):
 
         self.assertEqual(10_000, summary.plan.weekly_target_cents)
         self.assertEqual(40_000, summary.recommendation.amount_cents)
+
+    def test_monthly_target_preference_is_persisted_with_weekly_equivalent(self) -> None:
+        summary = self.service.patch_plan(
+            self.user_id,
+            {"target_frequency": "monthly", "target_amount_cents": 39_000},
+        )
+
+        self.assertEqual("monthly", summary.plan.target_frequency)
+        self.assertEqual(39_000, summary.plan.target_amount_cents)
+        self.assertEqual(9_000, summary.plan.weekly_target_cents)
 
     def test_pause_retains_plan_settings_and_allows_contributions(self) -> None:
         self.service.patch_plan(

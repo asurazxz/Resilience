@@ -59,10 +59,32 @@
 }
 
 .jar-banner,
-.jar-error {
+.jar-error,
+.jar-success {
   border-radius: 0.75rem;
   margin: 0 0 1rem;
   padding: 0.8rem 1rem;
+}
+
+.jar-success {
+  align-items: center;
+  background: var(--jar-light);
+  border: 1px solid #65a98a;
+  color: #14573f;
+  display: flex;
+  font-weight: 750;
+  gap: 0.55rem;
+}
+
+.jar-success span {
+  align-items: center;
+  background: var(--jar-green);
+  border-radius: 50%;
+  color: #fff;
+  display: inline-flex;
+  flex: 0 0 1.5rem;
+  height: 1.5rem;
+  justify-content: center;
 }
 
 .jar-goal-alert {
@@ -308,6 +330,31 @@
 .jar-radio input {
   min-height: auto;
   width: auto;
+}
+
+.jar-target-frequency {
+  margin: 0.65rem 0 !important;
+}
+
+.jar-target-frequency > div {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.jar-target-frequency .jar-radio {
+  border: 1px solid var(--jar-border);
+  border-radius: 0.6rem;
+  cursor: pointer;
+  margin: 0.4rem 0 0;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.7rem;
+}
+
+.jar-target-frequency .jar-radio:has(input:checked) {
+  background: var(--jar-light);
+  border-color: var(--jar-green);
+  box-shadow: inset 0 0 0 1px var(--jar-green);
 }
 
 .jar-button {

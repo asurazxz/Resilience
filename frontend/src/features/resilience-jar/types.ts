@@ -1,5 +1,6 @@
 export type RecommendationMethod = "conservative_4_week" | "latest_week";
 export type PlanStatus = "active" | "paused";
+export type TargetFrequency = "weekly" | "monthly";
 
 export type Goal =
   | { mode: "amount"; amount_cents: number }
@@ -7,6 +8,8 @@ export type Goal =
 
 export interface JarPlan {
   recommendation_method: RecommendationMethod;
+  target_frequency: TargetFrequency;
+  target_amount_cents: number;
   weekly_target_cents: number;
   status: PlanStatus;
   goal: Goal;
@@ -80,7 +83,15 @@ export interface ApiErrorBody {
 }
 
 export type PlanPatch = Partial<
-  Pick<JarPlan, "recommendation_method" | "weekly_target_cents" | "status" | "goal">
+  Pick<
+    JarPlan,
+    | "recommendation_method"
+    | "target_frequency"
+    | "target_amount_cents"
+    | "weekly_target_cents"
+    | "status"
+    | "goal"
+  >
 >;
 
 export interface ContributionWrite {

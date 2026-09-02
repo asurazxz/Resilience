@@ -20,6 +20,8 @@
       "additionalProperties": false,
       "required": [
         "recommendation_method",
+        "target_frequency",
+        "target_amount_cents",
         "weekly_target_cents",
         "status",
         "goal",
@@ -30,6 +32,8 @@
         "recommendation_method": {
           "enum": ["conservative_4_week", "latest_week"]
         },
+        "target_frequency": { "enum": ["weekly", "monthly"] },
+        "target_amount_cents": { "type": "integer", "minimum": 0 },
         "weekly_target_cents": { "type": "integer", "minimum": 0 },
         "status": { "enum": ["active", "paused"] },
         "goal": { "$ref": "#/$defs/goal" },
