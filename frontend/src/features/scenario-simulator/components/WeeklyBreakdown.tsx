@@ -1,6 +1,8 @@
 /**
- * Week-by-week figures behind the headline estimates, collapsed by default so
- * the user can trace any number back to the inputs without crowding the screen.
+ * Week-by-week figures behind the headline estimates.
+ *
+ * Always visible, so every number on the screen can be traced back to the
+ * inputs. The table scrolls sideways on a narrow screen rather than wrapping.
  */
 
 import { formatCents } from '../money';
@@ -12,11 +14,9 @@ export interface WeeklyBreakdownProps {
 
 export function WeeklyBreakdown({ weeks }: WeeklyBreakdownProps) {
   return (
-    <details className="rounded-xl border border-slate-200 bg-white">
-      <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-slate-900">
-        See the week-by-week figures
-      </summary>
-      <div className="overflow-x-auto px-4 pb-4">
+    <div className="space-y-2">
+      <h4 className="text-sm font-medium text-slate-700">Week by week</h4>
+      <div className="overflow-x-auto">
         <table className="w-full min-w-[32rem] text-left text-xs tabular-nums">
           <caption className="sr-only">
             Estimated weekly work income, money in or out, and remaining savings
@@ -57,6 +57,6 @@ export function WeeklyBreakdown({ weeks }: WeeklyBreakdownProps) {
           </tbody>
         </table>
       </div>
-    </details>
+    </div>
   );
 }

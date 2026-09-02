@@ -1,9 +1,8 @@
 /**
- * The working behind the headline figures, collapsed by default.
+ * The working behind the headline figures.
  *
- * Kept available rather than removed: a user who doubts the estimate should be
- * able to trace it week by week, which is what makes the result checkable
- * rather than something to take on trust.
+ * Always visible: a user who doubts the estimate should be able to trace it
+ * week by week without first discovering a control.
  */
 
 import type { WeekProjection } from '../types';
@@ -16,14 +15,15 @@ export interface ResultDetailsProps {
 
 export function ResultDetails({ weeks }: ResultDetailsProps) {
   return (
-    <details className="rounded-xl border border-slate-200 bg-white">
-      <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-slate-700">
-        See how this was worked out
-      </summary>
-      <div className="space-y-4 px-4 pb-4">
-        <BufferChart weeks={weeks} />
-        <WeeklyBreakdown weeks={weeks} />
-      </div>
-    </details>
+    <section
+      aria-labelledby="how-worked-out"
+      className="space-y-4 rounded-xl border border-slate-200 bg-white p-4"
+    >
+      <h3 id="how-worked-out" className="text-sm font-semibold text-slate-900">
+        How this was worked out
+      </h3>
+      <BufferChart weeks={weeks} />
+      <WeeklyBreakdown weeks={weeks} />
+    </section>
   );
 }
