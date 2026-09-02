@@ -24,7 +24,9 @@ that fill in the controls, because people think in situations rather than in
 percentages; the fine controls stay available beneath them. Step 3 leads with a
 plain sentence answering the question, and the chart and week-by-week table sit
 behind a "See how this was worked out" toggle so the working stays checkable
-without dominating the screen.
+without dominating the screen. The chart opens with a "Now" bar for the starting savings and marks that level with a dashed line, because bars scaled
+only against each other gave the reader nothing to check them against: a
+scenario that drained savings and one that grew them looked alike.
 
 Until a baseline figure is edited, step 1 carries an explicit "Example figures"
 notice. Without it the page presented sample data as though it were the user's
