@@ -1,87 +1,77 @@
 /**
- * Headline estimates: weekly cash flow during the shock and how long the
- * emergency buffer is estimated to last.
+ * Supporting figures beneath the headline answer.
+ *
+ * Each pairs the scenario figure with the user's normal week, so the number
+ * reads as a change rather than as an isolated amount. Labels avoid finance
+ * vocabulary: the audience is a worker checking whether they would cope, not
+ * an accountant.
  */
 
-import { formatCents, formatWeeks } from '../money';
+import { formatCents } from '../money';
 import type { BaselineSummary, ScenarioSummary as ScenarioSummaryData } from '../types';
-
-interface StatProps {
-  label: string;
-  value: string;
-  detail?: string;
-  tone?: 'neutral' | 'attention';
-}
-
-function Stat({ label, value, detail, tone = 'neutral' }: StatProps) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p
-        className={`mt-1 text-xl font-semibold tabular-nums ${
-          tone === 'attention' ? 'text-rose-700' : 'text-slate-900'
-        }`}
-      >
-        {value}
-      </p>
-      {detail ? <p className="mt-1 text-xs text-slate-600">{detail}</p> : null}
-    </div>
-  );
-}
 
 export interface ScenarioSummaryProps {
   baseline: BaselineSummary;
   scenario: ScenarioSummaryData;
 }
 
+interface StatProps {
+  label: string;
+  value: string;
+  detail: string;
+  tone?: 'plain' | 'bad';
+}
+
+function Stat({ label, value, detail, tone = 'plain' }: StatProps) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-3">
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
+      <p
+        className={`mt-1 text-lg font-semibold tabular-nums ${
+          tone === 'bad' ? 'text-rose-700' : 'text-slate-900'
+        }`}
+      >
+        {value}
+      </p>
+      <p className="mt-1 text-xs text-slate-600">{detail}</p>
+    </div>
+  );
+}
+
 export function ScenarioSummary({ baseline, scenario }: ScenarioSummaryProps) {
-  const runwayValue = scenario.buffer_holds_through_horizon
-    ? `Beyond ${formatWeeks(scenario.horizon_weeks)}`
-    : formatWeeks(scenario.buffer_runway_weeks ?? 0);
+  const weeklyFlow = scenario.weekly_net_cash_flow_during_shock_cents;
+  const weeklyIncome = scenario.weekly_net_work_income_during_shock_cents;
 
   return (
-    <section aria-labelledby="scenario-summary-heading" className="space-y-3">
-      <h2 id="scenario-summary-heading" className="text-base font-semibold text-slate-900">
-        Estimated impact
-      </h2>
-      <div className="grid grid-cols-2 gap-3">
-        <Stat
-          label="Savings last"
-          value={runwayValue}
-          detail={
-            scenario.buffer_holds_through_horizon
-              ? `Lowest point ${formatCents(scenario.lowest_buffer_cents)} in week ${scenario.lowest_buffer_week}`
-              : `Money runs out in week ${scenario.first_shortfall_week}`
-          }
-          tone={scenario.buffer_holds_through_horizon ? 'neutral' : 'attention'}
-        />
-        <Stat
-          label="Weekly money left"
-          value={formatCents(scenario.weekly_net_cash_flow_during_shock_cents)}
-          detail={`Usually ${formatCents(baseline.weekly_surplus_cents)} a week`}
-          tone={scenario.weekly_net_cash_flow_during_shock_cents < 0 ? 'attention' : 'neutral'}
-        />
-        <Stat
-          label="Weekly work income"
-          value={formatCents(scenario.weekly_net_work_income_during_shock_cents)}
-          detail={`After work costs. Usually ${formatCents(baseline.weekly_net_work_income_cents)}`}
-        />
-        <Stat
-          label="Not covered"
-          value={formatCents(scenario.total_shortfall_cents)}
-          detail={
-            scenario.total_shortfall_cents > 0
-              ? `Across the ${formatWeeks(scenario.horizon_weeks)} shown`
-              : 'Your savings cover this scenario'
-          }
-          tone={scenario.total_shortfall_cents > 0 ? 'attention' : 'neutral'}
-        />
-      </div>
-      {scenario.full_income_resumes_week ? (
-        <p className="text-sm text-slate-600">
-          Earnings return to their usual level in week {scenario.full_income_resumes_week}.
-        </p>
-      ) : null}
-    </section>
+    <div className="grid grid-cols-2 gap-3">
+      <Stat
+        label="Left each week"
+        value={formatCents(weeklyFlow)}
+        detail={`Normally ${formatCents(baseline.weekly_surplus_cents)} a week`}
+        tone={weeklyFlow < 0 ? 'bad' : 'plain'}
+      />
+      <Stat
+        label="You keep from work"
+        value={formatCents(weeklyIncome)}
+        detail={`Normally ${formatCents(baseline.weekly_net_work_income_cents)}, after work costs`}
+        tone={weeklyIncome < 0 ? 'bad' : 'plain'}
+      />
+      <Stat
+        label="Short by"
+        value={formatCents(scenario.total_shortfall_cents)}
+        detail={
+          scenario.total_shortfall_cents > 0
+            ? `Across the ${scenario.horizon_weeks} weeks shown`
+            : 'Your savings cover this'
+        }
+        tone={scenario.total_shortfall_cents > 0 ? 'bad' : 'plain'}
+      />
+      <Stat
+        label="Savings low point"
+        value={formatCents(scenario.lowest_buffer_cents)}
+        detail={`In week ${scenario.lowest_buffer_week}, from ${formatCents(baseline.emergency_savings_cents)}`}
+        tone={scenario.lowest_buffer_cents === 0 ? 'bad' : 'plain'}
+      />
+    </div>
   );
 }

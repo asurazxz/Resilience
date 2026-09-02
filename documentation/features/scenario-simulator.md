@@ -17,7 +17,23 @@ The user adjusts three things about a possible setback — how far earnings drop
 - preparatory prompts and official Singapore government links;
 - estimate and non-advice notices attached to every result.
 
-A collapsible "Your usual week" panel makes the five baseline figures editable
+The screen reads as three numbered steps — your money now, the situation, what
+it would mean — so it states what it needs before showing an answer. Step 2
+offers three recognisable situations (work drying up, injury, a sudden repair)
+that fill in the controls, because people think in situations rather than in
+percentages; the fine controls stay available beneath them. Step 3 leads with a
+plain sentence answering the question, and the chart and week-by-week table sit
+behind a "See how this was worked out" toggle so the working stays checkable
+without dominating the screen.
+
+Until a baseline figure is edited, step 1 carries an explicit "Example figures"
+notice. Without it the page presented sample data as though it were the user's
+own, which is a trust problem rather than a cosmetic one.
+
+The headline sentence is assembled in the UI from figures the engine returned.
+Wording is chosen there; no amount is derived there.
+
+A "Your usual week" panel makes the five baseline figures editable
 on the page, so the simulator can be driven with real numbers before the shared
 data-intake flow exists. The derived net income and surplus shown in that panel
 come from the API response; they are not recalculated in the browser, so those

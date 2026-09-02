@@ -9,7 +9,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { simulateScenario, type ResultSource } from './api';
-import { PREVIEW_BASELINE, PREVIEW_SCENARIO } from './fixtures';
+import { PREVIEW_BASELINE } from './fixtures';
+import { DEFAULT_SCENARIO } from './presets';
 import type { BaselineFinancesPayload, ScenarioResult, ShockScenarioPayload } from './types';
 
 const DEBOUNCE_MS = 250;
@@ -23,17 +24,20 @@ export interface ScenarioSimulatorState {
   error: string | null;
   setScenario: (patch: Partial<ShockScenarioPayload>) => void;
   setBaseline: (patch: Partial<BaselineFinancesPayload>) => void;
+  /** False until the user changes a baseline figure, so example data can be labelled. */
+  baselineEdited: boolean;
 }
 
 export function useScenarioSimulator(
   initialBaseline: BaselineFinancesPayload = PREVIEW_BASELINE,
 ): ScenarioSimulatorState {
   const [baseline, setBaselineState] = useState(initialBaseline);
-  const [scenario, setScenarioState] = useState<ShockScenarioPayload>(PREVIEW_SCENARIO);
+  const [scenario, setScenarioState] = useState<ShockScenarioPayload>(DEFAULT_SCENARIO);
   const [result, setResult] = useState<ScenarioResult | null>(null);
   const [source, setSource] = useState<ResultSource | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [baselineEdited, setBaselineEdited] = useState(false);
 
   const controllerRef = useRef<AbortController | null>(null);
   // Requests are numbered so a slow earlier response can never overwrite the
@@ -83,8 +87,19 @@ export function useScenarioSimulator(
   }, []);
 
   const setBaseline = useCallback((patch: Partial<BaselineFinancesPayload>) => {
+    setBaselineEdited(true);
     setBaselineState((current) => ({ ...current, ...patch }));
   }, []);
 
-  return { baseline, scenario, result, source, isLoading, error, setScenario, setBaseline };
+  return {
+    baseline,
+    scenario,
+    result,
+    source,
+    isLoading,
+    error,
+    setScenario,
+    setBaseline,
+    baselineEdited,
+  };
 }
