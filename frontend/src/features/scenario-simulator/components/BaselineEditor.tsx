@@ -31,21 +31,46 @@ export function BaselineEditor({ baseline, summary, onChange }: BaselineEditorPr
         onChange={(cents) => onChange({ weekly_gross_earnings_cents: cents })}
       />
 
-      <MoneyField
-        id="baseline-variable-costs"
-        label="Costs that fall when you work less"
-        valueCents={baseline.weekly_variable_work_costs_cents}
-        hint="Fuel, commission, parking."
-        onChange={(cents) => onChange({ weekly_variable_work_costs_cents: cents })}
-      />
+      <fieldset className="space-y-4 rounded-lg border border-slate-200 p-3">
+        <legend className="px-1 text-sm font-medium text-slate-700">
+          What work costs you each week
+        </legend>
+        <p className="text-xs text-slate-600">
+          Split these two ways. Some costs stop when you stop working, and some keep charging you
+          anyway — that difference is what decides how bad a week off really is.
+        </p>
 
-      <MoneyField
-        id="baseline-fixed-costs"
-        label="Costs you pay even in a week off"
-        valueCents={baseline.weekly_fixed_work_costs_cents}
-        hint="Vehicle rental, insurance, phone plan. This one matters most in a bad week."
-        onChange={(cents) => onChange({ weekly_fixed_work_costs_cents: cents })}
-      />
+        <MoneyField
+          id="baseline-variable-costs"
+          label="Costs that stop when you stop working"
+          valueCents={baseline.weekly_variable_work_costs_cents}
+          hint="Fuel, parking, commission. No work that week means you do not pay these."
+          onChange={(cents) => onChange({ weekly_variable_work_costs_cents: cents })}
+        />
+
+        <MoneyField
+          id="baseline-fixed-costs"
+          label="Costs that keep charging anyway"
+          valueCents={baseline.weekly_fixed_work_costs_cents}
+          hint="Vehicle or bike rental, insurance, phone plan, loan repayments."
+          onChange={(cents) => onChange({ weekly_fixed_work_costs_cents: cents })}
+        />
+
+        {baseline.weekly_fixed_work_costs_cents > 0 ? (
+          <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            So in a week you cannot work at all, you would still pay{' '}
+            <span className="font-semibold tabular-nums">
+              {formatCents(baseline.weekly_fixed_work_costs_cents)}
+            </span>
+            .
+          </p>
+        ) : (
+          <p className="rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-600">
+            With nothing here, a week you cannot work costs you nothing to keep going. If you rent
+            a vehicle or pay insurance, add it above.
+          </p>
+        )}
+      </fieldset>
 
       <MoneyField
         id="baseline-essentials"
