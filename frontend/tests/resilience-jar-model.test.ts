@@ -21,6 +21,8 @@ test("money input converts to integer cents without floating-point arithmetic", 
   assert.equal(dollarsToCents("12.34"), 1_234);
   assert.equal(dollarsToCents("12.345"), null);
   assert.equal(dollarsToCents("-1"), null);
+  assert.equal(dollarsToCents("1000000"), 100_000_000);
+  assert.equal(dollarsToCents("1000000.01"), null);
   assert.equal(centsToDollars(1_234), "12.34");
 });
 

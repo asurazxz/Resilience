@@ -4,6 +4,8 @@
 
 **Scope:** One-week functional prototype; deployment deferred
 
+> Historical plan: all five branches were merged into `dev` on 2026-09-02. Use this document for the original product boundaries and acceptance criteria; use `README.md`, `documentation/codebase-structure.md`, and the feature documents for current setup and implementation status.
+
 ## Product boundary
 
 Resilience is a mobile-first PWA for Singapore platform workers with irregular weekly earnings. The prototype connects four outcomes in one flow: understand net work income, choose a flexible savings target, find potentially relevant support, and prepare for a financial shock.
@@ -15,7 +17,7 @@ The approved architecture establishes two non-negotiable safety boundaries:
 
 Manual input is the primary data path. CSV import and Tesseract OCR are optional enhancements after the core journey works.
 
-## Branch convention
+## Original branch convention
 
 The five primary branches use `feature/0N-short-name`, where `0N` preserves the user-journey order in branch listings:
 
@@ -104,7 +106,9 @@ Agree these contracts before feature code diverges:
 
 Workstream 1 owns the first proposal for shared schemas, not unilateral final authority. Any contract change affecting another slice requires the affected owners to agree and update tests/fixtures in the same pull request.
 
-## Suggested integration order
+## Integration order (completed)
+
+The five feature branches have been integrated into `dev`. The sequence below records the intended merge order and remains useful when coordinating future changes to shared contracts.
 
 1. Merge repository layout, shared schemas, synthetic fixtures, database migration baseline, and runnable client/API shells.
 2. Merge the Income Reality Engine because its outputs feed savings and scenario features.

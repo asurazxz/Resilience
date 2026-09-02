@@ -40,7 +40,7 @@ export function QuestionnaireForm({
         disabled={submitting}
         className="w-full rounded-lg bg-emerald-700 px-4 py-2.5 font-medium text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {submitting ? "Checking..." : "Check potentially relevant schemes"}
+        {submitting ? "Checking..." : "Show schemes worth checking"}
       </button>
     </form>
   );
@@ -109,6 +109,7 @@ function QuestionField({
               type="number"
               min={field.min_value ?? undefined}
               max={field.max_value ?? undefined}
+              step="any"
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none"
               value={typeof value === "number" ? value : ""}
               onChange={(event) =>
@@ -123,6 +124,7 @@ function QuestionField({
           <input
             id={field.key}
             type="date"
+            min="1900-01-01"
             className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none"
             value={typeof value === "string" ? value : ""}
             onChange={(event) => onChange(event.target.value)}

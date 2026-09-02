@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterator
+from collections.abc import Iterator
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -17,9 +18,7 @@ class StubClient:
     def __init__(self, payload: dict[str, Any]) -> None:
         self.payload = payload
 
-    def complete_json(
-        self, system: str, user: str, schema: dict[str, Any]
-    ) -> dict[str, Any]:
+    def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
         return self.payload
 
 
@@ -117,16 +116,12 @@ def _matched_result() -> dict[str, Any]:
     }
     response = client.post("/api/scheme-navigator/evaluate", json={"answers": answers})
     return next(
-        r
-        for r in response.json()["results"]
-        if r["rule_id"] == "workfare-income-supplement"
+        r for r in response.json()["results"] if r["rule_id"] == "workfare-income-supplement"
     )
 
 
 def test_explain_uses_the_model_when_one_is_configured(stub_llm: None) -> None:
-    response = client.post(
-        "/api/scheme-navigator/explain", json={"result": _matched_result()}
-    )
+    response = client.post("/api/scheme-navigator/explain", json={"result": _matched_result()})
 
     assert response.status_code == 200
     body = response.json()
@@ -140,9 +135,7 @@ def test_explain_degrades_when_no_model_is_configured() -> None:
 
     app.dependency_overrides[get_llm_client] = lambda: None
     try:
-        response = client.post(
-            "/api/scheme-navigator/explain", json={"result": _matched_result()}
-        )
+        response = client.post("/api/scheme-navigator/explain", json={"result": _matched_result()})
     finally:
         app.dependency_overrides.clear()
 

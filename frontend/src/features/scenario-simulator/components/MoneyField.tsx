@@ -72,6 +72,8 @@ export function MoneyField({ id, label, valueCents, hint, onChange }: MoneyField
           id={id}
           type="text"
           inputMode="decimal"
+          maxLength={10}
+          pattern="\d+(\.\d{0,2})?"
           autoComplete="off"
           placeholder="0"
           value={draft}

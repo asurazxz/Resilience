@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from app.features.scheme_navigator.questionnaire import build_questionnaire
 from app.features.scheme_navigator.rules import RULES
 from app.features.scheme_navigator.schemas import Condition, SchemeRule
-from datetime import date
 
 
 def _rule(field_keys: list[str]) -> SchemeRule:
@@ -23,8 +24,7 @@ def _rule(field_keys: list[str]) -> SchemeRule:
         summary="Synthetic rule for questionnaire tests.",
         simplified_note="Test-only rule.",
         conditions=[
-            Condition(field=key, operator="eq", value=True, description=key)
-            for key in field_keys
+            Condition(field=key, operator="eq", value=True, description=key) for key in field_keys
         ],
     )
 

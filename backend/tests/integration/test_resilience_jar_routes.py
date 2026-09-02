@@ -10,20 +10,17 @@ import unittest
 )
 class ResilienceJarRouteTests(unittest.TestCase):
     def setUp(self) -> None:
-        from fastapi import FastAPI
-        from fastapi.testclient import TestClient
-
         from backend.app.features.resilience_jar.fixtures import (
             DEMO_USER_ID,
             build_demo_service,
         )
         from backend.app.features.resilience_jar.routes import create_router
+        from fastapi import FastAPI
+        from fastapi.testclient import TestClient
 
         app = FastAPI()
         app.include_router(
-            create_router(
-                build_demo_service(), user_id_provider=lambda: DEMO_USER_ID
-            )
+            create_router(build_demo_service(), user_id_provider=lambda: DEMO_USER_ID)
         )
         self.client = TestClient(app)
 
@@ -56,13 +53,9 @@ class ResilienceJarRouteTests(unittest.TestCase):
             f"/api/v1/resilience-jar/contributions/{contribution_id}",
             json={"amount_cents": 3_000},
         )
-        deleted = self.client.delete(
-            f"/api/v1/resilience-jar/contributions/{contribution_id}"
-        )
+        deleted = self.client.delete(f"/api/v1/resilience-jar/contributions/{contribution_id}")
 
-        self.assertEqual(
-            {"code", "message", "field_errors"}, set(invalid.json())
-        )
+        self.assertEqual({"code", "message", "field_errors"}, set(invalid.json()))
         self.assertEqual(201, created.status_code)
         self.assertEqual(201, withdrawal.status_code)
         self.assertEqual("withdrawal", withdrawal.json()["entry_type"])

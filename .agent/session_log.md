@@ -2,6 +2,37 @@
 
 Append significant sessions in reverse chronological order. Keep entries concise and factual.
 
+## 2026-09-03 — Apply the mobile editorial visual system
+
+- Reworked the shared React visual layer around the supplied DESIGN.md: warm paper surfaces, ink typography, Forest action states, 4px geometry, warm shadows, and a blue selection accent.
+- Replaced the mobile horizontal route strip with an accessible fixed **Menu / Close** disclosure, while keeping the full navigation visible on wider screens.
+- Applied the same tokens to the Emergency Fund and Scheme assistant so the expanded integrated flows remain visually cohesive; documented the rules and 390px test expectation in `frontend/README.md`.
+- Verified the production frontend build, all 26 frontend tests, a 390px browser view of Home and Income Overview, mobile menu navigation, and an error-free browser console. Refreshed Graphify after the code changes.
+- Created the team Figma design file, but further MCP writes are blocked by the Starter-plan quota. Capturing the live screen also needs explicit approval because it would export visible local financial data to Figma.
+
+## 2026-09-03 — Simplify and connect the integrated user journey
+
+- Fixed the shared navigation to the top and shortened its labels and core page wording.
+- Replaced Income Reality's dense metric cards with a weekly trend chart, plain-language summary, and expandable week rows.
+- Removed weekly emergency-balance editing in favour of a direct “Record emergency use” journey, added one dedicated plan-edit action, and compacted fund activity into expandable recent rows.
+- Added corner/full-window modes to the Scheme assistant, simplified scheme results into expandable summaries, strengthened form constraints, and split chart-heavy feature routes from the initial bundle.
+- Verified 26 frontend tests, the production PWA build without the prior large-chunk warning, live chat fallback responses, desktop/mobile browser flows, and a clean browser console.
+
+## 2026-09-02 — Refresh integrated project documentation
+
+- Reworked the root README into a current, single-path overview of the integrated five-feature application, local setup, verification commands, and documentation index.
+- Updated every package and feature README/documentation file to distinguish historical branch notes from the current `dev` architecture and verification results.
+- Documented the remaining runtime boundaries: browser-fixture Emergency Fund persistence, stateless Scenario persistence, Scheme rule review, and optional Groq fallbacks.
+- Validated local Markdown links, conflict-marker absence, whitespace, and the refreshed Graphify project graph.
+
+## 2026-09-02 — Repair the merged development application
+
+- Reconciled duplicated merge fragments in the frontend manifest, Vite config, TypeScript config, React entry point, shared application shell, and FastAPI entry point.
+- Integrated all five feature routes into the Foundation shell, retained the PWA/test setup, added the Scenario Simulator proxy, and synchronized the root workspace lockfile.
+- Normalized backend source imports so both tests and the documented root Uvicorn command load the same package graph; formatted the backend and cleared Ruff findings.
+- Verified 26 frontend tests, the production PWA build, 188 passing backend tests with 3 database-dependent skips, Ruff, JSON parsing, and live PWA/API/database/Scheme Navigator health checks.
+- Refreshed the Graphify code graph and launched the local Supabase, FastAPI, and Vite services.
+
 ## 2026-09-02 — Add Graphify cross-agent project integration
 
 - Installed Graphify's project-scoped generic Agent Skills bundle at `.agents/skills/graphify/`, complementing the existing Codex `AGENTS.md` integration.

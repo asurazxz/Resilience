@@ -10,7 +10,7 @@ exactly one new prompt, here.
 
 from __future__ import annotations
 
-from app.features.scheme_navigator.schemas import QuestionnaireField, SelectOption
+from .schemas import QuestionnaireField, SelectOption
 
 FIELD_REGISTRY: dict[str, QuestionnaireField] = {
     "citizenship_status": QuestionnaireField(

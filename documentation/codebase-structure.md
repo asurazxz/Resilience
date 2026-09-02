@@ -1,12 +1,12 @@
 # Codebase Structure
 
-**Date:** 2026-09-01
+**Updated:** 2026-09-02
 
-**Scope:** Runnable Feature 1 foundation plus shared boundaries for the one-week prototype
+**Scope:** Integrated five-feature prototype on `dev`
 
 ## Decision
 
-Resilience uses a feature-first monorepo. The frontend and backend mirror the five development workstreams so each owner can deliver a vertical slice with fewer shared-file conflicts. Cross-cutting code is promoted into a shared directory only when multiple features actually need it.
+Resilience uses a feature-first monorepo. The frontend and backend mirror the five product features so each vertical slice keeps its UI, transport, deterministic logic, and tests together. Cross-cutting code is promoted into a shared directory only when multiple features need it.
 
 Supabase is the managed PostgreSQL environment for shared integration and the demo. It does not replace PostgreSQL in the architecture. FastAPI remains the application boundary and connects through a standard `DATABASE_URL`, preserving portability to local or another hosted PostgreSQL instance.
 
@@ -56,17 +56,17 @@ Supabase is the managed PostgreSQL environment for shared integration and the de
     └── features/
 ```
 
-## Workstream ownership
+## Feature map
 
-| Branch | Frontend | Backend | Additional ownership |
+| Feature | Frontend | Backend | Shared integration |
 |---|---|---|---|
-| `feature/01-foundation-input` | `frontend/src/app/`, `frontend/src/features/foundation-input/` | `backend/app/api/`, `backend/app/core/`, `backend/app/db/`, `backend/app/features/foundation_input/` | Initial package manifests, shared database baseline, OCR integration, local setup |
-| `feature/02-income-reality` | `frontend/src/features/income-reality/` | `backend/app/features/income_reality/` | Deterministic income tests and transparent breakdown contracts |
-| `feature/03-resilience-jar` | `frontend/src/features/resilience-jar/` | `backend/app/features/resilience_jar/` | Savings recommendation and goal-progress tests |
-| `feature/04-scheme-navigator` | `frontend/src/features/scheme-navigator/` | `backend/app/features/scheme_navigator/` | Versioned rules, official sources, and `backend/app/integrations/ai/` |
-| `feature/05-scenario-simulator` | `frontend/src/features/scenario-simulator/` | `backend/app/features/scenario_simulator/` | Deterministic scenario and buffer-runway tests |
+| Foundation Input | `src/app/`, `src/features/foundation-input/` | `features/foundation_input/`, `core/`, `db/` | App shell, offline queue, PostgreSQL foundation, shared API client |
+| Income Reality | `src/features/income-reality/` | `features/income_reality/` | Foundation adapter and deterministic breakdown contract |
+| Emergency Fund | `src/features/resilience-jar/` | `features/resilience_jar/` | Fixture adapter, summary schema, recommendation and ledger service |
+| Scheme Navigator | `src/features/scheme-navigator/` | `features/scheme_navigator/`, `api/routes/scheme_navigator.py` | Versioned rules, official sources, and optional AI transport |
+| Scenario Simulator | `src/features/scenario-simulator/` | `features/scenario_simulator/` | Deterministic shock model and stateless simulation endpoint |
 
-Ownership identifies the primary editor, not exclusive access. Changes to `contracts/`, `supabase/migrations/`, shared components, or shared database code require coordination with affected workstreams.
+Changes to `contracts/`, `supabase/migrations/`, the app shell, or shared database code affect multiple features and require corresponding tests and documentation in the same change.
 
 ## Dependency boundaries
 
@@ -80,15 +80,14 @@ Ownership identifies the primary editor, not exclusive access. Changes to `contr
 
 ## Validation performed
 
-- Built the TypeScript PWA and ran frontend unit tests.
-- Ran FastAPI unit and live local-Postgres integration tests and Ruff checks.
+- Built the TypeScript PWA and ran 26 frontend tests.
+- Ran 188 backend tests with 3 database-dependent skips and passed Ruff.
 - Exported OpenAPI and generated the frontend TypeScript contract.
 - Applied the migration and seed to local Supabase, ran 13 pgTAP checks, and linted all schemas without errors.
 - Confirmed environment examples contain local placeholders/defaults only and real `.env` files remain ignored.
 
 ## Deferred work
 
-- Hosted Supabase project linking and migration push.
 - User authentication and corresponding end-user RLS policies.
-- OCR, Storage, Realtime, Edge Functions, AI integrations, and deployment.
+- OCR, Storage, Realtime, Edge Functions, and deployment.
 - CI, containers, and hosted application deployment.

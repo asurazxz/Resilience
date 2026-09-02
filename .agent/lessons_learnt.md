@@ -2,6 +2,27 @@
 
 Read this file before executing any repository task. Add an entry only after a real error has been encountered and resolved.
 
+## 2026-09-03 — Fall back to the in-app browser when the verification CLI is absent
+
+- **Symptom:** The prescribed `agent-browser` visual verification command was not installed on the Windows host, and the in-app runtime rejected `networkidle` despite exposing it in the generic API type.
+- **Root cause:** This desktop environment provides browser control through the Codex in-app browser runtime rather than the standalone CLI, with a smaller supported load-state set.
+- **Resolution:** Used the installed Browser skill and its persistent in-app tab, waited for `domcontentloaded` plus a bounded render delay, and completed DOM, interaction, responsive, screenshot, and console-log checks there.
+- **Prevention:** Check the available browser surface before invoking a standalone verifier; on this host use the in-app browser and `domcontentloaded` for local visual testing.
+
+## 2026-09-02 — Test the documented package import path
+
+- **Symptom:** Backend tests passed, but the documented `backend.app.main:app` Uvicorn launch failed with `ModuleNotFoundError: app`.
+- **Root cause:** The test configuration added `backend` to `PYTHONPATH`, masking branch-local absolute `app.*` imports that do not exist when the application is imported from the repository root.
+- **Resolution:** Converted backend source imports to package-relative imports and verified both the test suite and a live root-level Uvicorn launch.
+- **Prevention:** After integration, import the application through the exact production/development entry point in addition to running tests; avoid source imports that depend on test-only `PYTHONPATH` entries.
+
+## 2026-09-02 — Inspect shared merge files even when Git reports no conflicts
+
+- **Symptom:** Git reported a clean merge, but the frontend manifest, Vite config, TypeScript config, React entry point, application shell, and FastAPI entry point contained concatenated branch versions.
+- **Root cause:** Conflict resolution committed both sides sequentially, leaving syntactically invalid or semantically overwritten shared files without unmerged index entries or conflict markers.
+- **Resolution:** Reconstructed each shared file from both parents, retained every required dependency and route, then verified with JSON parsing, compilers, tests, lint, and live health checks.
+- **Prevention:** After a large feature merge, compare shared entry points against both merge parents and run real build/test/launch checks even when `git diff --diff-filter=U` and conflict-marker searches are empty.
+
 ## 2026-09-02 — Keep browser integration fixtures isolated from a user's local demo data
 
 - **Symptom:** A browser test that asserted seeded dollar values failed after legitimate local entries had changed the shared development database.

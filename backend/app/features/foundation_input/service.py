@@ -230,9 +230,7 @@ def _upsert_week(
     existing = session.scalar(
         _week_query(user_id).where(WeeklyEntry.week_start == week_start).with_for_update()
     )
-    record_with_same_id = session.scalar(
-        _week_query(user_id).where(WeeklyEntry.id == payload.id)
-    )
+    record_with_same_id = session.scalar(_week_query(user_id).where(WeeklyEntry.id == payload.id))
     if record_with_same_id and record_with_same_id.week_start != week_start:
         raise DomainError(
             409,

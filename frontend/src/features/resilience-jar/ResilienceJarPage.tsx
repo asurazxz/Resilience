@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 
 import {
   HttpResilienceJarApi,
@@ -30,12 +30,14 @@ import "./resilienceJar.css";
 interface ResilienceJarPageProps {
   api?: ResilienceJarApi;
   view?: "jar" | "plan";
+  startWithEmergencyUse?: boolean;
   onNavigate?: (path: "/resilience-jar" | "/resilience-jar/plan") => void;
 }
 
 export function ResilienceJarPage({
   api,
   view = "jar",
+  startWithEmergencyUse = false,
   onNavigate,
 }: ResilienceJarPageProps) {
   const client = useMemo(() => api ?? new HttpResilienceJarApi(), [api]);
@@ -56,13 +58,16 @@ export function ResilienceJarPage({
   const [contributionAmount, setContributionAmount] = useState("");
   const [contributionDate, setContributionDate] = useState(singaporeToday());
   const [contributionNote, setContributionNote] = useState("");
-  const [withdrawalOpen, setWithdrawalOpen] = useState(false);
+  const [withdrawalOpen, setWithdrawalOpen] = useState(startWithEmergencyUse);
+  const [showAllActivity, setShowAllActivity] = useState(false);
   const [withdrawalAmount, setWithdrawalAmount] = useState("");
   const [withdrawalDate, setWithdrawalDate] = useState(singaporeToday());
   const [withdrawalNote, setWithdrawalNote] = useState("");
   const [editingContributionId, setEditingContributionId] = useState<
     string | null
   >(null);
+  const activityRef = useRef<HTMLElement>(null);
+  const didFocusEmergencyUse = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -123,6 +128,13 @@ export function ResilienceJarPage({
     const timeoutId = window.setTimeout(() => setSuccessMessage(null), 4_000);
     return () => window.clearTimeout(timeoutId);
   }, [successMessage]);
+
+  useEffect(() => {
+    if (!summary || !startWithEmergencyUse || didFocusEmergencyUse.current) return;
+    didFocusEmergencyUse.current = true;
+    setWithdrawalOpen(true);
+    activityRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [startWithEmergencyUse, summary]);
 
   function syncPlanForms(next: JarSummary) {
     setTargetAmount(centsToDollars(next.plan.target_amount_cents));
@@ -364,6 +376,9 @@ export function ResilienceJarPage({
       ? summary.weekly_essential_expenses_cents * parsedGoalWeeks
       : null;
   const goalNeedsReview = summary.goal_review.status === "expenses_changed";
+  const visibleContributions = showAllActivity
+    ? summary.contributions
+    : summary.contributions.slice(0, 5);
   const previousMonthlyExpenses =
     summary.goal_review.previous_weekly_expenses_cents === null
       ? null
@@ -392,14 +407,23 @@ export function ResilienceJarPage({
           </p>
         </div>
         {view === "jar" ? (
-          <button
-            className="jar-button jar-button-secondary"
-            disabled={mutationsDisabled}
-            onClick={() => void togglePause()}
-            type="button"
-          >
-            {isPaused ? "Resume plan" : "Pause plan"}
-          </button>
+          <div className="jar-heading-actions">
+            <button
+              className="jar-button"
+              onClick={() => onNavigate?.("/resilience-jar/plan")}
+              type="button"
+            >
+              Edit emergency plan
+            </button>
+            <button
+              className="jar-button jar-button-secondary"
+              disabled={mutationsDisabled}
+              onClick={() => void togglePause()}
+              type="button"
+            >
+              {isPaused ? "Resume reminders" : "Pause reminders"}
+            </button>
+          </div>
         ) : (
           <button
             className="jar-back-link"
@@ -453,13 +477,9 @@ export function ResilienceJarPage({
                 </p>
               )}
             {view === "jar" ? (
-              <button
-                className="jar-alert-action"
-                onClick={() => onNavigate?.("/resilience-jar/plan")}
-                type="button"
-              >
-                Review goal
-              </button>
+              <p className="jar-goal-alert-guidance">
+                Use “Edit emergency plan” above when you are ready to update the goal.
+              </p>
             ) : (
               <p className="jar-goal-alert-guidance">
                 Review the goal below and save it to confirm the updated expense amount.
@@ -539,13 +559,7 @@ export function ResilienceJarPage({
                   : formatMoney(summary.plan.goal.amount_cents)}
               </strong>
             </div>
-            <button
-              className="jar-text-link"
-              onClick={() => onNavigate?.("/resilience-jar/plan")}
-              type="button"
-            >
-              Edit plan
-            </button>
+            <span className="jar-muted">Change this from “Edit emergency plan” above.</span>
           </div>
         </div>
       </section>
@@ -660,6 +674,10 @@ export function ResilienceJarPage({
               <input
                 id="jar-target-amount"
                 inputMode="decimal"
+                maxLength={10}
+                pattern="\d+(\.\d{1,2})?"
+                required
+                title="Enter an amount with up to two decimal places"
                 value={targetAmount}
                 onChange={(event) => setTargetAmount(event.target.value)}
               />
@@ -702,6 +720,8 @@ export function ResilienceJarPage({
                     type="number"
                     min="1"
                     max="52"
+                    required
+                    step="1"
                     value={goalWeeks}
                     onChange={(event) => setGoalWeeks(event.target.value)}
                   />
@@ -718,6 +738,10 @@ export function ResilienceJarPage({
                 Goal amount (SGD)
                 <input
                   inputMode="decimal"
+                  maxLength={10}
+                  pattern="\d+(\.\d{1,2})?"
+                  required
+                  title="Enter an amount with up to two decimal places"
                   value={goalAmount}
                   onChange={(event) => setGoalAmount(event.target.value)}
                 />
@@ -738,6 +762,7 @@ export function ResilienceJarPage({
       </div>
 
       <section
+        ref={activityRef}
         className="jar-card jar-contributions"
         aria-labelledby="jar-contributions-title"
         hidden={view !== "jar"}
@@ -746,7 +771,7 @@ export function ResilienceJarPage({
           <div>
             <h2 id="jar-contributions-title">Emergency fund activity</h2>
             <p className="jar-disclaimer">
-              Resilience only tracks emergency fund amounts you report. It never holds, transfers, or withdraws money.
+              Add money saved or record emergency money used. Resilience tracks these records but never moves money.
             </p>
           </div>
           <button
@@ -772,9 +797,12 @@ export function ResilienceJarPage({
             </div>
             <label>
               Amount (SGD)
-              <input
-                required
-                inputMode="decimal"
+                <input
+                  required
+                  inputMode="decimal"
+                  maxLength={10}
+                  pattern="\d+(\.\d{1,2})?"
+                  title="Enter an amount with up to two decimal places"
                 value={withdrawalAmount}
                 onChange={(event) => setWithdrawalAmount(event.target.value)}
               />
@@ -782,8 +810,9 @@ export function ResilienceJarPage({
             <label>
               Date
               <input
-                required
-                type="date"
+                  required
+                  type="date"
+                  min="2000-01-01"
                 max={singaporeToday()}
                 value={withdrawalDate}
                 onChange={(event) => setWithdrawalDate(event.target.value)}
@@ -798,7 +827,7 @@ export function ResilienceJarPage({
               />
             </label>
             <button className="jar-button jar-button-withdraw" disabled={mutationsDisabled} type="submit">
-              Record withdrawal
+              Record emergency use
             </button>
           </form>
         )}
@@ -812,18 +841,22 @@ export function ResilienceJarPage({
         <form className="jar-contribution-form" onSubmit={(event) => void saveContribution(event)}>
           <label>
             Amount (SGD)
-            <input
-              required
-              inputMode="decimal"
+              <input
+                required
+                inputMode="decimal"
+                maxLength={10}
+                pattern="\d+(\.\d{1,2})?"
+                title="Enter an amount with up to two decimal places"
               value={contributionAmount}
               onChange={(event) => setContributionAmount(event.target.value)}
             />
           </label>
           <label>
             Date
-            <input
-              required
-              type="date"
+              <input
+                required
+                type="date"
+                min="2000-01-01"
               max={singaporeToday()}
               value={contributionDate}
               onChange={(event) => setContributionDate(event.target.value)}
@@ -856,41 +889,53 @@ export function ResilienceJarPage({
         {summary.contributions.length === 0 ? (
           <p className="jar-empty">No contributions yet. Start building your emergency fund with any positive amount.</p>
         ) : (
-          <ul className="jar-contribution-list">
-            {summary.contributions.map((contribution) => (
-              <li className={`jar-entry jar-entry-${contribution.entry_type}`} key={contribution.id}>
-                <div>
-                  <span className="jar-entry-type">
-                    {contribution.entry_type === "withdrawal" ? "Withdrawal" : "Contribution"}
-                  </span>
-                  <strong>
-                    {contribution.entry_type === "withdrawal" ? "−" : "+"}
-                    {formatMoney(contribution.amount_cents)}
-                  </strong>
-                  <span>{formatDate(contribution.contribution_date)}</span>
-                  {contribution.note && <span>{contribution.note}</span>}
-                </div>
-                <div className="jar-list-actions">
-                  {contribution.entry_type === "deposit" && (
-                    <button
-                      type="button"
-                      disabled={mutationsDisabled}
-                      onClick={() => editContribution(contribution)}
-                    >
-                      Edit
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    disabled={mutationsDisabled}
-                    onClick={() => void deleteContribution(contribution)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="jar-contribution-list">
+              {visibleContributions.map((contribution) => (
+                <li className={`jar-entry jar-entry-${contribution.entry_type}`} key={contribution.id}>
+                  <details>
+                    <summary>
+                      <span className="jar-entry-type">
+                        {contribution.entry_type === "withdrawal" ? "Used" : "Added"}
+                      </span>
+                      <strong>
+                        {contribution.entry_type === "withdrawal" ? "−" : "+"}
+                        {formatMoney(contribution.amount_cents)}
+                      </strong>
+                      <span>{formatDate(contribution.contribution_date)}</span>
+                      <span className="jar-entry-open">Details</span>
+                    </summary>
+                    <div className="jar-entry-details">
+                      <p>{contribution.note || "No note added."}</p>
+                      <div className="jar-list-actions">
+                        {contribution.entry_type === "deposit" && (
+                          <button
+                            type="button"
+                            disabled={mutationsDisabled}
+                            onClick={() => editContribution(contribution)}
+                          >
+                            Edit
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          disabled={mutationsDisabled}
+                          onClick={() => void deleteContribution(contribution)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </details>
+                </li>
+              ))}
+            </ul>
+            {summary.contributions.length > 5 && (
+              <button className="jar-text-link" type="button" onClick={() => setShowAllActivity((shown) => !shown)}>
+                {showAllActivity ? "Show recent activity only" : `Show all ${summary.contributions.length} records`}
+              </button>
+            )}
+          </>
         )}
       </section>
 

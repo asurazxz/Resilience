@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from datetime import date, datetime
 from enum import StrEnum
-from typing import TypeAlias
 
 
 class RecommendationMethod(StrEnum):
@@ -33,7 +32,7 @@ class CoverageGoal:
     mode: str = "coverage"
 
 
-Goal: TypeAlias = AmountGoal | CoverageGoal
+type Goal = AmountGoal | CoverageGoal
 
 
 @dataclass(frozen=True)
@@ -45,9 +44,7 @@ class WeeklySurplus:
 @dataclass(frozen=True)
 class JarPlan:
     user_id: str
-    recommendation_method: RecommendationMethod = (
-        RecommendationMethod.CONSERVATIVE_FOUR_WEEK
-    )
+    recommendation_method: RecommendationMethod = RecommendationMethod.CONSERVATIVE_FOUR_WEEK
     target_frequency: TargetFrequency = TargetFrequency.WEEKLY
     target_amount_cents: int = 0
     weekly_target_cents: int = 0

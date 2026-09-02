@@ -7,9 +7,9 @@ from backend.app.features.resilience_jar.calculations import (
     calculate_completion_projection,
     calculate_milestones,
     calculate_progress,
+    recommend_weekly_savings,
     target_amount_to_weekly_cents,
     weekly_cents_to_target_amount,
-    recommend_weekly_savings,
 )
 from backend.app.features.resilience_jar.models import (
     AmountGoal,
@@ -29,26 +29,20 @@ def week(day: int, surplus_cents: int) -> WeeklySurplus:
 
 class RecommendationTests(unittest.TestCase):
     def test_no_completed_weeks_is_explicitly_insufficient(self) -> None:
-        result = recommend_weekly_savings(
-            RecommendationMethod.CONSERVATIVE_FOUR_WEEK, []
-        )
+        result = recommend_weekly_savings(RecommendationMethod.CONSERVATIVE_FOUR_WEEK, [])
 
         self.assertEqual("insufficient_data", result.status)
         self.assertIsNone(result.amount_cents)
         self.assertEqual("no_completed_weeks", result.rationale_code)
 
     def test_latest_week_uses_twenty_percent_and_floors_cents(self) -> None:
-        result = recommend_weekly_savings(
-            RecommendationMethod.LATEST_WEEK, [week(24, 10_004)]
-        )
+        result = recommend_weekly_savings(RecommendationMethod.LATEST_WEEK, [week(24, 10_004)])
 
         self.assertEqual(2_000, result.amount_cents)
         self.assertEqual(1, result.history_weeks_used)
 
     def test_latest_week_returns_zero_for_negative_surplus(self) -> None:
-        result = recommend_weekly_savings(
-            RecommendationMethod.LATEST_WEEK, [week(24, -5_000)]
-        )
+        result = recommend_weekly_savings(RecommendationMethod.LATEST_WEEK, [week(24, -5_000)])
 
         self.assertEqual(0, result.amount_cents)
         self.assertEqual("latest_week_non_positive", result.rationale_code)
@@ -94,9 +88,7 @@ class RecommendationTests(unittest.TestCase):
 
 class ProgressTests(unittest.TestCase):
     def test_amount_goal_reports_partial_progress_and_coverage(self) -> None:
-        result = calculate_progress(
-            AmountGoal(100_000), [20_000, 30_000], 70_000
-        )
+        result = calculate_progress(AmountGoal(100_000), [20_000, 30_000], 70_000)
 
         self.assertEqual(50_000, result.contribution_total_cents)
         self.assertEqual(50.0, result.progress_percent)

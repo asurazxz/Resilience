@@ -1,7 +1,6 @@
 # Backend
 
-This directory contains the provisional FastAPI service. Its application shell mounts the Scenario Simulator, Scheme Navigator, and synthetic Emergency Fund routers while the shared database and authentication foundations remain pending.
-This directory contains the Python 3.12/3.13 FastAPI service. Product logic is grouped by feature, while cross-cutting infrastructure and external services have explicit boundaries.
+This directory contains the integrated Python 3.12/3.13 FastAPI service. It mounts Foundation Input, Income Reality, Emergency Fund, Scenario Simulator, and Scheme Navigator routes; product logic remains grouped by feature with explicit infrastructure and external-service boundaries.
 
 ## Placement rules
 
@@ -12,23 +11,6 @@ This directory contains the Python 3.12/3.13 FastAPI service. Product logic is g
 - Put LLM and OCR clients in `app/integrations/`; integrations may explain or extract data but must not own financial or eligibility decisions.
 - Put fast deterministic tests in `tests/unit/` and tests crossing API/database boundaries in `tests/integration/`.
 
-The initial FastAPI package, dependency manifest, and application entry point are owned by `feature/01-foundation-input`.
-
-## Run and check
-
-From the repository root:
-
-```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -r backend/requirements.txt
-cd backend && ../.venv/bin/python -m uvicorn app.main:app --reload --port 8000
-```
-
-Run all backend tests from the repository root with:
-
-```bash
-PYTHONPATH=backend:. .venv/bin/python -m pytest backend/tests -q
-```
 ## Run and verify
 
 From the repository root after creating a Python 3.12 or 3.13 `.venv` and copying `backend/.env.example` to `backend/.env`:
@@ -41,5 +23,7 @@ From the repository root after creating a Python 3.12 or 3.13 `.venv` and copyin
 ```
 
 `DATABASE_URL` must use SQLAlchemy's psycopg dialect, for example `postgresql+psycopg://...`. Production/shared environments should use the Supabase transaction-pooler connection string with SSL and conservative pool settings. Keep direct database credentials server-side only.
+
+The API exposes `/health`, database-aware `/ready`, and interactive documentation at `/docs`. Optional Scheme Navigator AI configuration uses `GROQ_API_KEY` and `EXPLAINER_MODEL`; without a key, deterministic fallbacks keep the feature usable.
 
 Python 3.14 is not currently supported by the pinned dependency set on Windows because required binary wheels are unavailable. Create the environment explicitly with `py -3.13 -m venv .venv` (or `py -3.12`) before running these commands.

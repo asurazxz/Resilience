@@ -41,9 +41,7 @@ class StubClient:
         self.user: str | None = None
         self.calls = 0
 
-    def complete_json(
-        self, system: str, user: str, schema: dict[str, Any]
-    ) -> dict[str, Any]:
+    def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
         self.calls += 1
         self.system = system
         self.user = user
@@ -54,9 +52,7 @@ class FailingClient:
     def __init__(self, error: Exception) -> None:
         self.error = error
 
-    def complete_json(
-        self, system: str, user: str, schema: dict[str, Any]
-    ) -> dict[str, Any]:
+    def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
         raise self.error
 
 

@@ -243,7 +243,9 @@ class ValidationTests(unittest.TestCase):
 
 class ResultContractTests(unittest.TestCase):
     def test_every_monetary_field_is_a_whole_number_of_cents(self):
-        result = simulate(WORKER, ShockScenario(37, 5, unexpected_cost_cents=12_345, recovery_weeks=3))
+        result = simulate(
+            WORKER, ShockScenario(37, 5, unexpected_cost_cents=12_345, recovery_weeks=3)
+        )
         for week in result.weeks:
             for value in vars(week).values():
                 self.assertIsInstance(value, int)
@@ -290,7 +292,13 @@ class TransportContractTests(unittest.TestCase):
         import ast
         import pathlib
 
-        source = pathlib.Path(__file__).parents[2] / "app" / "features" / "scenario_simulator" / "schemas.py"
+        source = (
+            pathlib.Path(__file__).parents[2]
+            / "app"
+            / "features"
+            / "scenario_simulator"
+            / "schemas.py"
+        )
         tree = ast.parse(source.read_text())
         return {
             node.name: {

@@ -6,9 +6,9 @@ interface ResultsListProps {
 }
 
 const STATUS_LABEL: Record<SchemeResult["status"], string> = {
-  matched: "Potentially relevant",
-  missing_information: "Needs more information",
-  not_matched: "Not currently matched",
+  matched: "Worth checking",
+  missing_information: "Answer needed",
+  not_matched: "May not fit",
 };
 
 const STATUS_STYLE: Record<SchemeResult["status"], string> = {
@@ -30,32 +30,33 @@ export function ResultsList({ results }: ResultsListProps) {
   const sorted = [...results].sort((a, b) => order.indexOf(a.status) - order.indexOf(b.status));
 
   return (
-    <div className="space-y-4">
+    <section className="space-y-3" aria-labelledby="scheme-results-title">
+      <h2 id="scheme-results-title" className="text-2xl font-bold">Your results</h2>
       <p className="text-xs text-slate-500">
-        This is pre-screening based on simplified rules, not an eligibility decision.
-        Always confirm through the official source before applying.
+        These are pointers based on simplified rules. Open a scheme for the reason and official next step.
       </p>
 
       {sorted.map((result) => (
-        <article
+        <details
           key={result.rule_id}
-          className={`rounded-lg border p-4 ${STATUS_STYLE[result.status]}`}
+          className={`group rounded-xl border ${STATUS_STYLE[result.status]}`}
         >
-          <div className="flex items-start justify-between gap-3">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4">
             <div>
               <h3 className="font-semibold text-slate-900">{result.name}</h3>
               <p className="text-xs text-slate-500">{result.agency}</p>
             </div>
-            <span
-              className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_BADGE[result.status]}`}
-            >
-              {STATUS_LABEL[result.status]}
+            <span className="flex items-center gap-2">
+              <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_BADGE[result.status]}`}>{STATUS_LABEL[result.status]}</span>
+              <span className="font-bold text-slate-500 group-open:rotate-180" aria-hidden="true">⌄</span>
             </span>
-          </div>
+          </summary>
+
+          <div className="border-t border-black/10 px-4 pb-4">
 
           {result.status === "missing_information" && result.missing_fields.length > 0 && (
             <p className="mt-2 text-sm text-amber-800">
-              Answer the remaining question(s) above to check this scheme.
+              Answer the remaining question above to check this scheme more accurately.
             </p>
           )}
 
@@ -70,7 +71,7 @@ export function ResultsList({ results }: ResultsListProps) {
           {result.status === "not_matched" && result.unmatched_reasons.length > 0 && (
             <ul className="mt-2 list-inside list-disc text-sm text-slate-500">
               {result.unmatched_reasons.map((reason) => (
-                <li key={reason}>Does not currently meet: {reason}</li>
+                <li key={reason}>{reason}</li>
               ))}
             </ul>
           )}
@@ -86,7 +87,7 @@ export function ResultsList({ results }: ResultsListProps) {
               target="_blank"
               rel="noreferrer"
             >
-              Official source
+              Read the official details
             </a>
             {result.status === "matched" && (
               <a
@@ -95,15 +96,16 @@ export function ResultsList({ results }: ResultsListProps) {
                 target="_blank"
                 rel="noreferrer"
               >
-                Apply through official channel
+                Go to the official application
               </a>
             )}
           </div>
           <p className="mt-1 text-xs text-slate-400">
             Rule last reviewed {result.last_reviewed_date}
           </p>
-        </article>
+          </div>
+        </details>
       ))}
-    </div>
+    </section>
   );
 }

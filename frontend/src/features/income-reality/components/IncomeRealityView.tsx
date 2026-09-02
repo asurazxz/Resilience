@@ -16,12 +16,17 @@ export function IncomeRealityView({ assumptions, response, onAssumptionsChange }
         assumptions={assumptions}
         onChange={onAssumptionsChange}
       />
-      <RecentTrendSummary trend={response.trend} />
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+      <RecentTrendSummary trend={response.trend} weeks={response.weeks} />
+      <section className="card mt-6">
+        <p className="eyebrow">Week by week</p>
+        <h2 className="mt-1 text-2xl font-bold">Recorded weeks</h2>
+        <p className="mt-2 text-sm text-slate-600">Start with the amount left. Open any week only when you need the full calculation.</p>
+        <div className="mt-3">
         {[...response.weeks].reverse().map((week) => (
           <IncomeBreakdownCard key={week.week_start} week={week} />
         ))}
-      </div>
+        </div>
+      </section>
     </div>
   );
 }

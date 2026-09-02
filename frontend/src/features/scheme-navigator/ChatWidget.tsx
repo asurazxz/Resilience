@@ -11,7 +11,7 @@ const GREETING =
 function BotAvatar({ className = "h-8 w-8" }: { className?: string }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-emerald-700 text-white ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-md bg-emerald-700 text-white ${className}`}
       aria-hidden="true"
     >
       <svg
@@ -60,6 +60,7 @@ function suggestionsFor(results: SchemeResult[] | null): string[] {
 export function ChatWidget() {
   const { answers, results } = useChatContext();
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -69,6 +70,18 @@ export function ChatWidget() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages, sending]);
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        if (expanded) setExpanded(false);
+        else setOpen(false);
+      }
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [expanded, open]);
 
   async function send(question: string) {
     if (!question || sending) return;
@@ -101,7 +114,7 @@ export function ChatWidget() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open the scheme assistant"
-        className="fixed bottom-4 right-4 z-50 rounded-full shadow-lg ring-2 ring-white transition hover:scale-105"
+        className="fixed bottom-4 right-4 z-50 rounded-md shadow-lg ring-2 ring-white transition hover:scale-105"
       >
         <BotAvatar className="h-14 w-14" />
       </button>
@@ -111,7 +124,7 @@ export function ChatWidget() {
   return (
     <section
       aria-label="Scheme assistant"
-      className="fixed bottom-4 right-4 z-50 flex h-[30rem] w-[min(22rem,calc(100vw-2rem))] flex-col rounded-lg border border-slate-300 bg-white shadow-xl"
+      className={`fixed z-50 flex flex-col border border-slate-300 bg-white shadow-2xl transition-[inset,width,height] ${expanded ? "inset-3 h-auto w-auto rounded-xl md:inset-8" : "bottom-4 right-4 h-[30rem] w-[min(22rem,calc(100vw-2rem))] rounded-lg"}`}
     >
       <header className="flex items-center gap-2 border-b border-slate-200 px-3 py-2">
         <BotAvatar className="h-8 w-8" />
@@ -120,7 +133,16 @@ export function ChatWidget() {
         </h2>
         <button
           type="button"
-          onClick={() => setOpen(false)}
+          onClick={() => setExpanded((value) => !value)}
+          aria-label={expanded ? "Return the scheme assistant to the corner" : "Expand the scheme assistant"}
+          aria-expanded={expanded}
+          className="rounded px-2 py-1 text-sm font-semibold text-slate-600 hover:bg-slate-100"
+        >
+          {expanded ? "Corner view" : "Full window"}
+        </button>
+        <button
+          type="button"
+          onClick={() => { setExpanded(false); setOpen(false); }}
           aria-label="Close the scheme assistant"
           className="rounded px-2 text-lg leading-none text-slate-500"
         >
@@ -170,7 +192,7 @@ export function ChatWidget() {
                 key={suggestion}
                 type="button"
                 onClick={() => void send(suggestion)}
-                className="rounded-full border border-emerald-700 px-2.5 py-1 text-xs text-emerald-800"
+                className="rounded-md border border-emerald-700 px-2.5 py-1 text-xs text-emerald-800"
               >
                 {suggestion}
               </button>
@@ -189,6 +211,7 @@ export function ChatWidget() {
         <div className="flex gap-2">
           <input
             value={draft}
+            maxLength={500}
             onChange={(event) => setDraft(event.target.value)}
             placeholder="Ask about a scheme..."
             aria-label="Your question"
@@ -206,6 +229,7 @@ export function ChatWidget() {
           Does not decide eligibility or calculate amounts. Anything outside the
           schemes screened here is unverified — confirm on SupportGoWhere.
         </p>
+        <p className="mt-1 text-right text-[0.68rem] text-slate-400">{draft.length}/500</p>
       </form>
     </section>
   );

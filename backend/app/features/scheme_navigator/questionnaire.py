@@ -9,8 +9,8 @@ here at all.
 
 from __future__ import annotations
 
-from app.features.scheme_navigator.fields import FIELD_REGISTRY
-from app.features.scheme_navigator.schemas import QuestionnaireField, SchemeRule
+from .fields import FIELD_REGISTRY
+from .schemas import QuestionnaireField, SchemeRule
 
 # Fields listed here are asked first, in this order, when present in the
 # derived set; any remaining referenced fields follow in alphabetical order

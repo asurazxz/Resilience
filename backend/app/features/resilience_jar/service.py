@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
-from typing import Any, Callable
+from collections.abc import Callable
+from datetime import UTC, date, datetime
+from typing import Any
 from zoneinfo import ZoneInfo
 
 from .calculations import (
@@ -71,9 +72,7 @@ class ResilienceJarService:
         plan = self._get_or_create_plan(user_id)
         contributions = self._contributions.list_for_user(user_id)
         surpluses = self._financial_context.list_completed_weekly_surpluses(user_id)
-        essential_expenses = (
-            self._financial_context.get_weekly_essential_expenses_cents(user_id)
-        )
+        essential_expenses = self._financial_context.get_weekly_essential_expenses_cents(user_id)
         progress = calculate_progress(
             plan.goal,
             [
@@ -86,14 +85,10 @@ class ResilienceJarService:
         )
         return JarSummary(
             plan=plan,
-            recommendation=recommend_weekly_savings(
-                plan.recommendation_method, surpluses
-            ),
+            recommendation=recommend_weekly_savings(plan.recommendation_method, surpluses),
             progress=progress,
             goal_review=self._goal_review(plan, essential_expenses),
-            completion_projection=calculate_completion_projection(
-                plan, progress, self._today()
-            ),
+            completion_projection=calculate_completion_projection(plan, progress, self._today()),
             milestones=calculate_milestones(
                 progress.goal_target_cents, progress.contribution_total_cents
             ),
@@ -154,34 +149,23 @@ class ResilienceJarService:
                 plan.weekly_target_cents, target_frequency
             )
         if "status" in payload:
-            changes["status"] = self._parse_enum(
-                PlanStatus, payload["status"], "status"
-            )
+            changes["status"] = self._parse_enum(PlanStatus, payload["status"], "status")
         if "goal" in payload:
             changes["goal"] = self._parse_goal(payload["goal"])
-            current_expenses = (
-                self._financial_context.get_weekly_essential_expenses_cents(user_id)
-            )
+            current_expenses = self._financial_context.get_weekly_essential_expenses_cents(user_id)
             changes["goal_expense_baseline_cents"] = (
-                current_expenses
-                if current_expenses is not None and current_expenses > 0
-                else None
+                current_expenses if current_expenses is not None and current_expenses > 0 else None
             )
 
-        changes["updated_at"] = datetime.now(timezone.utc)
+        changes["updated_at"] = datetime.now(UTC)
         self._plans.save(plan.updated(**changes))
         return self.get_summary(user_id)
 
-    def create_contribution(
-        self, user_id: str, payload: dict[str, Any]
-    ) -> Contribution:
+    def create_contribution(self, user_id: str, payload: dict[str, Any]) -> Contribution:
         self._require_object(payload)
         allowed_fields = {"amount_cents", "contribution_date", "note"}
         self._reject_unknown_fields(payload, allowed_fields)
-        missing = [
-            field for field in ("amount_cents", "contribution_date")
-            if field not in payload
-        ]
+        missing = [field for field in ("amount_cents", "contribution_date") if field not in payload]
         if missing:
             raise DomainError(
                 "validation_error",
@@ -191,20 +175,13 @@ class ResilienceJarService:
         amount_cents = self._positive_integer(payload["amount_cents"], "amount_cents")
         contribution_date = self._contribution_date(payload["contribution_date"])
         note = self._note(payload.get("note"))
-        return self._contributions.create(
-            user_id, "deposit", amount_cents, contribution_date, note
-        )
+        return self._contributions.create(user_id, "deposit", amount_cents, contribution_date, note)
 
-    def create_withdrawal(
-        self, user_id: str, payload: dict[str, Any]
-    ) -> Contribution:
+    def create_withdrawal(self, user_id: str, payload: dict[str, Any]) -> Contribution:
         self._require_object(payload)
         allowed_fields = {"amount_cents", "contribution_date", "note"}
         self._reject_unknown_fields(payload, allowed_fields)
-        missing = [
-            field for field in ("amount_cents", "contribution_date")
-            if field not in payload
-        ]
+        missing = [field for field in ("amount_cents", "contribution_date") if field not in payload]
         if missing:
             raise DomainError(
                 "validation_error",
@@ -263,9 +240,9 @@ class ResilienceJarService:
             else existing.contribution_date
         )
         note = self._note(payload["note"]) if "note" in payload else existing.note
-        remaining_balance = self._ledger_balance(
-            user_id, excluding_contribution_id=existing.id
-        ) + (amount_cents if existing.entry_type == "deposit" else -amount_cents)
+        remaining_balance = self._ledger_balance(user_id, excluding_contribution_id=existing.id) + (
+            amount_cents if existing.entry_type == "deposit" else -amount_cents
+        )
         if remaining_balance < 0:
             raise DomainError(
                 "insufficient_jar_balance",
@@ -307,9 +284,7 @@ class ResilienceJarService:
         if not self._contributions.delete(user_id, contribution_id):
             self._not_found()
 
-    def _ledger_balance(
-        self, user_id: str, *, excluding_contribution_id: str | None = None
-    ) -> int:
+    def _ledger_balance(self, user_id: str, *, excluding_contribution_id: str | None = None) -> int:
         return sum(
             contribution.amount_cents
             if contribution.entry_type == "deposit"
@@ -321,9 +296,7 @@ class ResilienceJarService:
     def _get_or_create_plan(self, user_id: str) -> JarPlan:
         plan = self._plans.get(user_id)
         if plan is None:
-            current_expenses = (
-                self._financial_context.get_weekly_essential_expenses_cents(user_id)
-            )
+            current_expenses = self._financial_context.get_weekly_essential_expenses_cents(user_id)
             plan = self._plans.save(
                 JarPlan(
                     user_id=user_id,
@@ -337,9 +310,7 @@ class ResilienceJarService:
         return plan
 
     @staticmethod
-    def _goal_review(
-        plan: JarPlan, current_expenses: int | None
-    ) -> GoalReview:
+    def _goal_review(plan: JarPlan, current_expenses: int | None) -> GoalReview:
         baseline = plan.goal_expense_baseline_cents
         if current_expenses is None or current_expenses <= 0 or baseline is None:
             return GoalReview(
@@ -411,9 +382,7 @@ class ResilienceJarService:
             raise DomainError(
                 "validation_error",
                 "One or more fields are invalid.",
-                field_errors={
-                    "contribution_date": "Contribution date cannot be in the future."
-                },
+                field_errors={"contribution_date": "Contribution date cannot be in the future."},
             )
         return parsed
 
@@ -465,9 +434,7 @@ class ResilienceJarService:
             raise DomainError(
                 "validation_error",
                 "One or more fields are not supported.",
-                field_errors={
-                    f"{prefix}{field}": "Unknown field." for field in unknown
-                },
+                field_errors={f"{prefix}{field}": "Unknown field." for field in unknown},
             )
 
     @staticmethod

@@ -1,8 +1,8 @@
 # Scheme Navigator — Questionnaire & Deterministic Evaluator
 
 **Date:** 2026-09-01 (questionnaire + evaluator), 2026-09-02 (AI explainer)
-**Branch:** `feature/04-scheme-navigator`
-**Scope:** dynamic questionnaire, deterministic rule evaluator, and a grounded AI explainer. End-to-end runnable.
+**Status:** Integrated into the shared app on `dev`
+**Scope:** Dynamic questionnaire, deterministic rule evaluator, grounded AI explainer, and global chat widget.
 
 ## User-visible scope
 
@@ -13,6 +13,9 @@ Each result also offers "Explain this in plain language", which returns a short 
 Deferred: persistence (answers are in-memory client state only, not saved), MyInfo/pre-fill, and any UI polish beyond functional Tailwind styling.
 
 A circular bot avatar sits bottom-right on every screen, opening a chat panel. The panel greets the person and offers two or three one-tap suggestions derived from their actual results ("Why didn't I match WIS?", "What other support might be available to me?"), so they are not facing a blank box.
+
+The panel can switch between its corner view and a nearly full-window view without losing the conversation.
+Scheme results themselves are compact summaries and reveal reasons, explanations, and official links only when opened.
 
 ## The chatbot answers in two modes
 
@@ -98,7 +101,7 @@ The evaluator decides; the LLM only rephrases. Four things enforce that:
 **Backend**
 - `sources.py` — `CURATED_SOURCES`: hand-written prototype summaries per `rule_id`, each with `source_url` and `retrieved_on`. Not verbatim official text and not verified current policy.
 - `explainer.py` — `build_prompt()` (pure) and `explain(result, client)`. Holds `SYSTEM_PROMPT`, the response JSON schema, and the fallback copy.
-- `app/integrations/ai/client.py` — `LLMClient` Protocol plus `GeminiClient`. Transport only: no rules, no prompt content. The Protocol earned its keep immediately: swapping the provider from Anthropic to Gemini changed this file and nothing else, and all 60 tests passed unchanged.
+- `app/integrations/ai/client.py` — provider-neutral `LLMClient` protocol plus the current `GroqClient`. Transport only: no rules or prompt content.
 
 - `chat.py` — `build_chat_prompt()` (pure) and `chat()`, holding the assistant's tighter system prompt and its canned fallback. History is capped at 8 turns so the prompt cannot grow without bound.
 
@@ -107,10 +110,10 @@ The evaluator decides; the LLM only rephrases. Four things enforce that:
 - `POST /api/scheme-navigator/chat` `{ messages, answers, results }` → `ChatResponse { reply, is_ai_generated, generated_at }`. Never 500s on model failure; the panel is usable before the questionnaire is submitted.
 
 **Frontend**
-- `ChatWidget.tsx` — fixed bottom-right avatar launcher and panel. The avatar is an inline SVG bot in a circle: no binary asset, no external request, and nothing for Workstream 1's future design system to collide with. Suggestion chips are derived client-side from the results already in state (presentation only, no model involvement).
-- `ChatContext.tsx` — carries `answers` and `results` from the Scheme Navigator out to the shell-mounted widget, so the questionnaire's state does not have to be lifted into the shell. The widget works with no context published, which is what keeps it harmless on screens other workstreams add.
+- `ChatWidget.tsx` — fixed bottom-right avatar launcher and panel. The avatar is an inline SVG bot in a circle, with no binary asset or external request. Suggestion chips are derived client-side from results already in state.
+- `ChatContext.tsx` — carries `answers` and `results` from the Scheme Navigator out to the shell-mounted widget, so the questionnaire's state does not have to be lifted into the shell. The widget also works when another route has published no questionnaire context.
 
-**Cross-workstream note.** The widget is mounted in `frontend/src/App.tsx` so it is present on every page, per the product owner's instruction. `documentation/codebase-structure.md` assigns the app shell to Workstream 1, so this is a deliberate two-line edit in another owner's file (a provider wrapper and the widget) and should be flagged to them at integration. Everything else lives in `features/scheme-navigator/`.
+**Shared-shell integration.** `ChatProvider` and `ChatWidget` are mounted in `frontend/src/app/App.tsx`, so the widget is present on every route. Feature implementation remains under `features/scheme-navigator/`.
 
 **Model call:** Groq via the `groq` SDK, default model `openai/gpt-oss-120b`, `max_tokens=4096`, `response_format={"type": "json_object"}`, no tools, non-streaming.
 
@@ -120,11 +123,10 @@ The provider has now changed three times (Anthropic → Gemini → Groq) and on 
 
 **Configuration:** `GROQ_API_KEY` and `EXPLAINER_MODEL`, both optional. Settings are loaded from `backend/.env` via `python-dotenv` (`override=False`, so an exported shell variable wins). `backend/.env` is gitignored and holds the real key; the tracked `.env.example` carries placeholders only. With no key the feature runs on fallbacks, which is the state the UI was verified in.
 
-## Assumptions made (reversible)
+## Current assumptions (reversible)
 
-- No app shell existed yet anywhere in the repo (FastAPI entrypoint, Vite/React scaffold), so this pass adds a minimal one scoped to this feature — `backend/app/main.py`, `backend/app/core/config.py`, and the full `frontend/` Vite/React/TS/Tailwind scaffold — rather than only feature-internal files. Workstream 1 owns extending/restructuring this foundation.
 - Scheme thresholds (WIS, ComCare, SkillsFuture Credit, CDC Vouchers) are simplified numeric approximations of real 2025/2026 parameters, not verified current rules. Each rule's `simplified_note` states this, and it is surfaced in every API result and in the UI.
-- Questionnaire fields are answered directly by the user (e.g. `monthly_income`, `household_income_per_capita`) rather than sourced from the Income Reality Engine, since that engine does not exist yet. Revisit once Workstream 2 lands.
+- Questionnaire fields are answered directly by the user (for example `monthly_income` and `household_income_per_capita`) rather than sourced from Income Reality. A future adapter may prefill these values without changing the deterministic evaluator.
 - `spouse_annual_income` is asked unconditionally with "enter 0 if not married" guidance, rather than a conditional follow-up field, to keep the evaluator simple for this prototype pass.
 
 ## Interfaces
@@ -154,9 +156,8 @@ No persistence layer yet: answers and results live only in React state for this 
 - `backend/tests/unit/test_scheme_navigator_questionnaire.py` (dedup across rules, unknown-field-key raises, real-rule field set matches expectation, stable preferred ordering).
 - `backend/tests/integration/test_scheme_navigator_api.py` (health, questionnaire shape, evaluate-with-no-answers → all missing, evaluate-with-full-answers → all four schemes matched, plus `/explain` with a stubbed client, `/explain` with no client configured, and unknown-rule → 404).
 - `backend/tests/unit/test_scheme_navigator_explainer.py` (prompt carries the outcome, every curated snippet, and the simplified note; prompt withholds the user's answers; response cannot carry a status; model output used when present; blank summary and blank steps handled; fallback covers all three statuses and never claims eligibility). The LLM is a stub in every test — no test touches the network.
-- 60 tests pass (Python 3.13.6 venv). Verified end to end on 2026-09-02 with both servers running: `/health`, questionnaire, evaluate (all four matched), explain on a matched and a missing-information result, and unknown-rule → 404; then the same journey through the browser UI at `:5173` with no console errors. `npm run build` type-checks and bundles cleanly.
-- All 41+ tests pass via `pytest` (Python 3.13 venv; Python 3.14 was tried first and rejected — no prebuilt `pydantic-core` wheel, would have required a source build blocked by sandboxed network/SSL, so the venv was rebuilt against 3.13).
-- Manually booted both servers (`uvicorn` on `:8000`, `vite` on `:5174` — `:5173` was already taken by a stray process from an earlier verification attempt) and hit `/health`, `GET /questionnaire`, and `POST /evaluate` with `curl`; confirmed the built frontend (`npm run build`, `tsc -b`) type-checks and bundles with no errors.
+- The integrated backend suite passes 188 tests with 3 database-dependent tests skipped by default; the integrated frontend suite passes 26 tests.
+- Verified end to end on 2026-09-02 with `/health`, questionnaire, evaluation, explanation fallbacks, and the browser UI at `:5173`; the production PWA build passes.
 
 ## Known limitations / follow-up
 
@@ -164,7 +165,7 @@ No persistence layer yet: answers and results live only in React state for this 
 - `CURATED_SOURCES` snippets are hand-written prototype summaries, not verified quotations from the official pages. They need review by someone checking the live sources before any non-prototype use.
 - **The chatbot's guardrails are prompt-level, and prompts are not a security boundary.** The system prompt forbids eligibility claims, monetary calculation, and off-topic answers, and the prompt tests pin that those instructions stay present — but no test proves the model *obeys* them, and none can. Because the live call has never succeeded (below), the assistant's actual adherence under adversarial questions is entirely unverified. Try to break it before demoing.
 - **This risk grew when the chatbot was allowed to discuss uncurated schemes.** Previously a hallucinated scheme fact was impossible by construction, because the model had only reviewed snippets to work from; that structural guarantee is now gone and has been replaced by an instruction asking the model to self-declare uncertainty. Self-declared uncertainty is exactly the thing language models are least reliable at. The realistic failure is a confident, plausible, wrong statement about a scheme's criteria, delivered to someone deciding whether to apply for financial support. Before the demo, deliberately ask it about a scheme that is *not* one of the four and check it both flags itself as unverified and does not invent criteria.
-- **Neither the explainer nor the chatbot has completed a live model call, so `is_ai_generated: true` has not been observed in practice.** A Gemini key is configured in `backend/.env` and `GeminiClient` constructs successfully, but `generativelanguage.googleapis.com` fails TLS certificate verification from the development sandbox used on 2026-09-02 (`google.com` from the same machine is reachable, so this is host-specific egress interception, not a general network fault). The request shape was built by inspecting the installed `google-genai` 2.21.0 signatures, and response parsing is unit-tested against a stub — but the real round trip, and the validity of the key itself, remain unverified. Re-test from an unrestricted network before the demo.
+- **A live Groq-generated explanation/chat response has not been part of the integrated verification.** The transport and response parsing are unit-tested with stubs, and no-key/provider failures use deterministic fallbacks. Re-test the configured model from an unrestricted network before the demo.
 - No database persistence of answers, goals, or rule versions — in-memory only.
 - Conditional/dependent questions (e.g. only ask `spouse_annual_income` if married) are not modelled; simplified per assumption above.
-- Frontend has no automated tests yet (component tests deferred); backend evaluator and API are covered.
+- Frontend contract/routing coverage is part of the integrated test suite; dedicated Scheme Navigator component interaction tests remain a follow-up.

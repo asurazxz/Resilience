@@ -1,6 +1,6 @@
 # Frontend
 
-This directory contains the integrated React, TypeScript, Vite, and Tailwind client for the Emergency Fund, Scenario Simulator, and Scheme Navigator. The Emergency Fund uses synthetic browser-local data; the other two features call the local FastAPI service. The scheme chatbot is mounted in the shared shell and remains available across feature routes. Full PWA support remains deferred.
+This directory contains the integrated React, TypeScript, Vite, Tailwind, and PWA client for all five product features. Foundation Input, Income Reality, the Scenario Simulator, and the Scheme Navigator call FastAPI. The Emergency Fund currently uses a typed browser-local fixture adapter, and the Scheme Navigator chatbot remains available across routes.
 
 ## Run locally
 
@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173/resilience-jar` to track the emergency fund, `http://localhost:5173/resilience-jar/plan` for its settings, `http://localhost:5173/scenario-simulator` to plan for a setback, or `http://localhost:5173/scheme-navigator` to pre-screen support schemes. The shared header provides client-side navigation, and browser back/forward navigation is supported.
+Open `http://localhost:5173` for the Foundation overview. The shared navigation links to weekly entries, Income Reality, Emergency Fund, Setback Planner, Scheme Navigator, CSV import, and assumptions. Browser back/forward navigation is supported.
 
 Available checks:
 
@@ -19,8 +19,6 @@ Available checks:
 npm test
 npm run build
 ```
-This directory contains the React, TypeScript, Tailwind CSS, and offline-capable PWA client. It is organised by product feature so each workstream owns an isolated vertical slice.
-
 ## Placement rules
 
 - Put routing, providers, navigation, and application composition in `src/app/`.
@@ -30,7 +28,17 @@ This directory contains the React, TypeScript, Tailwind CSS, and offline-capable
 - Put genuinely cross-feature TypeScript types in `src/types/`; feature-only types stay with their feature.
 - Put browser and end-to-end tests in `tests/`; colocate focused component tests with their source when the test tooling is selected.
 
-The shell is deliberately small and uses feature-owned CSS rather than introducing a shared design system. Workstream 1 can later replace the fixture adapter and extend the app composition without changing the feature component.
+The shell owns providers and routing while feature-specific UI remains isolated. The Emergency Fund fixture adapter can be replaced with a database-backed implementation without changing its page contract.
+
+## Visual system and mobile behaviour
+
+The shared visual system lives in `src/styles.css`; route-shell navigation styles live in `src/app/app.css`.
+
+- The interface uses a warm paper palette (`#f7f7f4` canvas, `#f2f1ed` cards, and `#26251e` ink), with Forest reserved for positive action and Ember reserved for small emphasis.
+- Cards, fields, and buttons use restrained 4px corners, hairline borders, and warm shadows. Keep new UI within these tokens instead of adding gradients, glass effects, or pill-shaped controls.
+- The fixed header becomes an accessible **Menu / Close** disclosure below 768px. It preserves all routes without a horizontally overflowing navigation strip.
+- Controls retain a 44px minimum target size. Test additions at a 390px-wide viewport as well as desktop width.
+
 ## Run and verify
 
 From the repository root after copying `frontend/.env.example` to `frontend/.env`:

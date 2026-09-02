@@ -6,7 +6,7 @@
 
 The Emergency Fund is a mobile-first feature slice for building a safety buffer against income disruptions and unexpected costs. Users choose a weekly or monthly contribution target and record contributions or emergency use. It calculates recommendations, essential-expense coverage, milestones, and a completion projection deterministically. It never holds, transfers, or withdraws money; a withdrawal entry only records money the user moved outside Resilience. Other savings remain separate from the balance tracked in this fund.
 
-The feature currently runs against in-memory backend repositories and a typed frontend fixture adapter. A minimal React and Vite shell provides a contribution-first Emergency Fund at `/resilience-jar` and less-frequent plan controls at `/resilience-jar/plan`. The existing route, API prefix, module names, and contract filenames remain `resilience-jar` for integration compatibility. Database persistence and live income inputs remain integration work because the Workstream 1 and 2 foundations are not yet present on this branch.
+The feature is mounted in the shared React shell at `/resilience-jar`, with less-frequent plan controls at `/resilience-jar/plan`. It currently uses a typed browser fixture adapter; the backend domain service and in-memory repositories remain available behind the stable `resilience-jar` interfaces. Database persistence and live Income Reality inputs are follow-up work.
 
 ## Business rules
 
@@ -30,9 +30,11 @@ The feature currently runs against in-memory backend repositories and a typed fr
 - A deterministic projected completion card, milestone tracker, and Recharts balance-over-time line chart update after every plan or ledger change. Hovering over a chart date shows that day's aggregated contributions, withdrawals, and closing balance. The chart uses numeric labels and does not rely on colour alone.
 - The emergency-use action opens a separate withdrawal form, validates against the tracked fund balance, and repeats that Resilience does not move money.
 - The compact fund summary links to a separate Emergency Fund Settings view containing recommendation method, target acceptance/editing, and coverage-goal configuration.
+- One prominent “Edit emergency plan” action now owns that settings journey; expense-change alerts point to it instead of adding a duplicate goal-edit button.
 - Plan Settings lets users preview and save either a weekly or monthly target. Recommendation cards and confirmations follow the selected cadence, while the underlying recommendation formula remains weekly.
 - Successful recommendation acceptance, manual target saves, and goal saves produce a brief accessible confirmation containing the updated target amount or goal basis. Failed saves continue to use the existing error alert and never show a success confirmation.
 - Coverage-goal settings show the derived dollar amount from the latest essential expenses before save. The save confirmation repeats that amount so the result is explicit.
+- Activity shows five compact records initially. Each record expands for its note and edit/delete controls, with an explicit option to reveal older records.
 - An actionable alert appears on both views when essential expenses differ from the last saved goal baseline. It shows approximate previous and current monthly amounts and directs the user to review the goal.
 - Client-side history navigation keeps the same API adapter instance, so moving between views does not reset accepted targets or contributions.
 - The local demo hydrates its fixture adapter from the last successful browser cache, so reviewed goals and other demo changes survive a refresh in the same browser origin.
@@ -49,7 +51,7 @@ The feature router factory in `backend/app/features/resilience_jar/routes.py` ex
 - `PATCH /api/v1/resilience-jar/contributions/{contribution_id}`
 - `DELETE /api/v1/resilience-jar/contributions/{contribution_id}`
 
-Domain validation errors use `{ code, message, field_errors }`. The application-level FastAPI validation handler must use the same shape once Workstream 1 supplies app composition.
+Domain validation errors use `{ code, message, field_errors }`. The shared FastAPI app owns application-level transport error handling.
 
 The reviewed summary shape is represented by:
 
@@ -63,19 +65,18 @@ The plan stores `goal_expense_baseline_cents`. The summary returns `goal_review`
 
 ## Integration
 
-- Mount `create_router(service, user_id_provider=...)` from the shared FastAPI app. `create_demo_router()` is available for a synthetic demo only.
-- Implement the three repository protocols in `repositories.py` using Workstream 1's current-user and database primitives and Workstream 2's completed-week available-surplus output.
-- Persist one plan per user and a user-scoped contribution ledger through those adapters. Coordinate any schema additions with Workstream 1 rather than creating a competing baseline migration.
-- The local Vite shell mounts the user-facing Emergency Fund through the stable `ResilienceJarPage` integration component at `/resilience-jar` with `FixtureResilienceJarApi`. Replace that adapter with `HttpResilienceJarApi` when the shared backend is available.
+- The shared Vite shell mounts `ResilienceJarPage` at `/resilience-jar` with `FixtureResilienceJarApi`.
+- `create_router(service, user_id_provider=...)` and `HttpResilienceJarApi` define the backend integration seam; `create_demo_router()` remains available for synthetic demos.
+- Implement the three repository protocols in `repositories.py` using the shared current-user/database primitives and Income Reality's completed-week surplus output.
+- Persist one plan per user and a user-scoped contribution ledger through those adapters and the existing `goals`/`goal_contributions` schema envelope.
 - The last successful summary is cached for read-only offline display. Mutations are clearly disabled offline until a shared mutation queue exists.
 
 ## Verification performed
 
-- `python3 -m py_compile backend/app/features/resilience_jar/*.py`
-- `python3 -m unittest discover -s backend/tests -p 'test_*.py'` — 29 passed, 2 FastAPI route tests skipped because the shared dependency is not installed.
-- `npm test` from `frontend/` — 19 model, fixture-adapter, and routing tests passed.
-- `npm run build` from `frontend/` — TypeScript and Vite production build passed.
-- `npm run dev` plus requests to both frontend routes — `/resilience-jar` and `/resilience-jar/plan` returned HTTP 200.
+- The integrated backend suite passes 188 tests with 3 database-dependent tests skipped by default; Ruff passes.
+- The integrated frontend suite passes 26 tests, including Emergency Fund model, fixture-adapter, and routing coverage.
+- The TypeScript and production PWA build passes.
+- The shared dev app serves `/resilience-jar` and `/resilience-jar/plan` successfully.
 - Parsed both committed JSON contract artifacts with Python's standard JSON parser.
 
 Tests cover both formulas, cent rounding, weak/negative weeks, insufficient history, weekly/monthly target persistence and conversion, both goal modes, expense changes and goal-review acknowledgement, over-goal progress, target stability, pause/resume retention, contribution CRUD, withdrawal balance enforcement, completion projections, milestone states, signed chart timelines, future-date validation, user isolation, typed fixture behavior, money input, monthly display conversion, visual fill capping, and Singapore dates.
@@ -83,7 +84,5 @@ Tests cover both formulas, cent rounding, weak/negative weeks, insufficient hist
 ## Limitations and follow-up
 
 - The local React shell uses synthetic data backed only by that browser origin's local cache. Clearing site data, changing browser/origin, or an incompatible future fixture shape resets the demo; this is not a replacement for shared database persistence.
-- The FastAPI package manifest and app entry point remain owned by Workstream 1.
-- The HTTP route tests are ready but skipped until FastAPI is installed. React Testing Library coverage must be added after the frontend test stack lands; dependency-free model and fixture-adapter tests run now.
 - In-memory repositories reset on process restart. PostgreSQL adapters and any coordinated migration are required before shared integration.
 - Authentication, real money movement, notifications, deployment, and elaborate animation remain out of scope.

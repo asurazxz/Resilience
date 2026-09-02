@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from .fixtures import DEMO_USER_ID, build_demo_service
 from .serializers import contribution_dict, summary_dict
@@ -30,7 +31,7 @@ def create_router(
 
     @router.patch("/plan")
     def patch_plan(
-        payload: dict[str, Any] = Body(...),
+        payload: dict[str, Any] = Body(...),  # noqa: B008
         user_id: str = Depends(user_id_provider),
     ):
         try:
@@ -40,7 +41,7 @@ def create_router(
 
     @router.post("/contributions", status_code=201)
     def create_contribution(
-        payload: dict[str, Any] = Body(...),
+        payload: dict[str, Any] = Body(...),  # noqa: B008
         user_id: str = Depends(user_id_provider),
     ):
         try:
@@ -50,7 +51,7 @@ def create_router(
 
     @router.post("/withdrawals", status_code=201)
     def create_withdrawal(
-        payload: dict[str, Any] = Body(...),
+        payload: dict[str, Any] = Body(...),  # noqa: B008
         user_id: str = Depends(user_id_provider),
     ):
         try:
@@ -61,20 +62,16 @@ def create_router(
     @router.patch("/contributions/{contribution_id}")
     def update_contribution(
         contribution_id: str,
-        payload: dict[str, Any] = Body(...),
+        payload: dict[str, Any] = Body(...),  # noqa: B008
         user_id: str = Depends(user_id_provider),
     ):
         try:
-            return contribution_dict(
-                service.update_contribution(user_id, contribution_id, payload)
-            )
+            return contribution_dict(service.update_contribution(user_id, contribution_id, payload))
         except DomainError as error:
             return error_response(error)
 
     @router.delete("/contributions/{contribution_id}", status_code=204)
-    def delete_contribution(
-        contribution_id: str, user_id: str = Depends(user_id_provider)
-    ):
+    def delete_contribution(contribution_id: str, user_id: str = Depends(user_id_provider)):
         try:
             service.delete_contribution(user_id, contribution_id)
             return Response(status_code=204)
@@ -85,6 +82,4 @@ def create_router(
 
 
 def create_demo_router():
-    return create_router(
-        build_demo_service(), user_id_provider=lambda: DEMO_USER_ID
-    )
+    return create_router(build_demo_service(), user_id_provider=lambda: DEMO_USER_ID)

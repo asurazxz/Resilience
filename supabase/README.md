@@ -5,9 +5,9 @@ Supabase provides the team's managed PostgreSQL integration database. The applic
 ## Directory responsibilities
 
 - `migrations/` contains ordered, reviewable SQL migrations and is the source of truth for schema changes.
-- `tests/` contains database-level checks for constraints, permissions, and any Row Level Security policies introduced later.
+- `tests/` contains database-level checks for constraints, permissions, and Row Level Security posture.
 
-Use synthetic data only. Do not commit project credentials, database dumps, or real financial information. Supabase Auth, Storage, Realtime, and Edge Functions are deferred unless a core prototype feature explicitly requires them.
+Use synthetic data only. Do not commit project credentials, database dumps, or real financial information. The prototype uses private PostgreSQL behind FastAPI; Supabase Auth, Storage, Realtime, and Edge Functions remain out of scope.
 
 ## Local workflow
 
@@ -44,3 +44,5 @@ npx supabase migration list --linked
 ```
 
 Apply schema only through committed migrations. Share `DATABASE_URL` through the team's password manager or hosting secret store, never chat or Git. Each teammate must receive Supabase project membership separately; verification codes and access tokens are individual and must not be shared.
+
+The merged application currently persists Foundation Input and Income Reality source data in PostgreSQL. Emergency Fund demo state remains browser-local, while Scenario Simulator requests and Scheme Navigator answers are stateless unless a future migration adds persistence.

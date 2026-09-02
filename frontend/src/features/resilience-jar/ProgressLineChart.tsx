@@ -41,7 +41,7 @@ export function ProgressLineChart({
         Contributions move the line up; emergency withdrawals move it down.
       </p>
       <div className="jar-chart-canvas">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
           <LineChart
             data={points}
             margin={{ top: 18, right: 18, bottom: 4, left: 4 }}

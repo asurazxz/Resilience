@@ -16,18 +16,18 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from app.features.scheme_navigator.schemas import (
+from ...integrations.ai.client import LLMClient, LLMUnavailableError
+from .schemas import (
     ExplanationResponse,
     SchemeResult,
     SchemeStatus,
     SourceSnippet,
 )
-from app.features.scheme_navigator.sources import (
+from .sources import (
     COMCARE_HOTLINE,
     SUPPORT_GO_WHERE_URL,
     snippets_for,
 )
-from app.integrations.ai.client import LLMClient, LLMUnavailableError
 
 SYSTEM_PROMPT = """You explain Singapore government support schemes to platform \
 workers in plain, everyday language.
@@ -106,9 +106,7 @@ def build_prompt(result: SchemeResult, snippets: list[SourceSnippet]) -> str:
         lines.append("Extracts from the official source:")
         lines += [f"- {snippet.text} ({snippet.source_url})" for snippet in snippets]
 
-    lines.append(
-        "Write the summary and next steps for this person, following your instructions."
-    )
+    lines.append("Write the summary and next steps for this person, following your instructions.")
     return "\n".join(lines)
 
 
@@ -128,12 +126,12 @@ def _fallback(result: SchemeResult, snippets: list[SourceSnippet]) -> Explanatio
     elif result.status is SchemeStatus.MISSING_INFORMATION:
         readable = ", ".join(f.replace("_", " ") for f in result.missing_fields)
         summary = (
-            f"{result.name} could not be checked yet because some answers are "
-            f"missing: {readable}."
+            f"{result.name} could not be checked yet because some answers are missing: {readable}."
         )
         next_steps = [
             "Answer the remaining questions to see whether this scheme may be relevant.",
-            f"Check the official {result.agency} page directly if you would rather not answer them here.",
+            f"Check the official {result.agency} page directly if you would rather not "
+            "answer them here.",
         ]
     else:
         # A non-match is the closest thing here to a dead end, so it always
@@ -187,9 +185,7 @@ def explain(result: SchemeResult, client: LLMClient | None) -> ExplanationRespon
         return _fallback(result, snippets)
 
     next_steps = [
-        str(step).strip()
-        for step in payload.get("next_steps") or []
-        if str(step).strip()
+        str(step).strip() for step in payload.get("next_steps") or [] if str(step).strip()
     ]
 
     return ExplanationResponse(

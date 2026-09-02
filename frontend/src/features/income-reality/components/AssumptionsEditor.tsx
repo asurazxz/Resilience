@@ -27,11 +27,15 @@ export function AssumptionsEditor({ assumptions, onChange }: AssumptionsEditorPr
           min={0}
           max={100}
           step={0.01}
+          required
           value={ratePercent}
           disabled={!assumptions.apply_cpf}
-          onChange={(event) =>
-            onChange({ ...assumptions, cpf_rate_bps: Math.round(Number(event.target.value) * 100) })
-          }
+          onChange={(event) => {
+            const rate = Number(event.target.value);
+            if (Number.isFinite(rate) && rate >= 0 && rate <= 100) {
+              onChange({ ...assumptions, cpf_rate_bps: Math.round(rate * 100) });
+            }
+          }}
         />
       </label>
       <p className="mt-3 text-sm text-slate-600">

@@ -15,9 +15,7 @@ from app.features.scheme_navigator.rules import RULES
 from app.features.scheme_navigator.schemas import Condition, SchemeRule, SchemeStatus
 
 WIS = next(rule for rule in RULES if rule.id == "workfare-income-supplement")
-COMCARE = next(
-    rule for rule in RULES if rule.id == "comcare-short-to-medium-term-assistance"
-)
+COMCARE = next(rule for rule in RULES if rule.id == "comcare-short-to-medium-term-assistance")
 SKILLSFUTURE = next(rule for rule in RULES if rule.id == "skillsfuture-credit")
 CDC = next(rule for rule in RULES if rule.id == "cdc-vouchers")
 
@@ -135,9 +133,7 @@ class TestBoundaryValues:
             (3001, SchemeStatus.NOT_MATCHED),
         ],
     )
-    def test_wis_income_boundaries(
-        self, income: int, expected_status: SchemeStatus
-    ) -> None:
+    def test_wis_income_boundaries(self, income: int, expected_status: SchemeStatus) -> None:
         result = evaluate_rule(WIS, wis_answers(monthly_income=income))
 
         assert result.status == expected_status
@@ -174,9 +170,7 @@ class TestEvaluateAll:
         response = evaluate_all(RULES, {})
 
         assert len(response.results) == len(RULES)
-        assert {result.rule_id for result in response.results} == {
-            rule.id for rule in RULES
-        }
+        assert {result.rule_id for result in response.results} == {rule.id for rule in RULES}
 
     def test_generated_at_is_populated(self) -> None:
         response = evaluate_all(RULES, {})

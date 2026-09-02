@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 from typing import Any, Protocol
 
-from app.core.config import settings
+from ...core.config import settings
 
 # Covers the answer plus any reasoning tokens the model emits before it.
 MAX_OUTPUT_TOKENS = 4096
@@ -30,9 +30,7 @@ class LLMUnavailableError(RuntimeError):
 class LLMClient(Protocol):
     """Returns a JSON object matching the schema it was given."""
 
-    def complete_json(
-        self, system: str, user: str, schema: dict[str, Any]
-    ) -> dict[str, Any]: ...
+    def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]: ...
 
 
 class GroqClient:
@@ -58,9 +56,7 @@ class GroqClient:
         self._model = model or settings.explainer_model
         self._client = Groq(api_key=settings.groq_api_key)
 
-    def complete_json(
-        self, system: str, user: str, schema: dict[str, Any]
-    ) -> dict[str, Any]:
+    def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
         required = ", ".join(schema.get("required", [])) or "the fields above"
         instructions = (
             f"{system}\n\n"

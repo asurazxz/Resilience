@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from app.features.scheme_navigator.schemas import Condition, SchemeRule
+from .schemas import Condition, SchemeRule
 
 RULES: list[SchemeRule] = [
     SchemeRule(

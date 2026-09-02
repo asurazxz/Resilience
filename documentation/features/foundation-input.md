@@ -1,14 +1,15 @@
 # Feature 1 — Foundation Input
 
 **Implemented:** 2026-09-02
-**Branch:** `feature/01-foundation-input`
-**Status:** Runnable; locally and remotely verified on Supabase
+**Integrated:** `dev`, 2026-09-02
+**Status:** Runnable; locally and remotely verified with Supabase
 
 ## User-visible scope
 
 - Mobile-first PWA shell with overview, weekly history, CSV import, and assumptions navigation.
 - Anonymous demo onboarding for emergency savings, recurring work costs, and essential household expenses.
 - Editable weekly earnings and variable work costs, including explicit no-income weeks.
+- Weekly entry no longer asks users to maintain a second emergency-savings balance; it links directly to Emergency Fund's “Record emergency use” action while preserving the existing Foundation snapshot for calculations.
 - “Add a new week” opens a blank entry rather than the latest saved week; if the current Monday is already recorded, it starts on the following Monday.
 - Strict Resilience CSV download, server-side validation preview, and user-confirmed conversion into weekly entries.
 - Cached bootstrap data and ordered optimistic writes in IndexedDB. Reconnect triggers replay using mutation UUIDs as idempotency keys.
@@ -148,16 +149,16 @@ Do not use `--include-seed` for normal shared-project pushes. Never use `db rese
 
 ## Verification performed
 
-- Frontend: `npm run test:frontend` (4 tests pass), `npm run build:frontend` (TypeScript and production PWA build pass), `npm run test:integration` (4 local browser journeys, including queued assumptions sync, date-changed week saves, live Income Reality updates, and CPF estimation), npm audit (0 vulnerabilities).
-- Backend: 6 unit tests pass; Ruff passes; OpenAPI exports and TypeScript generation succeed.
+- Frontend: the integrated `npm test` run passes 26 tests; `npm run build:frontend` passes TypeScript and the production PWA build.
+- Backend: the integrated suite passes 188 tests with 3 database-dependent tests skipped by default; Ruff passes.
 - Database: local Supabase starts, migration plus synthetic seed applies, all 13 pgTAP assertions pass, and `supabase db lint --local --level warning` reports no schema errors.
 - Integration: real FastAPI → SQLAlchemy/psycopg → local Supabase bootstrap, weekly create, revision conflict, read, and cleanup pass.
 - Hosted Supabase: migration parity confirmed; 13 application tables and 13 RLS-enabled tables found; `anon` schema usage and `authenticated` weekly-entry SELECT both denied; remote security and performance advisors report no issues.
 
-## Next integration steps
+## Current integration and follow-up
 
 - Feature 2 now calculates from confirmed weekly earnings, variable costs, and immutable input snapshots through `foundationAdapter.ts`; recorded CPF overrides its estimator for that week.
-- Feature 3 should use `goals`/`goal_contributions` and agree its API additions through OpenAPI.
-- Feature 4 should evolve `scheme_rule_versions` by migration and keep eligibility deterministic.
-- Feature 5 should use `scenarios` and the same cents/Monday conventions.
+- Feature 3 is mounted with a browser fixture adapter; PostgreSQL adapters should use `goals` and `goal_contributions` when persistence is added.
+- Feature 4 is mounted with deterministic eligibility rules; `scheme_rule_versions` remains the database integration envelope for future versioned persistence.
+- Feature 5 is mounted as a stateless simulator and follows the shared cents conventions; saved scenarios can use the `scenarios` table later.
 - Any feature adding a table must include `user_id`, ownership indexes/constraints, RLS posture, migration tests, and an updated generated API contract where exposed.

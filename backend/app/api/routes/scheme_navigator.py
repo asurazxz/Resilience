@@ -11,12 +11,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.features.scheme_navigator.chat import chat
-from app.features.scheme_navigator.evaluator import evaluate_all
-from app.features.scheme_navigator.explainer import explain
-from app.features.scheme_navigator.questionnaire import build_questionnaire
-from app.features.scheme_navigator.rules import RULES
-from app.features.scheme_navigator.schemas import (
+from ...features.scheme_navigator.chat import chat
+from ...features.scheme_navigator.evaluator import evaluate_all
+from ...features.scheme_navigator.explainer import explain
+from ...features.scheme_navigator.questionnaire import build_questionnaire
+from ...features.scheme_navigator.rules import RULES
+from ...features.scheme_navigator.schemas import (
     ChatRequest,
     ChatResponse,
     EvaluationRequest,
@@ -25,7 +25,7 @@ from app.features.scheme_navigator.schemas import (
     ExplanationResponse,
     QuestionnaireField,
 )
-from app.integrations.ai.client import GroqClient, LLMClient, LLMUnavailableError
+from ...integrations.ai.client import GroqClient, LLMClient, LLMUnavailableError
 
 router = APIRouter(prefix="/api/scheme-navigator", tags=["scheme-navigator"])
 

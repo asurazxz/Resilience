@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from uuid import uuid4
 
 from .models import Contribution, JarPlan, WeeklySurplus
@@ -44,7 +44,7 @@ class InMemoryContributionRepository:
         contribution_date: date,
         note: str | None,
     ) -> Contribution:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         contribution = Contribution(
             id=str(uuid4()),
             user_id=user_id,
@@ -78,7 +78,7 @@ class InMemoryContributionRepository:
             contribution_date=contribution_date,
             note=note,
             created_at=existing.created_at,
-            updated_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(UTC),
         )
         self._contributions[updated.id] = updated
         return updated
@@ -105,7 +105,5 @@ class InMemoryFinancialContextRepository:
     def set_surpluses(self, user_id: str, surpluses: list[WeeklySurplus]) -> None:
         self._surpluses[user_id] = list(surpluses)
 
-    def set_weekly_essential_expenses_cents(
-        self, user_id: str, amount_cents: int | None
-    ) -> None:
+    def set_weekly_essential_expenses_cents(self, user_id: str, amount_cents: int | None) -> None:
         self._essential_expenses[user_id] = amount_cents

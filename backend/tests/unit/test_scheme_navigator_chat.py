@@ -47,18 +47,14 @@ class StubClient:
         self.system: str | None = None
         self.user: str | None = None
 
-    def complete_json(
-        self, system: str, user: str, schema: dict[str, Any]
-    ) -> dict[str, Any]:
+    def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
         self.system = system
         self.user = user
         return self.payload
 
 
 class FailingClient:
-    def complete_json(
-        self, system: str, user: str, schema: dict[str, Any]
-    ) -> dict[str, Any]:
+    def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
         raise LLMUnavailableError("unreachable")
 
 
@@ -148,7 +144,7 @@ def test_prompt_carries_results_and_the_question(results: list[SchemeResult]) ->
 def test_prompt_carries_the_reasons_a_scheme_matched(
     results: list[SchemeResult],
 ) -> None:
-    """"Why do I get this?" must be answerable from the evaluator's reasons.
+    """ "Why do I get this?" must be answerable from the evaluator's reasons.
 
     Without them the model would have to re-derive the outcome from the
     person's raw figures, which the safety rules forbid.
@@ -268,9 +264,7 @@ def test_no_unanswered_section_once_everything_is_filled(
 
 
 def test_unanswered_questions_treats_blank_and_none_as_unanswered() -> None:
-    labels = unanswered_questions(
-        {"citizenship_status": None, "age": "", "monthly_income": 1500}
-    )
+    labels = unanswered_questions({"citizenship_status": None, "age": "", "monthly_income": 1500})
 
     assert "What is your residency status?" in labels
     assert "What is your age?" in labels
@@ -311,7 +305,7 @@ def test_uses_model_reply_when_available(results: list[SchemeResult]) -> None:
 
 
 def test_no_client_still_explains_the_results(results: list[SchemeResult]) -> None:
-    """"Why am I eligible?" is answerable with no model at all.
+    """ "Why am I eligible?" is answerable with no model at all.
 
     The evaluator already produced the reasons; a fallback that discards
     them answers a question about someone's money with a generic signpost

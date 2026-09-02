@@ -1,54 +1,19 @@
-"""Provisional FastAPI application shell.
-
-`feature/01-foundation-input` owns the real application entry point, settings,
-and router composition. This module composes the currently merged feature
-routers so the development branch can be exercised end to end.
-"""
-
-from __future__ import annotations
-
-# Trust the operating system's certificate store before an HTTPS client is
-# created. This keeps the optional AI explainer usable behind local TLS proxies.
-try:
-    import truststore
-
-    truststore.inject_into_ssl()
-except ImportError:  # pragma: no cover - optional dependency
-    pass
-
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
-from app.api.routes.scheme_navigator import router as scheme_navigator_router
-from app.core.config import settings
-from app.features.resilience_jar.routes import create_demo_router
-from app.features.scenario_simulator.router import router as scenario_simulator_router
-
-app = FastAPI(title="Resilience API", version="0.1.0")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_allow_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.include_router(scheme_navigator_router)
-app.include_router(scenario_simulator_router)
-app.include_router(create_demo_router())
 from uuid import uuid4
 
-from backend.app.core.errors import DomainError
-from backend.app.core.settings import get_settings
-from backend.app.db.session import get_engine
-from backend.app.features.foundation_input.routes import router as foundation_router
-from backend.app.features.income_reality.router import router as income_reality_router
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
+
+from .api.routes.scheme_navigator import router as scheme_navigator_router
+from .core.errors import DomainError
+from .core.settings import get_settings
+from .db.session import get_engine
+from .features.foundation_input.routes import router as foundation_router
+from .features.income_reality.router import router as income_reality_router
+from .features.resilience_jar.routes import create_demo_router
+from .features.scenario_simulator.router import router as scenario_simulator_router
 
 settings = get_settings()
 app = FastAPI(
@@ -58,7 +23,15 @@ app = FastAPI(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_origin],
+    allow_origins=list(
+        dict.fromkeys(
+            [
+                settings.frontend_origin,
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+            ]
+        )
+    ),
     allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Idempotency-Key", "X-Confirm-Reset"],
@@ -69,6 +42,9 @@ app.include_router(
     prefix="/api/v1/income-reality",
     tags=["income-reality"],
 )
+app.include_router(scheme_navigator_router)
+app.include_router(scenario_simulator_router)
+app.include_router(create_demo_router())
 
 
 @app.middleware("http")

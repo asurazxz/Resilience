@@ -16,9 +16,11 @@ from .models import (
 )
 
 DISCLAIMERS: tuple[str, ...] = (
-    "These figures are estimates calculated from the values you entered. They are not a prediction of what will happen.",
+    "These figures are estimates calculated from the values you entered. "
+    "They are not a prediction of what will happen.",
     "Resilience does not provide financial advice and does not hold or transfer your money.",
-    "The estimate assumes your essential expenses and fixed work costs stay the same during the scenario.",
+    "The estimate assumes your essential expenses and fixed work costs stay the same "
+    "during the scenario.",
     "Support scheme eligibility is decided only by the relevant government agency.",
 )
 
@@ -29,14 +31,18 @@ OFFICIAL_RESOURCES: tuple[OfficialResource, ...] = (
     OfficialResource(
         id="supportgowhere",
         name="SupportGoWhere",
-        description="Government directory of Singapore support schemes, with an eligibility checker.",
+        description=(
+            "Government directory of Singapore support schemes, with an eligibility checker."
+        ),
         url="https://supportgowhere.life.gov.sg",
         last_reviewed="2026-09-01",
     ),
     OfficialResource(
         id="msf",
         name="Ministry of Social and Family Development",
-        description="ComCare short-to-medium-term assistance, administered through Social Service Offices.",
+        description=(
+            "ComCare short-to-medium-term assistance, administered through Social Service Offices."
+        ),
         url="https://www.msf.gov.sg",
         last_reviewed="2026-09-01",
     ),
@@ -89,7 +95,8 @@ def build_actions(
                 title="A normal week is already short",
                 detail=(
                     f"Before this scenario, your usual week is estimated to fall short by "
-                    f"{_sgd(-baseline_summary.weekly_surplus_cents)}. The figures below start from that position."
+                    f"{_sgd(-baseline_summary.weekly_surplus_cents)}. The figures below "
+                    f"start from that position."
                 ),
                 severity="attention",
                 resource_ids=("supportgowhere", "msf"),
@@ -105,9 +112,11 @@ def build_actions(
                 id="savings-run-out-without-income-change",
                 title="Savings run out even with earnings unchanged",
                 detail=(
-                    f"Your earnings stay the same in this scenario, but your savings are still estimated to run "
+                    f"Your earnings stay the same in this scenario, but your savings are "
+                    f"still estimated to run "
                     f"out in week {first_shortfall}, leaving about "
-                    f"{_sgd(scenario_summary.total_shortfall_cents)} uncovered over the period shown."
+                    f"{_sgd(scenario_summary.total_shortfall_cents)} uncovered over the "
+                    f"period shown."
                 ),
                 severity="attention",
                 resource_ids=("supportgowhere", "msf"),
@@ -119,9 +128,11 @@ def build_actions(
                 id="buffer-runs-out-during-shock",
                 title="Savings run out before the scenario ends",
                 detail=(
-                    f"This estimate has your savings covering {_weeks(scenario_summary.buffer_runway_weeks or 0)} "
+                    f"This estimate has your savings covering "
+                    f"{_weeks(scenario_summary.buffer_runway_weeks or 0)} "
                     f"of a {_weeks(scenario.weeks_affected)} disruption, with an estimated "
-                    f"{_sgd(scenario_summary.total_shortfall_cents)} not covered over the period shown."
+                    f"{_sgd(scenario_summary.total_shortfall_cents)} not covered over the "
+                    f"period shown."
                 ),
                 severity="attention",
                 resource_ids=("supportgowhere", "msf"),
@@ -133,7 +144,8 @@ def build_actions(
                 id="buffer-runs-out-after-shock",
                 title="Savings run out while income is recovering",
                 detail=(
-                    f"Your savings are estimated to cover the disruption itself but run out in week "
+                    f"Your savings are estimated to cover the disruption itself but run "
+                    f"out in week "
                     f"{first_shortfall}, before earnings return to their usual level."
                 ),
                 severity="attention",
@@ -147,7 +159,8 @@ def build_actions(
                 id="buffer-holds",
                 title="Savings cover this scenario",
                 detail=(
-                    f"Your savings are estimated to last through all {_weeks(scenario_summary.horizon_weeks)} shown, "
+                    f"Your savings are estimated to last through all "
+                    f"{_weeks(scenario_summary.horizon_weeks)} shown, "
                     f"ending at about {_sgd(scenario_summary.buffer_at_horizon_cents)}, "
                     f"with a low point of {_sgd(scenario_summary.lowest_buffer_cents)} in week "
                     f"{scenario_summary.lowest_buffer_week}."
@@ -163,8 +176,9 @@ def build_actions(
                 id="fixed-work-costs-continue",
                 title="Fixed work costs continue",
                 detail=(
-                    f"{_sgd(baseline.weekly_fixed_work_costs_cents)} of weekly work costs are treated as fixed, so they "
-                    f"continue even in a week with reduced earnings. It is worth checking whether rental, "
+                    f"{_sgd(baseline.weekly_fixed_work_costs_cents)} of weekly work costs "
+                    f"are treated as fixed, so they continue even in a week with reduced "
+                    f"earnings. It is worth checking whether rental, "
                     f"insurance, or subscription costs can be paused or reduced."
                 ),
                 severity="info",
@@ -178,7 +192,8 @@ def build_actions(
                 title="The one-off cost is larger than your savings",
                 detail=(
                     f"The {_sgd(scenario.unexpected_cost_cents)} cost is more than your current "
-                    f"{_sgd(baseline.emergency_savings_cents)} in savings, so part of it is unfunded from week 1 "
+                    f"{_sgd(baseline.emergency_savings_cents)} in savings, so part of it is "
+                    f"unfunded from week 1 "
                     f"in this estimate."
                 ),
                 severity="attention",

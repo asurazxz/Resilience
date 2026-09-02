@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from .models import (
-    Contribution,
     CompletionProjection,
+    Contribution,
     Goal,
     GoalReview,
     JarPlan,
@@ -40,9 +40,7 @@ def recommendation_dict(recommendation: Recommendation) -> dict[str, object]:
         "latest_surplus_cents": recommendation.latest_surplus_cents,
         "history_weeks_used": recommendation.history_weeks_used,
         "as_of_week_start": (
-            recommendation.as_of_week_start.isoformat()
-            if recommendation.as_of_week_start
-            else None
+            recommendation.as_of_week_start.isoformat() if recommendation.as_of_week_start else None
         ),
         "rationale_code": recommendation.rationale_code,
     }
@@ -73,9 +71,7 @@ def contribution_dict(contribution: Contribution) -> dict[str, object]:
 def goal_review_dict(goal_review: GoalReview) -> dict[str, object]:
     return {
         "status": goal_review.status,
-        "previous_weekly_expenses_cents": (
-            goal_review.previous_weekly_expenses_cents
-        ),
+        "previous_weekly_expenses_cents": (goal_review.previous_weekly_expenses_cents),
         "current_weekly_expenses_cents": goal_review.current_weekly_expenses_cents,
         "expense_change_cents": goal_review.expense_change_cents,
     }
@@ -108,15 +104,10 @@ def summary_dict(summary: JarSummary) -> dict[str, object]:
         "recommendation": recommendation_dict(summary.recommendation),
         "progress": progress_dict(summary.progress),
         "goal_review": goal_review_dict(summary.goal_review),
-        "completion_projection": completion_projection_dict(
-            summary.completion_projection
-        ),
+        "completion_projection": completion_projection_dict(summary.completion_projection),
         "milestones": [milestone_dict(item) for item in summary.milestones],
-        "weekly_essential_expenses_cents": (
-            summary.weekly_essential_expenses_cents
-        ),
+        "weekly_essential_expenses_cents": (summary.weekly_essential_expenses_cents),
         "contributions": [
-            contribution_dict(contribution)
-            for contribution in summary.contributions
+            contribution_dict(contribution) for contribution in summary.contributions
         ],
     }

@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 from fractions import Fraction
 
 from .models import (
     AmountGoal,
     CompletionProjection,
-    CoverageGoal,
     Goal,
     JarPlan,
     Milestone,
@@ -20,17 +19,13 @@ from .models import (
 )
 
 
-def target_amount_to_weekly_cents(
-    amount_cents: int, frequency: TargetFrequency
-) -> int:
+def target_amount_to_weekly_cents(amount_cents: int, frequency: TargetFrequency) -> int:
     if frequency is TargetFrequency.WEEKLY:
         return amount_cents
     return amount_cents * 12 // 52
 
 
-def weekly_cents_to_target_amount(
-    weekly_cents: int, frequency: TargetFrequency
-) -> int:
+def weekly_cents_to_target_amount(weekly_cents: int, frequency: TargetFrequency) -> int:
     if frequency is TargetFrequency.WEEKLY:
         return weekly_cents
     return weekly_cents * 52 // 12
@@ -74,9 +69,7 @@ def recommend_weekly_savings(
     else:
         recent = ordered[:4]
         positive_surpluses = [
-            week.available_surplus_cents
-            for week in recent
-            if week.available_surplus_cents > 0
+            week.available_surplus_cents for week in recent if week.available_surplus_cents > 0
         ]
         if latest_non_negative == 0 or not positive_surpluses:
             amount_cents = 0
@@ -112,9 +105,11 @@ def calculate_progress(
     else:
         goal_target_cents = None
 
-    progress_percent = _one_decimal(
-        Decimal(contribution_total) * Decimal(100) / Decimal(goal_target_cents)
-    ) if goal_target_cents else None
+    progress_percent = (
+        _one_decimal(Decimal(contribution_total) * Decimal(100) / Decimal(goal_target_cents))
+        if goal_target_cents
+        else None
+    )
 
     if weekly_essential_expenses_cents is None or weekly_essential_expenses_cents <= 0:
         coverage_days = None
@@ -124,8 +119,7 @@ def calculate_progress(
             Decimal(contribution_total) / Decimal(weekly_essential_expenses_cents)
         )
         coverage_days = _one_decimal(
-            Decimal(contribution_total) * Decimal(7)
-            / Decimal(weekly_essential_expenses_cents)
+            Decimal(contribution_total) * Decimal(7) / Decimal(weekly_essential_expenses_cents)
         )
 
     return Progress(
@@ -152,9 +146,7 @@ def calculate_completion_projection(
         return CompletionProjection("paused", None, None, remaining)
     if plan.weekly_target_cents <= 0:
         return CompletionProjection("no_weekly_target", None, None, remaining)
-    weeks_remaining = (
-        remaining + plan.weekly_target_cents - 1
-    ) // plan.weekly_target_cents
+    weeks_remaining = (remaining + plan.weekly_target_cents - 1) // plan.weekly_target_cents
     return CompletionProjection(
         "projected",
         today + timedelta(weeks=weeks_remaining),
@@ -173,10 +165,7 @@ def calculate_milestones(
         Milestone(
             percentage=percentage,
             target_cents=(goal_target_cents * percentage + 99) // 100,
-            reached=(
-                contribution_total_cents
-                >= (goal_target_cents * percentage + 99) // 100
-            ),
+            reached=(contribution_total_cents >= (goal_target_cents * percentage + 99) // 100),
         )
         for percentage in (25, 50, 75, 100)
     )

@@ -5,4 +5,20 @@ export {
   readCachedSummary,
   type ResilienceJarApi,
 } from "./api.ts";
-export type * from "./types.ts";
+export type {
+  ApiErrorBody,
+  CompletionProjection,
+  Contribution,
+  ContributionWrite,
+  Goal,
+  GoalReview,
+  JarPlan,
+  JarProgress,
+  JarSummary,
+  Milestone,
+  PlanPatch,
+  PlanStatus,
+  Recommendation,
+  RecommendationMethod,
+  TargetFrequency,
+} from "./types.ts";

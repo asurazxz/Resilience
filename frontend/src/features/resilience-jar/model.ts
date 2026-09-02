@@ -12,7 +12,8 @@ export function dollarsToCents(value: string): number | null {
   const normalized = value.trim();
   if (!/^\d+(?:\.\d{1,2})?$/.test(normalized)) return null;
   const [dollars, cents = ""] = normalized.split(".");
-  return Number(dollars) * 100 + Number(cents.padEnd(2, "0"));
+  const result = Number(dollars) * 100 + Number(cents.padEnd(2, "0"));
+  return Number.isSafeInteger(result) && result <= 100_000_000 ? result : null;
 }
 
 export function centsToDollars(cents: number): string {

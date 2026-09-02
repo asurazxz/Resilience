@@ -1,9 +1,9 @@
 .jar-page {
-  --jar-ink: #17352c;
-  --jar-muted: #5d6f68;
-  --jar-green: #227a5b;
-  --jar-light: #e8f4ed;
-  --jar-border: #c9d8d1;
+  --jar-ink: var(--ink, #26251e);
+  --jar-muted: var(--ash, #7a7974);
+  --jar-green: var(--forest, #34785c);
+  --jar-light: #e9f1ec;
+  --jar-border: var(--stone, #cdcdc9);
   box-sizing: border-box;
   color: var(--jar-ink);
   margin: 0 auto;
@@ -37,6 +37,13 @@
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1rem;
+}
+
+.jar-heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: flex-end;
 }
 
 .jar-heading h1,
@@ -146,8 +153,8 @@
 .jar-card {
   background: #fff;
   border: 1px solid var(--jar-border);
-  border-radius: 1rem;
-  box-shadow: 0 0.2rem 1rem rgba(25, 61, 48, 0.06);
+  border-radius: 4px;
+  box-shadow: 0 14px 32px rgba(38, 37, 30, 0.08);
 }
 
 .jar-overview {
@@ -256,7 +263,7 @@
   border-radius: 0.75rem;
   display: grid;
   gap: 0.75rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-top: 1rem;
   padding: 0.75rem;
 }
@@ -269,6 +276,10 @@
 .jar-plan-strip span {
   color: var(--jar-muted);
   font-size: 0.78rem;
+}
+
+.jar-plan-strip > .jar-muted {
+  grid-column: 1 / -1;
 }
 
 .jar-plan-strip strong {
@@ -326,7 +337,7 @@
 .jar-page select {
   background: #fff;
   border: 1px solid #8ba49a;
-  border-radius: 0.55rem;
+  border-radius: 4px;
   color: var(--jar-ink);
   font: inherit;
   min-height: 2.75rem;
@@ -364,7 +375,7 @@
 
 .jar-target-frequency .jar-radio {
   border: 1px solid var(--jar-border);
-  border-radius: 0.6rem;
+  border-radius: 4px;
   cursor: pointer;
   margin: 0.4rem 0 0;
   min-height: 2.75rem;
@@ -380,7 +391,7 @@
 .jar-button {
   background: var(--jar-green);
   border: 1px solid var(--jar-green);
-  border-radius: 0.6rem;
+  border-radius: 4px;
   color: #fff;
   cursor: pointer;
   font: inherit;
@@ -423,7 +434,7 @@
 
 .jar-suggestion {
   background: var(--jar-light);
-  border-radius: 0.8rem;
+  border-radius: 4px;
   display: grid;
   gap: 0.5rem;
   margin: 0.5rem 0 1rem;
@@ -478,7 +489,7 @@
   align-items: end;
   background: #fff8df;
   border: 1px solid #dfbd59;
-  border-radius: 0.8rem;
+  border-radius: 4px;
   display: grid !important;
   gap: 0.75rem !important;
   grid-template-columns: 1.4fr 1fr 1fr 1.4fr auto;
@@ -502,16 +513,45 @@
 }
 
 .jar-contribution-list li {
-  align-items: center;
   border-top: 1px solid var(--jar-border);
-  justify-content: space-between;
-  gap: 1rem;
+  display: block;
   padding: 0.9rem 0;
 }
 
-.jar-contribution-list li > div:first-child {
+.jar-contribution-list details {
+  width: 100%;
+}
+
+.jar-contribution-list summary {
+  align-items: center;
+  cursor: pointer;
   display: grid;
-  gap: 0.2rem;
+  gap: 0.75rem;
+  grid-template-columns: auto minmax(7rem, 1fr) minmax(7rem, auto) auto;
+  list-style: none;
+}
+
+.jar-contribution-list summary::-webkit-details-marker {
+  display: none;
+}
+
+.jar-entry-open {
+  color: var(--jar-green);
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.jar-entry-details {
+  background: #f7faf8;
+  border-radius: 4px;
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.7rem;
+  padding: 0.75rem;
+}
+
+.jar-entry-details p {
+  margin: 0;
 }
 
 .jar-entry-type {
@@ -526,7 +566,7 @@
   text-transform: uppercase;
 }
 
-.jar-entry-withdrawal > div:first-child > strong {
+.jar-entry-withdrawal summary > strong {
   color: #8a3d23;
 }
 
@@ -643,7 +683,7 @@
 .jar-chart-tooltip {
   background: #fff;
   border: 1px solid var(--jar-border);
-  border-radius: 0.7rem;
+  border-radius: 4px;
   box-shadow: 0 0.35rem 1.2rem rgba(25, 61, 48, 0.14);
   min-width: 13rem;
   padding: 0.75rem;
@@ -695,6 +735,14 @@
     flex-direction: column;
   }
 
+  .jar-heading-actions {
+    justify-content: stretch;
+  }
+
+  .jar-heading-actions .jar-button {
+    flex: 1;
+  }
+
   .jar-visual {
     align-self: center;
   }
@@ -716,6 +764,19 @@
   .jar-contribution-list li {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .jar-contribution-list summary {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .jar-contribution-list summary > span:nth-child(3) {
+    grid-column: 2;
+  }
+
+  .jar-entry-open {
+    grid-column: 3;
+    grid-row: 1 / span 2;
   }
 
   .jar-list-actions {

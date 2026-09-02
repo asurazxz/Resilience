@@ -1,37 +1,99 @@
 @import "tailwindcss";
 
 :root {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #172033;
-  background: #f6f7fb;
+  /* DESIGN.md's paper-like palette, adapted for a touch-first product UI. */
+  --paper: #f7f7f4;
+  --bone: #f2f1ed;
+  --linen: #e6e5e0;
+  --stone: #cdcdc9;
+  --ash: #7a7974;
+  --ink: #26251e;
+  --ember: #f54e00;
+  --forest: #34785c;
+  --amber: #c08532;
+  --danger: #cf2d56;
+
+  /* Existing Tailwind utilities inherit the new warm system. */
+  --color-slate-50: var(--bone);
+  --color-slate-100: var(--linen);
+  --color-slate-200: var(--stone);
+  --color-slate-300: #b8b7b1;
+  --color-slate-400: #94938e;
+  --color-slate-500: var(--ash);
+  --color-slate-600: #62615d;
+  --color-slate-700: #474640;
+  --color-slate-800: #34332e;
+  --color-slate-900: var(--ink);
+  --color-slate-950: var(--ink);
+  --color-white: var(--paper);
+  --color-indigo-50: #edece6;
+  --color-indigo-700: var(--ink);
+  --color-indigo-800: #11110e;
+  --color-emerald-50: #e9f1ec;
+  --color-emerald-200: #b8d0c1;
+  --color-emerald-700: var(--forest);
+  --color-emerald-800: #285d47;
+  --color-rose-50: #fbedf0;
+  --color-rose-700: #a92345;
+  --color-amber-50: #fff6df;
+  --color-amber-100: #f8e8bd;
+  --color-amber-600: var(--amber);
+  --color-amber-800: #72500d;
+  --color-amber-900: #5b3f09;
+  --color-sky-50: #edf3f5;
+  --color-sky-200: #bfd0d4;
+
+  font-family: Lato, "Trebuchet MS", ui-sans-serif, system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
   font-synthesis: none;
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; min-height: 100vh; }
+body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--paper); }
 button, input, select { font: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .55; }
+::selection { background: #8bc4f8; color: var(--ink); }
+
+h1, h2, h3 { font-weight: 400; letter-spacing: -0.02em; }
 
 input, select {
   min-height: 44px;
   width: 100%;
-  border: 1px solid #d8dce8;
-  border-radius: .75rem;
-  background: white;
+  border: 1px solid var(--stone);
+  border-radius: 4px;
+  background: var(--paper);
   padding: .65rem .8rem;
-  color: #172033;
+  color: var(--ink);
 }
 
 input:focus, select:focus, button:focus-visible, a:focus-visible {
-  outline: 3px solid #c9c2ff;
+  outline: 3px solid #8bc4f8;
   outline-offset: 2px;
 }
 
 @layer components {
-  .card { @apply rounded-3xl border border-slate-200 bg-white p-5 shadow-sm; }
-  .button-primary { @apply inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-700 px-4 py-2 font-semibold text-white transition hover:bg-indigo-800; }
-  .button-secondary { @apply inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-800 transition hover:bg-slate-50; }
-  .eyebrow { @apply text-xs font-bold uppercase tracking-[.16em] text-indigo-700; }
-  .label { @apply mb-1.5 block text-sm font-semibold text-slate-700; }
+  .card { @apply border p-5; border-color: var(--stone); border-radius: 4px; background: var(--bone); box-shadow: 0 14px 32px rgba(38, 37, 30, .08), 0 0 0 1px rgba(38, 37, 30, .03); }
+  .button-primary { @apply inline-flex min-h-11 items-center justify-center px-4 py-2 transition; border-radius: 4px; background: var(--ink); color: var(--paper); font-weight: 500; }
+  .button-primary:hover { background: #11110e; }
+  .button-secondary { @apply inline-flex min-h-11 items-center justify-center border px-4 py-2 transition; border-color: var(--stone); border-radius: 4px; background: var(--linen); color: var(--ink); font-weight: 500; }
+  .button-secondary:hover { background: #dcdbd5; }
+  .eyebrow { @apply text-xs uppercase; color: var(--ash); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-weight: 500; letter-spacing: .08em; }
+  .label { @apply mb-1.5 block text-sm; color: var(--ink); font-weight: 500; }
+}
+
+/* Keep the broad existing interface coherent as it adopts the shared tokens. */
+.resilience-app [class*="rounded-"],
+.resilience-onboarding [class*="rounded-"] { border-radius: 4px; }
+.resilience-app h1,
+.resilience-app h2,
+.resilience-onboarding h1,
+.resilience-onboarding h2 { font-weight: 400 !important; letter-spacing: -0.025em; }
+.resilience-app [class*="font-black"],
+.resilience-onboarding [class*="font-black"] { font-weight: 500 !important; }
+
+@media (max-width: 47rem) {
+  .resilience-app .card { padding: 1rem; }
+  .resilience-app main { padding-inline: 1rem; }
 }

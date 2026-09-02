@@ -8,7 +8,7 @@ FastAPI routes, and the frontend questionnaire. Keeping them framework-free
 from __future__ import annotations
 
 from datetime import date, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -76,7 +76,7 @@ class SchemeRule(BaseModel):
     conditions: list[Condition]
 
 
-class SchemeStatus(str, Enum):
+class SchemeStatus(StrEnum):
     MATCHED = "matched"
     NOT_MATCHED = "not_matched"
     MISSING_INFORMATION = "missing_information"

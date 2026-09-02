@@ -5,6 +5,7 @@ figures the user sees can be unit-tested in isolation. Nothing here may be
 replaced by a model-generated estimate.
 """
 
+from .guidance import DISCLAIMERS, build_actions, resources_for_actions
 from .models import (
     BaselineFinances,
     BaselineSummary,
@@ -13,7 +14,6 @@ from .models import (
     ShockScenario,
     WeekProjection,
 )
-from .guidance import DISCLAIMERS, build_actions, resources_for_actions
 
 DEFAULT_TAIL_WEEKS = 4
 MIN_HORIZON_WEEKS = 8
@@ -96,9 +96,7 @@ def project_weeks(
 
         # Variable costs fall with the work actually done; fixed costs such as
         # vehicle rental or insurance continue even in a week with no earnings.
-        variable_costs = _scaled(
-            baseline.weekly_variable_work_costs_cents, numerator, denominator
-        )
+        variable_costs = _scaled(baseline.weekly_variable_work_costs_cents, numerator, denominator)
         work_costs = variable_costs + baseline.weekly_fixed_work_costs_cents
         net_work_income = gross - work_costs
 
@@ -141,9 +139,7 @@ def _scenario_summary(
 ) -> ScenarioSummary:
     shock_week = weeks[0] if scenario.weeks_affected > 0 else None
 
-    first_shortfall_week = next(
-        (week.week for week in weeks if week.shortfall_cents > 0), None
-    )
+    first_shortfall_week = next((week.week for week in weeks if week.shortfall_cents > 0), None)
     # Weeks fully covered by the buffer are the weeks completed before money
     # first runs out, so a shortfall in week 1 means a runway of zero weeks.
     buffer_runway_weeks = None if first_shortfall_week is None else first_shortfall_week - 1

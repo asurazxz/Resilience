@@ -8,10 +8,10 @@ language, but it never produces one.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
-from typing import Callable
 
-from app.features.scheme_navigator.schemas import (
+from .schemas import (
     Condition,
     EvaluationResponse,
     Operator,

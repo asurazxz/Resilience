@@ -21,24 +21,24 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from app.features.scheme_navigator.fields import FIELD_REGISTRY
-from app.features.scheme_navigator.questionnaire import (
+from ...integrations.ai.client import LLMClient, LLMUnavailableError
+from .fields import FIELD_REGISTRY
+from .questionnaire import (
     build_questionnaire,
     get_required_field_keys,
 )
-from app.features.scheme_navigator.rules import RULES
-from app.features.scheme_navigator.schemas import (
+from .rules import RULES
+from .schemas import (
     ChatMessage,
     ChatResponse,
     SchemeResult,
     SchemeStatus,
 )
-from app.features.scheme_navigator.sources import (
+from .sources import (
     COMCARE_HOTLINE,
     SUPPORT_GO_WHERE_URL,
     snippets_for,
 )
-from app.integrations.ai.client import LLMClient, LLMUnavailableError
 
 FALLBACK_REPLY = (
     "Here is where to get an answer on that:\n\n"
@@ -162,9 +162,7 @@ def _render_answers(answers: dict[str, object]) -> list[str]:
         if isinstance(value, bool):
             rendered = "Yes" if value else "No"
         elif field and field.options:
-            rendered = next(
-                (o.label for o in field.options if o.value == value), str(value)
-            )
+            rendered = next((o.label for o in field.options if o.value == value), str(value))
         else:
             rendered = str(value)
         lines.append(f"- {label} {rendered}")
@@ -207,9 +205,7 @@ def build_chat_prompt(
             if result.matched_facts:
                 lines.append("  met: " + "; ".join(result.matched_facts))
             if result.unmatched_reasons:
-                lines.append(
-                    "  did not meet: " + "; ".join(result.unmatched_reasons)
-                )
+                lines.append("  did not meet: " + "; ".join(result.unmatched_reasons))
             if result.missing_fields:
                 lines.append(
                     "  still unanswered: "
@@ -227,14 +223,10 @@ def build_chat_prompt(
     # specific "answer these two" rather than a vague "fill in the form".
     unanswered = unanswered_questions(answers)
     if unanswered:
-        lines.append(
-            "Not answered yet — they have NOT finished the questionnaire:"
-        )
+        lines.append("Not answered yet — they have NOT finished the questionnaire:")
         lines += [f"- {label}" for label in unanswered]
         if not results:
-            lines.append(
-                "They have also not run the check yet, so there are no results."
-            )
+            lines.append("They have also not run the check yet, so there are no results.")
         lines.append("")
 
     rule_ids = [r.rule_id for r in results] or [rule.id for rule in RULES]
@@ -283,9 +275,7 @@ def _results_summary(results: list[SchemeResult]) -> str | None:
 
     matched = [r for r in results if r.status is SchemeStatus.MATCHED]
     not_matched = [r for r in results if r.status is SchemeStatus.NOT_MATCHED]
-    incomplete = [
-        r for r in results if r.status is SchemeStatus.MISSING_INFORMATION
-    ]
+    incomplete = [r for r in results if r.status is SchemeStatus.MISSING_INFORMATION]
 
     sections: list[str] = []
 
@@ -310,9 +300,7 @@ def _results_summary(results: list[SchemeResult]) -> str | None:
     if incomplete:
         block = ["Still need a few answers before I can check these:", ""]
         for result in incomplete:
-            readable = ", ".join(
-                f.replace("_", " ") for f in result.missing_fields[:3]
-            )
+            readable = ", ".join(f.replace("_", " ") for f in result.missing_fields[:3])
             block.append(f"• {result.name} — {readable}")
         sections.append("\n".join(block))
 

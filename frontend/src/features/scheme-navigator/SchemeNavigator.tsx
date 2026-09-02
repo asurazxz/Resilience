@@ -63,12 +63,13 @@ export function SchemeNavigator() {
   }
 
   return (
-    <main className="mx-auto max-w-xl px-4 py-8">
+    <main className="mx-auto max-w-2xl px-4 py-4">
       <header className="mb-6">
-        <h1 className="text-xl font-semibold text-slate-900">Scheme Navigator</h1>
+        <p className="eyebrow">Government support</p>
+        <h1 className="mt-1 text-3xl font-black text-slate-900">Find schemes worth checking</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Answer a few questions to see Singapore government support schemes that may
-          be relevant to you. This is pre-screening, not an eligibility decision.
+          Answer a few questions. We will show which official schemes may be worth a closer look.
+          The relevant agency makes the final decision.
         </p>
       </header>
 
@@ -78,8 +79,7 @@ export function SchemeNavigator() {
 
       {loadState === "error" && (
         <p className="text-sm text-red-600">
-          Could not load the questionnaire. Is the backend running at the configured
-          API URL?
+          The scheme questions could not be loaded. Please try again after checking your connection.
         </p>
       )}
 

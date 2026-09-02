@@ -46,18 +46,14 @@ class ServiceTestCase(unittest.TestCase):
 
     def test_method_change_does_not_accept_new_recommendation(self) -> None:
         self.service.patch_plan(self.user_id, {"weekly_target_cents": 12_345})
-        summary = self.service.patch_plan(
-            self.user_id, {"recommendation_method": "latest_week"}
-        )
+        summary = self.service.patch_plan(self.user_id, {"recommendation_method": "latest_week"})
 
         self.assertEqual(12_345, summary.plan.weekly_target_cents)
         self.assertEqual(10_000, summary.recommendation.amount_cents)
 
     def test_new_income_never_changes_an_accepted_target(self) -> None:
         self.service.patch_plan(self.user_id, {"weekly_target_cents": 10_000})
-        self.context.set_surpluses(
-            self.user_id, [WeeklySurplus(date(2026, 8, 31), 200_000)]
-        )
+        self.context.set_surpluses(self.user_id, [WeeklySurplus(date(2026, 8, 31), 200_000)])
 
         summary = self.service.get_summary(self.user_id)
 

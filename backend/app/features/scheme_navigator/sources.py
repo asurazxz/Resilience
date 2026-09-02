@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from app.features.scheme_navigator.schemas import SourceSnippet
+from .schemas import SourceSnippet
 
 # Where to send someone when this app cannot answer them. A dead end is
 # never an acceptable response for a person looking for financial support,
@@ -35,21 +35,16 @@ COMCARE_HOTLINE = "1800-222-0000"  # ComCare Call, MSF
 COMCARE_HOTLINE_SOURCE = "https://www.msf.gov.sg/what-we-do/comcare"
 CONTACTS_VERIFIED_ON = date(2026, 9, 2)
 
-_WIS_URL = (
-    "https://supportgowhere.life.gov.sg/schemes/E-WIS/"
-    "workfare-income-supplement-wis-scheme"
-)
+_WIS_URL = "https://supportgowhere.life.gov.sg/schemes/E-WIS/workfare-income-supplement-wis-scheme"
 _COMCARE_URL = (
     "https://supportgowhere.life.gov.sg/schemes/COMCARE-SMTA/"
     "comcare-short-to-medium-term-assistance-smta"
 )
 _SKILLSFUTURE_URL = (
-    "https://supportgowhere.life.gov.sg/schemes/SKILLSFUTURE_CREDITS/"
-    "skillsfuture-credit"
+    "https://supportgowhere.life.gov.sg/schemes/SKILLSFUTURE_CREDITS/skillsfuture-credit"
 )
 _CDC_URL = (
-    "https://supportgowhere.life.gov.sg/schemes/CDC/"
-    "community-development-council-cdc-vouchers"
+    "https://supportgowhere.life.gov.sg/schemes/CDC/community-development-council-cdc-vouchers"
 )
 
 CURATED_SOURCES: dict[str, list[SourceSnippet]] = {

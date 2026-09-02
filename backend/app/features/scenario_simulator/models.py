@@ -27,9 +27,13 @@ class BaselineFinances:
 
     def __post_init__(self) -> None:
         _require_non_negative(self.weekly_gross_earnings_cents, "weekly_gross_earnings_cents")
-        _require_non_negative(self.weekly_variable_work_costs_cents, "weekly_variable_work_costs_cents")
+        _require_non_negative(
+            self.weekly_variable_work_costs_cents, "weekly_variable_work_costs_cents"
+        )
         _require_non_negative(self.weekly_fixed_work_costs_cents, "weekly_fixed_work_costs_cents")
-        _require_non_negative(self.weekly_essential_expenses_cents, "weekly_essential_expenses_cents")
+        _require_non_negative(
+            self.weekly_essential_expenses_cents, "weekly_essential_expenses_cents"
+        )
         _require_non_negative(self.emergency_savings_cents, "emergency_savings_cents")
 
     @property
@@ -62,7 +66,8 @@ class ShockScenario:
     def __post_init__(self) -> None:
         if not 0 <= self.income_reduction_percent <= 100:
             raise ValueError(
-                f"income_reduction_percent must be between 0 and 100, got {self.income_reduction_percent}"
+                "income_reduction_percent must be between 0 and 100, got "
+                f"{self.income_reduction_percent}"
             )
         _require_non_negative(self.weeks_affected, "weeks_affected")
         _require_non_negative(self.unexpected_cost_cents, "unexpected_cost_cents")
