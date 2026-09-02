@@ -1,18 +1,14 @@
-fastapi==0.115.0
-uvicorn[standard]==0.30.6
-pydantic==2.9.2
-pytest==8.3.3
-httpx==0.27.2
-groq==1.7.0
-python-dotenv==1.2.3
-truststore==0.10.4
 # Provisional backend manifest.
 #
-# feature/01-foundation-input owns the canonical manifest. This file exists so
-# the Scenario Simulator endpoint can be run and demonstrated; replace it when
-# the Workstream 1 version lands.
+# feature/01-foundation-input owns the canonical manifest. This file currently
+# contains the union needed by the merged development features and their tests.
 
 fastapi==0.141.1
+groq==1.7.0
+httpx==0.27.2
 httpx2==2.0.0
 pydantic==2.13.5
+pytest==8.3.3
+python-dotenv==1.2.3
+truststore==0.10.4
 uvicorn[standard]==0.52.4

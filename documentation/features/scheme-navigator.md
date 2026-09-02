@@ -141,7 +141,7 @@ The provider has now changed three times (Anthropic → Gemini → Groq) and on 
 
 **Frontend** (`frontend/src/features/scheme-navigator/`):
 - `types.ts` — hand-mirrors the backend Pydantic schemas.
-- `api.ts` — fetch wrappers (`VITE_API_BASE_URL`, default `http://localhost:8000`).
+- `api.ts` — fetch wrappers (`VITE_API_BASE_URL`, defaulting to the same-origin Vite proxy in development).
 - `QuestionnaireForm.tsx` — renders whatever fields the backend returns, dispatching on `field_type`.
 - `ResultsList.tsx` — matched-first ordering, disclaimer banner, official/application links.
 - `SchemeNavigator.tsx` — container: loads questionnaire, holds answer state, calls evaluate, clears stale results when an answer changes.

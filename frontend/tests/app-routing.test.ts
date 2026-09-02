@@ -19,6 +19,11 @@ test("scenario simulator has a separate route", () => {
   assert.equal(resolveAppRoute("/scenario-simulator/"), "scenario");
 });
 
+test("scheme navigator has a separate route", () => {
+  assert.equal(resolveAppRoute("/scheme-navigator"), "schemes");
+  assert.equal(resolveAppRoute("/scheme-navigator/"), "schemes");
+});
+
 test("unknown paths remain explicit", () => {
   assert.equal(resolveAppRoute("/contributions"), "not_found");
 });

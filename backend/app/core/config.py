@@ -26,15 +26,23 @@ _ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
 # file, which is the behaviour deployment tooling expects.
 load_dotenv(_ENV_PATH, override=False)
 
+_LOCAL_FRONTEND_ORIGINS = (
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+)
+
 
 class Settings:
-    cors_allow_origins: list[str] = [
-        origin.strip()
-        for origin in os.environ.get(
-            "CORS_ALLOW_ORIGINS", "http://localhost:5173"
-        ).split(",")
-        if origin.strip()
-    ]
+    configured_origins = os.environ.get(
+        "CORS_ALLOW_ORIGINS",
+        os.environ.get("FRONTEND_ORIGIN", ""),
+    ).split(",")
+    cors_allow_origins: list[str] = list(
+        dict.fromkeys(
+            [*_LOCAL_FRONTEND_ORIGINS, *(origin.strip() for origin in configured_origins)]
+        )
+    )
+    cors_allow_origins = [origin for origin in cors_allow_origins if origin]
 
     groq_api_key: str = os.environ.get("GROQ_API_KEY", "").strip()
     explainer_model: str = os.environ.get("EXPLAINER_MODEL", "openai/gpt-oss-120b").strip()

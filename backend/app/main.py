@@ -1,34 +1,20 @@
-"""FastAPI application entrypoint.
+"""Provisional FastAPI application shell.
 
-Minimal on purpose: this pass adds just enough app shell to run the Scheme
-Navigator questionnaire and evaluator end to end. Workstream 1 owns the
-long-term foundation (database wiring, auth, other feature routers) and may
-extend or restructure this file.
+`feature/01-foundation-input` owns the real application entry point, settings,
+and router composition. This module composes the currently merged feature
+routers so the development branch can be exercised end to end.
 """
 
 from __future__ import annotations
 
-# Trust the operating system's certificate store rather than only certifi's
-# bundled roots. Antivirus and corporate proxies (Norton, Zscaler, and
-# similar) terminate TLS locally and re-sign it with a private root that is
-# installed in the OS store but is absent from certifi -- which makes
-# outbound HTTPS from the SDKs fail with CERTIFICATE_VERIFY_FAILED on some
-# machines and not others. This must run before any HTTPS client is built.
+# Trust the operating system's certificate store before an HTTPS client is
+# created. This keeps the optional AI explainer usable behind local TLS proxies.
 try:
     import truststore
 
     truststore.inject_into_ssl()
 except ImportError:  # pragma: no cover - optional dependency
     pass
-"""Provisional FastAPI application shell.
-
-`feature/01-foundation-input` owns the real application entry point, settings,
-and router composition. This module exists so the Scenario Simulator slice can
-be run end to end; it should be replaced by the Workstream 1 version rather
-than extended here.
-"""
-
-import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -49,22 +35,10 @@ app.add_middleware(
 )
 
 app.include_router(scheme_navigator_router)
-
-
-@app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
-    allow_origins=[os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")],
-    allow_credentials=False,
-    allow_methods=["GET", "POST", "PATCH", "DELETE"],
-    allow_headers=["Content-Type"],
-)
+app.include_router(scenario_simulator_router)
+app.include_router(create_demo_router())
 
 
 @app.get("/health", tags=["health"])
 def health() -> dict[str, str]:
     return {"status": "ok"}
-
-
-app.include_router(scenario_simulator_router)
-app.include_router(create_demo_router())

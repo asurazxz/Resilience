@@ -61,7 +61,7 @@ Frontend and backend feature folders use the same five workstream boundaries so 
 
 ## Local setup
 
-The merged development app runs the Emergency Fund and Scenario Simulator in one React shell. The Emergency Fund still uses a browser-local synthetic adapter; the Scenario Simulator calls the local FastAPI service.
+The merged development app runs the Emergency Fund, Scenario Simulator, and Scheme Navigator in one React shell. The Emergency Fund still uses a browser-local synthetic adapter; the Scenario Simulator and Scheme Navigator call the local FastAPI service. The Scheme Navigator chatbot remains available across all routes.
 
 ### 1. Clone and read the agent rules
 
@@ -129,12 +129,12 @@ Start the client in a second terminal:
 cd frontend && npm run dev
 ```
 
-Open <http://localhost:5173/resilience-jar> for the Emergency Fund or <http://localhost:5173/scenario-simulator> for the Setback Planner. API documentation is available at <http://localhost:8000/docs>.
+Open <http://localhost:5173/resilience-jar> for the Emergency Fund, <http://localhost:5173/scenario-simulator> for the Setback Planner, or <http://localhost:5173/scheme-navigator> for support-scheme pre-screening. API documentation is available at <http://localhost:8000/docs>.
 
 Run the complete checks from the repository root:
 
 ```bash
-PYTHONPATH=backend:. .venv/bin/python -m unittest discover -s backend/tests -p 'test_*.py'
+PYTHONPATH=backend:. .venv/bin/python -m pytest backend/tests -q
 cd frontend && npm test && npm run build
 ```
 

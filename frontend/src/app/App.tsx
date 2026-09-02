@@ -6,10 +6,21 @@ import {
   ResilienceJarPage,
 } from "../features/resilience-jar/index.ts";
 import { ScenarioSimulatorPage } from "../features/scenario-simulator/index.ts";
+import { ChatProvider } from "../features/scheme-navigator/ChatContext.tsx";
+import { ChatWidget } from "../features/scheme-navigator/ChatWidget.tsx";
+import { SchemeNavigator } from "../features/scheme-navigator/SchemeNavigator.tsx";
 import { resolveAppRoute, type AppPath } from "./routing.ts";
 import "./app.css";
 
 export function App() {
+  return (
+    <ChatProvider>
+      <RoutedApp />
+    </ChatProvider>
+  );
+}
+
+function RoutedApp() {
   const fixtureApi = useMemo(
     () => new FixtureResilienceJarApi(readCachedSummary()),
     [],
@@ -41,13 +52,16 @@ export function App() {
 
   if (route === "not_found") {
     return (
-      <main className="app-not-found">
-        <p className="app-brand">Resilience</p>
-        <h1>Page not found</h1>
-        <a href="/resilience-jar" onClick={handleLink("/resilience-jar")}>
-          Open the Emergency Fund
-        </a>
-      </main>
+      <>
+        <main className="app-not-found">
+          <p className="app-brand">Resilience</p>
+          <h1>Page not found</h1>
+          <a href="/resilience-jar" onClick={handleLink("/resilience-jar")}>
+            Open the Emergency Fund
+          </a>
+        </main>
+        <ChatWidget />
+      </>
     );
   }
 
@@ -78,14 +92,24 @@ export function App() {
           >
             Setback Planner
           </a>
+          <a
+            href="/scheme-navigator"
+            aria-current={route === "schemes" ? "page" : undefined}
+            onClick={handleLink("/scheme-navigator")}
+          >
+            Schemes
+          </a>
         </nav>
         <span className="app-demo-label">Local demo</span>
       </header>
       {route === "scenario" ? (
         <ScenarioSimulatorPage />
+      ) : route === "schemes" ? (
+        <SchemeNavigator />
       ) : (
         <ResilienceJarPage api={fixtureApi} view={route} onNavigate={navigate} />
       )}
+      <ChatWidget />
     </>
   );
 }

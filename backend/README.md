@@ -1,6 +1,6 @@
 # Backend
 
-This directory contains the provisional FastAPI service. Its application shell mounts both the Scenario Simulator router and the synthetic Emergency Fund router while the shared database and authentication foundations remain pending.
+This directory contains the provisional FastAPI service. Its application shell mounts the Scenario Simulator, Scheme Navigator, and synthetic Emergency Fund routers while the shared database and authentication foundations remain pending.
 
 ## Placement rules
 
@@ -26,5 +26,5 @@ cd backend && ../.venv/bin/python -m uvicorn app.main:app --reload --port 8000
 Run all backend tests from the repository root with:
 
 ```bash
-PYTHONPATH=backend:. .venv/bin/python -m unittest discover -s backend/tests -p 'test_*.py'
+PYTHONPATH=backend:. .venv/bin/python -m pytest backend/tests -q
 ```

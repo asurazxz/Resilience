@@ -47,6 +47,23 @@ def test_health() -> None:
     assert response.json() == {"status": "ok"}
 
 
+@pytest.mark.parametrize(
+    "origin",
+    ["http://localhost:5173", "http://127.0.0.1:5173"],
+)
+def test_local_vite_origins_are_allowed(origin: str) -> None:
+    response = client.options(
+        "/api/scheme-navigator/questionnaire",
+        headers={
+            "Origin": origin,
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == origin
+
+
 def test_get_questionnaire_returns_fields() -> None:
     response = client.get("/api/scheme-navigator/questionnaire")
 
