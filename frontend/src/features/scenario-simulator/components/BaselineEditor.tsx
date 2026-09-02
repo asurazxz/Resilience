@@ -50,7 +50,7 @@ export function BaselineEditor({ baseline, summary, onChange }: BaselineEditorPr
 
         <MoneyField
           id="baseline-fixed-costs"
-          label="Costs that keep charging anyway"
+          label="Liabilities"
           valueCents={baseline.weekly_fixed_work_costs_cents}
           hint="Vehicle or bike rental, insurance, phone plan, loan repayments."
           onChange={(cents) => onChange({ weekly_fixed_work_costs_cents: cents })}
@@ -74,7 +74,7 @@ export function BaselineEditor({ baseline, summary, onChange }: BaselineEditorPr
 
       <MoneyField
         id="baseline-essentials"
-        label="Weekly living costs"
+        label="Weekly essentials"
         valueCents={baseline.weekly_essential_expenses_cents}
         hint="Rent, food, utilities, family support."
         onChange={(cents) => onChange({ weekly_essential_expenses_cents: cents })}
@@ -97,7 +97,7 @@ export function BaselineEditor({ baseline, summary, onChange }: BaselineEditorPr
             </dd>
           </div>
           <div>
-            <dt className="text-slate-500">Left after living costs</dt>
+            <dt className="text-slate-500">Left after essentials</dt>
             <dd
               className={`font-semibold tabular-nums ${
                 summary.weekly_surplus_cents < 0 ? 'text-rose-700' : 'text-slate-900'
