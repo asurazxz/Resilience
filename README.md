@@ -14,7 +14,7 @@ The one-week prototype follows this user journey:
 
 1. Record weekly platform earnings, work costs, essential expenses, and current emergency savings.
 2. See estimated net work income, available surplus, and recent income variation.
-3. Set an adjustable savings target and track progress in the Resilience Jar.
+3. Build an adjustable emergency fund and track its essential-expense coverage.
 4. Answer a short questionnaire to find potentially relevant support schemes and official application links.
 5. Simulate an income interruption or unexpected cost and see estimated cash-flow and buffer impact.
 
@@ -28,7 +28,7 @@ Each area is a full-stack vertical slice with its own UI, API integration, deter
 |---|---|---|
 | 1 | **Foundation & data intake** — `feature/01-foundation-input` | Responsive PWA shell, navigation and onboarding; editable manual-entry flows; shared TypeScript/API contracts; PostgreSQL schema and migrations for user-approved entries, goals, scenarios, and rule versions. CSV/OCR review flow is stretch scope. |
 | 2 | **Income Reality Engine** — `feature/02-income-reality` | Tested Python calculations for net weekly work income and available surplus; FastAPI endpoints; transparent breakdown and week-to-week trend UI; editable assumptions. |
-| 3 | **Habit Builder & Resilience Jar** — `feature/03-resilience-jar` | Tested, adjustable weekly savings recommendation; goal and contribution APIs; progress in days/weeks of essential expenses; pause/edit controls and jar visualisation. The app tracks money but never holds or transfers it. |
+| 3 | **Emergency Fund** — `feature/03-resilience-jar` | Tested, adjustable weekly/monthly contribution recommendation; emergency-fund goal and ledger APIs; progress in days/weeks of essential expenses; pause/edit controls and fund visualisation. The app tracks money but never holds or transfers it. |
 | 4 | **Scheme Navigator & AI explainer** — `feature/04-scheme-navigator` | Versioned scheme-rule schema and deterministic evaluator; questionnaire and result UI; official sources and missing-information states; grounded plain-language explanation. The LLM must not determine eligibility. |
 | 5 | **Scenario Simulator** — `feature/05-scenario-simulator` | Tested cash-flow and buffer-runway calculations; adjustable income reduction, time-off, and unexpected-cost inputs; results UI with preparatory actions, relevant official resources, and clear estimate disclaimers. |
 
@@ -62,7 +62,7 @@ Frontend and backend feature folders use the same five workstream boundaries so 
 
 ## Local setup
 
-The Resilience Jar frontend is runnable as a local React and Vite demo using synthetic data. The shared FastAPI application and database integration are still pending Workstream 1.
+The Emergency Fund frontend is runnable as a local React and Vite demo using synthetic data. The shared FastAPI application and database integration are still pending Workstream 1. Existing `/resilience-jar` paths remain unchanged for compatibility.
 
 ### 1. Clone and read the agent rules
 

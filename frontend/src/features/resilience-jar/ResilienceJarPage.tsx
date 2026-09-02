@@ -75,7 +75,7 @@ export function ResilienceJarPage({
         if (active) {
           setSummary(cached);
           if (cached) syncPlanForms(cached);
-          setError(cached ? null : "No cached Jar summary is available offline.");
+          setError(cached ? null : "No cached emergency fund summary is available offline.");
           setLoading(false);
         }
         return;
@@ -256,7 +256,7 @@ export function ResilienceJarPage({
       return;
     }
     if (amountCents > trackedBalance) {
-      setError("The withdrawal cannot exceed your tracked Jar balance.");
+      setError("The withdrawal cannot exceed your tracked emergency fund balance.");
       return;
     }
     await runMutation(async () => {
@@ -308,7 +308,7 @@ export function ResilienceJarPage({
   ) {
     setSuccessMessage(null);
     if (offline) {
-      setError("Changes are online-only. Reconnect before updating your Jar.");
+      setError("Changes are online-only. Reconnect before updating your emergency fund.");
       return;
     }
     setSaving(true);
@@ -326,14 +326,14 @@ export function ResilienceJarPage({
   }
 
   if (loading && !summary) {
-    return <main className="jar-page jar-state">Loading your Resilience Jar…</main>;
+    return <main className="jar-page jar-state">Loading your emergency fund…</main>;
   }
 
   if (!summary) {
     return (
       <main className="jar-page jar-state" role="alert">
-        <h1>Resilience Jar</h1>
-        <p>{error ?? "Your Jar could not be loaded."}</p>
+        <h1>Emergency Fund</h1>
+        <p>{error ?? "Your emergency fund could not be loaded."}</p>
       </main>
     );
   }
@@ -370,13 +370,13 @@ export function ResilienceJarPage({
       <header className="jar-heading">
         <div>
           <p className="jar-eyebrow">
-            {view === "jar" ? "Habit Builder" : "Resilience Jar"}
+            {view === "jar" ? "Financial safety net" : "Emergency Fund"}
           </p>
-          <h1>{view === "jar" ? "Resilience Jar" : "Plan settings"}</h1>
+          <h1>{view === "jar" ? "Emergency Fund" : "Emergency fund settings"}</h1>
           <p>
             {view === "jar"
-              ? "Build your buffer one deliberate contribution at a time."
-              : "Choose how your weekly target and longer-term goal should work."}
+              ? "Build a safety buffer for income disruptions and unexpected costs."
+              : "Choose how your contribution target and emergency coverage goal should work."}
           </p>
         </div>
         {view === "jar" ? (
@@ -394,7 +394,7 @@ export function ResilienceJarPage({
             onClick={() => onNavigate?.("/resilience-jar")}
             type="button"
           >
-            <span aria-hidden="true">←</span> Back to Jar
+            <span aria-hidden="true">←</span> Back to fund
           </button>
         )}
       </header>
@@ -484,11 +484,11 @@ export function ResilienceJarPage({
         </div>
         <div className="jar-progress-copy">
           <p className="jar-eyebrow" id="jar-progress-title">
-            Contribution progress
+            Emergency fund progress
           </p>
           <div className="jar-progress-metrics">
             <div>
-              <span>Saved in Jar</span>
+              <span>Fund balance</span>
               <strong>{formatMoney(progress.contribution_total_cents)}</strong>
             </div>
             <div className="jar-goal-amount">
@@ -511,7 +511,9 @@ export function ResilienceJarPage({
               About {progress.coverage_days} days ({progress.coverage_weeks} weeks) of essential expenses.
             </p>
           )}
-          <p className="jar-muted">Existing emergency savings are not included here.</p>
+          <p className="jar-muted">
+            Other emergency savings remain separate from this tracked fund.
+          </p>
           <div className="jar-plan-strip">
             <div>
               <span>{activeTargetLabel}</span>
@@ -657,7 +659,7 @@ export function ResilienceJarPage({
         </section>
 
         <section className="jar-card" aria-labelledby="jar-goal-title">
-          <h2 id="jar-goal-title">Jar goal</h2>
+          <h2 id="jar-goal-title">Emergency fund goal</h2>
           <form onSubmit={(event) => void saveGoal(event)}>
             <fieldset>
               <legend>Set the goal by</legend>
@@ -722,9 +724,9 @@ export function ResilienceJarPage({
       >
         <div className="jar-contribution-heading">
           <div>
-            <h2 id="jar-contributions-title">Track your Jar</h2>
+            <h2 id="jar-contributions-title">Emergency fund activity</h2>
             <p className="jar-disclaimer">
-              Resilience only tracks amounts you report. It never holds, transfers, or withdraws money.
+              Resilience only tracks emergency fund amounts you report. It never holds, transfers, or withdraws money.
             </p>
           </div>
           <button
@@ -733,7 +735,7 @@ export function ResilienceJarPage({
             onClick={() => setWithdrawalOpen((open) => !open)}
             type="button"
           >
-            {withdrawalOpen ? "Cancel withdrawal" : "Use emergency funds"}
+            {withdrawalOpen ? "Cancel emergency use" : "Record emergency use"}
           </button>
         </div>
 
@@ -784,7 +786,7 @@ export function ResilienceJarPage({
         <div>
           <h3>Add contribution</h3>
           <p className="jar-disclaimer">
-            Only money added to this Jar is counted. Existing savings are excluded.
+            Only contributions recorded in this fund are counted. Other savings remain separate.
           </p>
         </div>
         <form className="jar-contribution-form" onSubmit={(event) => void saveContribution(event)}>
@@ -832,7 +834,7 @@ export function ResilienceJarPage({
         </form>
 
         {summary.contributions.length === 0 ? (
-          <p className="jar-empty">No contributions yet. Your first entry can be any positive amount.</p>
+          <p className="jar-empty">No contributions yet. Start building your emergency fund with any positive amount.</p>
         ) : (
           <ul className="jar-contribution-list">
             {summary.contributions.map((contribution) => (
@@ -908,7 +910,7 @@ function errorMessage(error: unknown): string {
   }
   return error instanceof Error
     ? error.message
-    : "The Resilience Jar could not be updated.";
+    : "The emergency fund could not be updated.";
 }
 
 function formatDate(value: string): string {

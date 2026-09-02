@@ -215,7 +215,7 @@ class ResilienceJarService:
         if amount_cents > self._ledger_balance(user_id):
             raise DomainError(
                 "insufficient_jar_balance",
-                "Withdrawal cannot exceed the tracked Jar balance.",
+                "Withdrawal cannot exceed the tracked emergency fund balance.",
                 field_errors={"amount_cents": "Use an amount within the tracked balance."},
             )
         return self._contributions.create(
@@ -269,7 +269,7 @@ class ResilienceJarService:
         if remaining_balance < 0:
             raise DomainError(
                 "insufficient_jar_balance",
-                "This change would make the tracked Jar balance negative.",
+                "This change would make the tracked emergency fund balance negative.",
                 field_errors={"amount_cents": "Reduce withdrawals before changing this entry."},
             )
         updated = self._contributions.update(

@@ -37,7 +37,7 @@ export function App() {
         <p className="app-brand">Resilience</p>
         <h1>Page not found</h1>
         <a href="/resilience-jar" onClick={handleHomeLink}>
-          Open the Resilience Jar
+          Open the Emergency Fund
         </a>
       </main>
     );
@@ -49,7 +49,7 @@ export function App() {
         <a
           className="app-logo"
           href="/resilience-jar"
-          aria-label="Resilience Jar home"
+          aria-label="Emergency Fund home"
           onClick={handleHomeLink}
         >
           <span aria-hidden="true">R</span>

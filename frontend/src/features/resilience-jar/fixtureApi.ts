@@ -175,7 +175,7 @@ export class FixtureResilienceJarApi implements ResilienceJarApi {
 
   async createWithdrawal(payload: ContributionWrite): Promise<Contribution> {
     if (payload.amount_cents > this.summary.progress.contribution_total_cents) {
-      throw new Error("Withdrawal cannot exceed the tracked Jar balance.");
+      throw new Error("Withdrawal cannot exceed the tracked emergency fund balance.");
     }
     const now = new Date().toISOString();
     const withdrawal: Contribution = {

@@ -35,7 +35,7 @@ export function ProgressLineChart({
   return (
     <figure className="jar-chart" aria-labelledby="jar-chart-title">
       <figcaption id="jar-chart-title">
-        Tracked Jar balance over time
+        Emergency fund balance over time
       </figcaption>
       <p className="jar-muted">
         Contributions move the line up; emergency withdrawals move it down.
@@ -71,7 +71,7 @@ export function ProgressLineChart({
             )}
             <Line
               dataKey="balance_cents"
-              name="Jar balance"
+              name="Emergency fund balance"
               type="monotone"
               stroke="#227a5b"
               strokeWidth={3}

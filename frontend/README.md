@@ -1,6 +1,6 @@
 # Frontend
 
-This directory contains a runnable React, TypeScript, and Vite client. The current shell mounts the Resilience Jar with synthetic in-memory data so it can run before the shared API and database foundations land. Tailwind CSS and full PWA support remain deferred.
+This directory contains a runnable React, TypeScript, and Vite client. The current shell mounts the Emergency Fund with synthetic in-memory data so it can run before the shared API and database foundations land. The existing `resilience-jar` module and routes remain stable integration identifiers. Tailwind CSS and full PWA support remain deferred.
 
 ## Run locally
 
@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173/resilience-jar` to track contributions. Plan and goal settings are available at `http://127.0.0.1:5173/resilience-jar/plan`. Navigation between the two views preserves the current local demo state. The root URL shows the Jar, and unknown paths show a small not-found page.
+Open `http://127.0.0.1:5173/resilience-jar` to track the emergency fund. Plan and goal settings are available at `http://127.0.0.1:5173/resilience-jar/plan`. Navigation between the two views preserves the current local demo state. The root URL shows the Emergency Fund, and unknown paths show a small not-found page.
 
 Available checks:
 

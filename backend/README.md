@@ -15,7 +15,7 @@ The initial FastAPI package, dependency manifest, and application entry point ar
 
 ## Current feature checks
 
-The Resilience Jar deterministic core uses only the Python standard library and can be checked before the shared FastAPI manifest lands:
+The Emergency Fund deterministic core, retained under the `resilience_jar` integration module, uses only the Python standard library and can be checked before the shared FastAPI manifest lands:
 
 ```bash
 python3 -m unittest discover -s backend/tests -p 'test_*.py' -v

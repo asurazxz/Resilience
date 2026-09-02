@@ -98,7 +98,7 @@ export class HttpResilienceJarApi implements ResilienceJarApi {
     if (!response.ok) {
       const fallback: ApiErrorBody = {
         code: "request_failed",
-        message: "The Resilience Jar request could not be completed.",
+        message: "The emergency fund request could not be completed.",
         field_errors: {},
       };
       let body = fallback;
