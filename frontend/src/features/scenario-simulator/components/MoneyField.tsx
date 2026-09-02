@@ -8,7 +8,7 @@
  * usable while typing.
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { dollarsToCents } from '../money';
 
@@ -37,12 +37,28 @@ export interface MoneyFieldProps {
 
 export function MoneyField({ id, label, valueCents, hint, onChange }: MoneyFieldProps) {
   const [draft, setDraft] = useState(() => centsToDraft(valueCents));
+  // The last value this field reported, so a change made elsewhere - picking a
+  // situation preset, for example - can be told apart from the user's own
+  // typing and reflected in the text.
+  const lastReportedRef = useRef(valueCents);
+
+  useEffect(() => {
+    if (valueCents === lastReportedRef.current) {
+      return;
+    }
+    lastReportedRef.current = valueCents;
+    setDraft(centsToDraft(valueCents));
+  }, [valueCents]);
 
   function handleChange(raw: string) {
     const next = sanitiseAmount(raw);
     setDraft(next);
     const parsed = Number(next);
-    onChange(next === '' || Number.isNaN(parsed) ? 0 : dollarsToCents(parsed));
+    const cents = next === '' || Number.isNaN(parsed) ? 0 : dollarsToCents(parsed);
+    // Recorded before reporting so the effect above leaves partial entries
+    // such as "12." alone.
+    lastReportedRef.current = cents;
+    onChange(cents);
   }
 
   return (
