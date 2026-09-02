@@ -86,3 +86,4 @@ Desktop.ini
 # Agent collaboration instructions and memory
 .agent/
 .agent/**
+.claude/
