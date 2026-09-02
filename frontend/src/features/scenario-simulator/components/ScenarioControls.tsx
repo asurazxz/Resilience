@@ -3,7 +3,9 @@
  * how long they take to recover, and any one-off cost.
  *
  * These sit below the situation cards because most users only need to pick a
- * situation; the sliders are for adjusting one that is nearly right.
+ * situation; the sliders are for adjusting one that is nearly right. They stay
+ * visible so a preset's meaning is legible at a glance rather than hidden
+ * behind a control the reader has to find.
  */
 
 import { formatCents } from '../money';
@@ -63,12 +65,10 @@ function SliderField({
 
 export function ScenarioControls({ scenario, onChange }: ScenarioControlsProps) {
   return (
-    <details className="rounded-xl border border-slate-200 bg-white">
-      <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-slate-700">
-        Adjust the details
-      </summary>
+    <div className="space-y-5 rounded-xl border border-slate-200 bg-white p-4">
+      <h3 className="text-sm font-medium text-slate-700">Adjust the details</h3>
 
-      <div className="space-y-5 px-4 pb-4">
+      <div className="space-y-5">
         <SliderField
           id="income-reduction"
           label="Earnings drop by"
@@ -124,6 +124,6 @@ export function ScenarioControls({ scenario, onChange }: ScenarioControlsProps) 
           onChange={(cents) => onChange({ unexpected_cost_cents: cents })}
         />
       </div>
-    </details>
+    </div>
   );
 }
