@@ -84,3 +84,12 @@ Desktop.ini
 # Agent collaboration instructions and memory
 .agent/
 .agent/**
+
+# Graphify: retain the shareable graph and project skill, but exclude
+# machine-specific caches, personal query memory, costs, and backup snapshots.
+graphify-out/cache/
+graphify-out/cost.json
+graphify-out/memory/
+graphify-out/reflections/
+graphify-out/.graphify_*
+graphify-out/????-??-??/

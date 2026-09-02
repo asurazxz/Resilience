@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://resilience.local/contracts/income-reality.schema.json",
   "title": "Income Reality Engine contract",
-  "description": "Request/response shapes for POST /income-reality/breakdown (workstream feature/02-income-reality). Proposed by workstream 2, not unilaterally final - the week_start (Monday-start ISO week) convention in particular should be confirmed against feature/01-foundation-input's persisted entry schema when it lands. Monetary values are integer cents; dates are ISO 8601 strings, per contracts/README.md.",
+  "description": "Request/response shapes for POST /api/v1/income-reality/breakdown. Feature 1 supplies persisted Monday-start weekly entries and Feature 2 performs deterministic calculations. Monetary values are integer cents; dates are ISO 8601 strings, per contracts/README.md.",
   "$defs": {
     "PlatformEarning": {
       "type": "object",
@@ -34,7 +34,13 @@
           "default": 0,
           "description": "Aggregate declared work costs for the week (fuel, tolls, commission, rental, etc.). Itemisation is owned by feature/01-foundation-input's data intake."
         },
-        "essential_expenses_cents": { "type": "integer", "minimum": 0, "default": 0 }
+        "essential_expenses_cents": { "type": "integer", "minimum": 0, "default": 0 },
+        "recorded_cpf_cents": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "default": null,
+          "description": "Actual CPF/MediSave recorded in Feature 1. When present, it overrides the percentage estimate for this week."
+        }
       }
     },
     "AssumptionsIn": {
@@ -44,7 +50,7 @@
         "apply_cpf": {
           "type": "boolean",
           "default": false,
-          "description": "Whether to deduct the simplified flat-rate CPF/MediSave estimate. Not the real statutory schedule."
+          "description": "Whether to deduct the simplified flat-rate CPF/MediSave estimate for weeks without a recorded CPF amount. Not the real statutory schedule."
         },
         "cpf_rate_bps": {
           "type": "integer",

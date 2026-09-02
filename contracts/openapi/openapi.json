@@ -598,6 +598,47 @@
         }
       }
     },
+    "/api/v1/income-reality/breakdown": {
+      "post": {
+        "tags": [
+          "income-reality"
+        ],
+        "summary": "Post Breakdown",
+        "operationId": "post_breakdown_api_v1_income_reality_breakdown_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IncomeRealityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncomeRealityResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -651,6 +692,24 @@
   },
   "components": {
     "schemas": {
+      "AssumptionsIn": {
+        "properties": {
+          "apply_cpf": {
+            "type": "boolean",
+            "title": "Apply Cpf",
+            "default": false
+          },
+          "cpf_rate_bps": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Cpf Rate Bps",
+            "default": 800
+          }
+        },
+        "type": "object",
+        "title": "AssumptionsIn"
+      },
       "Body_csv_preview_api_v1_foundation_imports_csv_preview_post": {
         "properties": {
           "file": {
@@ -1032,6 +1091,51 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "IncomeRealityRequest": {
+        "properties": {
+          "weeks": {
+            "items": {
+              "$ref": "#/components/schemas/WeeklyEntryIn"
+            },
+            "type": "array",
+            "maxItems": 52,
+            "minItems": 1,
+            "title": "Weeks"
+          },
+          "assumptions": {
+            "$ref": "#/components/schemas/AssumptionsIn"
+          }
+        },
+        "type": "object",
+        "required": [
+          "weeks"
+        ],
+        "title": "IncomeRealityRequest"
+      },
+      "IncomeRealityResponse": {
+        "properties": {
+          "weeks": {
+            "items": {
+              "$ref": "#/components/schemas/WeekBreakdownOut"
+            },
+            "type": "array",
+            "title": "Weeks"
+          },
+          "trend": {
+            "$ref": "#/components/schemas/TrendSummaryOut"
+          },
+          "assumptions_applied": {
+            "$ref": "#/components/schemas/AssumptionsIn"
+          }
+        },
+        "type": "object",
+        "required": [
+          "weeks",
+          "trend",
+          "assumptions_applied"
+        ],
+        "title": "IncomeRealityResponse"
+      },
       "InputSnapshot": {
         "properties": {
           "id": {
@@ -1149,6 +1253,44 @@
           "emergencySavingsCents"
         ],
         "title": "OnboardingRequest"
+      },
+      "PlatformEarningIn": {
+        "properties": {
+          "platform": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Platform"
+          },
+          "gross_cents": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Gross Cents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "platform",
+          "gross_cents"
+        ],
+        "title": "PlatformEarningIn"
+      },
+      "PlatformEarningOut": {
+        "properties": {
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "gross_cents": {
+            "type": "integer",
+            "title": "Gross Cents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "platform",
+          "gross_cents"
+        ],
+        "title": "PlatformEarningOut"
       },
       "ProfileResponse": {
         "properties": {
@@ -1321,6 +1463,44 @@
         ],
         "title": "RecurringWorkCostResponse"
       },
+      "TrendSummaryOut": {
+        "properties": {
+          "weeks_considered": {
+            "type": "integer",
+            "title": "Weeks Considered"
+          },
+          "average_net_income_cents": {
+            "type": "integer",
+            "title": "Average Net Income Cents"
+          },
+          "min_net_income_cents": {
+            "type": "integer",
+            "title": "Min Net Income Cents"
+          },
+          "max_net_income_cents": {
+            "type": "integer",
+            "title": "Max Net Income Cents"
+          },
+          "stdev_net_income_cents": {
+            "type": "integer",
+            "title": "Stdev Net Income Cents"
+          },
+          "conservative_weekly_income_cents": {
+            "type": "integer",
+            "title": "Conservative Weekly Income Cents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "weeks_considered",
+          "average_net_income_cents",
+          "min_net_income_cents",
+          "max_net_income_cents",
+          "stdev_net_income_cents",
+          "conservative_weekly_income_cents"
+        ],
+        "title": "TrendSummaryOut"
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -1403,6 +1583,103 @@
           "amountCents"
         ],
         "title": "VariableCostInput"
+      },
+      "WeekBreakdownOut": {
+        "properties": {
+          "week_start": {
+            "type": "string",
+            "title": "Week Start"
+          },
+          "gross_earnings_cents": {
+            "type": "integer",
+            "title": "Gross Earnings Cents"
+          },
+          "platform_breakdown": {
+            "items": {
+              "$ref": "#/components/schemas/PlatformEarningOut"
+            },
+            "type": "array",
+            "title": "Platform Breakdown"
+          },
+          "work_costs_cents": {
+            "type": "integer",
+            "title": "Work Costs Cents"
+          },
+          "cpf_cents": {
+            "type": "integer",
+            "title": "Cpf Cents"
+          },
+          "net_income_cents": {
+            "type": "integer",
+            "title": "Net Income Cents"
+          },
+          "essential_expenses_cents": {
+            "type": "integer",
+            "title": "Essential Expenses Cents"
+          },
+          "surplus_cents": {
+            "type": "integer",
+            "title": "Surplus Cents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "week_start",
+          "gross_earnings_cents",
+          "platform_breakdown",
+          "work_costs_cents",
+          "cpf_cents",
+          "net_income_cents",
+          "essential_expenses_cents",
+          "surplus_cents"
+        ],
+        "title": "WeekBreakdownOut"
+      },
+      "WeeklyEntryIn": {
+        "properties": {
+          "week_start": {
+            "type": "string",
+            "title": "Week Start",
+            "description": "ISO 8601 date, Monday of the week"
+          },
+          "platform_earnings": {
+            "items": {
+              "$ref": "#/components/schemas/PlatformEarningIn"
+            },
+            "type": "array",
+            "title": "Platform Earnings"
+          },
+          "work_costs_cents": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Work Costs Cents",
+            "default": 0
+          },
+          "essential_expenses_cents": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Essential Expenses Cents",
+            "default": 0
+          },
+          "recorded_cpf_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded Cpf Cents",
+            "description": "Actual recorded CPF/MediSave amount; overrides the estimate for this week"
+          }
+        },
+        "type": "object",
+        "required": [
+          "week_start"
+        ],
+        "title": "WeeklyEntryIn"
       },
       "WeeklyEntryResponse": {
         "properties": {

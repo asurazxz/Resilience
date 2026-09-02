@@ -5,25 +5,23 @@ interface AssumptionsEditorProps {
   onChange: (assumptions: AssumptionsIn) => void;
 }
 
-// Bare-bones controls only - lets the user see and edit the assumptions
-// behind the calculation, per the "editable assumptions" requirement in
-// documentation/initial-scaffold.md. No styling pass.
 export function AssumptionsEditor({ assumptions, onChange }: AssumptionsEditorProps) {
   const ratePercent = assumptions.cpf_rate_bps / 100;
 
   return (
-    <fieldset>
-      <legend>Assumptions</legend>
-      <label>
+    <fieldset className="card mt-6">
+      <legend className="px-2 text-lg font-bold">CPF / MediSave assumption</legend>
+      <label className="flex items-center gap-3">
         <input
+          className="!h-5 !min-h-0 !w-5"
           type="checkbox"
           checked={assumptions.apply_cpf}
           onChange={(event) => onChange({ ...assumptions, apply_cpf: event.target.checked })}
         />
-        Apply estimated CPF/MediSave deduction
+        <span className="font-semibold">Estimate CPF/MediSave when no amount was recorded</span>
       </label>
-      <label>
-        CPF rate (%):
+      <label className="mt-4 block max-w-xs">
+        <span className="label">Estimated rate (%)</span>
         <input
           type="number"
           min={0}
@@ -36,11 +34,9 @@ export function AssumptionsEditor({ assumptions, onChange }: AssumptionsEditorPr
           }
         />
       </label>
-      <p>
-        <small>
-          Estimate only, not the official CPF/MediSave schedule. Editable, and never used to decide
-          eligibility or filing.
-        </small>
+      <p className="mt-3 text-sm text-slate-600">
+        A recorded CPF amount always takes priority for that week. Otherwise this is a simplified
+        estimate, not the official schedule, and is never used to decide eligibility or filing.
       </p>
     </fieldset>
   );

@@ -30,6 +30,7 @@ class WeeklyEntry:
     platform_earnings: tuple[PlatformEarning, ...] = ()
     work_costs_cents: int = 0
     essential_expenses_cents: int = 0
+    recorded_cpf_cents: int | None = None
 
 
 @dataclass(frozen=True)
@@ -61,7 +62,9 @@ def calculate_cpf_cents(gross_earnings_cents: int, apply_cpf: bool, cpf_rate_bps
     return (gross_earnings_cents * cpf_rate_bps + 5000) // 10000
 
 
-def calculate_week_breakdown(entry: WeeklyEntry, *, apply_cpf: bool, cpf_rate_bps: int) -> WeekBreakdown:
+def calculate_week_breakdown(
+    entry: WeeklyEntry, *, apply_cpf: bool, cpf_rate_bps: int
+) -> WeekBreakdown:
     """Net income and surplus for a single week.
 
     Negative results are intentionally not floored to zero: a week where
@@ -70,7 +73,11 @@ def calculate_week_breakdown(entry: WeeklyEntry, *, apply_cpf: bool, cpf_rate_bp
     the underlying formula.
     """
     gross_earnings_cents = sum(p.gross_cents for p in entry.platform_earnings)
-    cpf_cents = calculate_cpf_cents(gross_earnings_cents, apply_cpf, cpf_rate_bps)
+    cpf_cents = (
+        entry.recorded_cpf_cents
+        if entry.recorded_cpf_cents is not None
+        else calculate_cpf_cents(gross_earnings_cents, apply_cpf, cpf_rate_bps)
+    )
     net_income_cents = gross_earnings_cents - entry.work_costs_cents - cpf_cents
     surplus_cents = net_income_cents - entry.essential_expenses_cents
     return WeekBreakdown(

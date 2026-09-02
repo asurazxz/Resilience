@@ -11,6 +11,7 @@ export interface WeeklyEntryIn {
   platform_earnings: PlatformEarning[];
   work_costs_cents: number;
   essential_expenses_cents: number;
+  recorded_cpf_cents?: number | null;
 }
 
 export interface AssumptionsIn {

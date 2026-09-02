@@ -1,6 +1,11 @@
 import type { ApiErrorBody, CsvPreview, FoundationBootstrap } from "../types/foundation";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+// During local development Vite proxies /api to FastAPI. Keeping browser calls
+// same-origin also lets embedded development browsers use the app without
+// blocking a separate localhost:8000 request.
+const API_BASE_URL = import.meta.env.DEV
+  ? ""
+  : (import.meta.env.VITE_API_BASE_URL ?? window.location.origin);
 
 export class ApiError extends Error {
   constructor(

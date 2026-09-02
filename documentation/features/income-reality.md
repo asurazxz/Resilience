@@ -1,13 +1,13 @@
 # Income Reality Engine (Workstream 2)
 
-**Date:** 2026-09-01
+**Date:** 2026-09-02
 
 **Branch:** `feature/02-income-reality`
 
-**Scope:** Deterministic net-income and surplus calculations, an unmounted FastAPI router, a proposed shared
-contract with fixtures, and bare-bones frontend UI. No app scaffolding (dependency manifests, FastAPI entry
-point, Vite setup) — that is `feature/01-foundation-input`'s ownership per `backend/README.md` and
-`frontend/README.md`, and it had not landed on any branch as of this session.
+**Status:** Integrated with Feature 1 on `dev`
+
+**Scope:** Deterministic net-income and surplus calculations, a mounted FastAPI API, shared contract and
+fixtures, and a frontend route driven by Feature 1's confirmed weekly entries and immutable expense snapshots.
 
 ## User-visible scope
 
@@ -17,20 +17,15 @@ surplus (net income minus essential expenses). Across the supplied weeks, they a
 average, lowest, highest, variation, and a conservative weekly figure to plan around.
 
 **Explicitly deferred:**
-- Mounting the router into a running FastAPI app (blocked on `feature/01-foundation-input`'s `app/main.py`).
-- Reading entries from persisted storage — this version takes weekly entries directly in the request body (see
-  Decisions below).
-- Any visual design pass on the frontend components — bare-bones markup only, per explicit scope direction this
-  session.
+- Reading entries directly inside the backend endpoint. The Feature 1 frontend bootstrap supplies persisted
+  entries through a typed adapter, keeping the Feature 2 engine storage-independent.
 - Itemised work-cost breakdown (fuel, tolls, commission, etc.) — the engine accepts one aggregate
   `work_costs_cents` figure per week; itemisation, if any, belongs to Workstream 1's data intake.
 
 ## Assumptions and business rules
 
 - **Money:** integer cents at every boundary (per `contracts/README.md`).
-- **Weekly period:** ISO 8601 `week_start` date, Monday-start convention. Proposed by this workstream in
-  `contracts/schemas/income-reality.schema.json` since no other branch had fixed a convention yet — needs
-  confirmation against `feature/01-foundation-input`'s persisted entry schema when it lands.
+- **Weekly period:** ISO 8601 `week_start` date using Feature 1's confirmed Monday-start convention.
 - **Input shape:** the API takes weekly entries directly in the request body rather than reading from the
   database. This lets the frontend and backend both develop against `contracts/fixtures/income-reality/`
   before Supabase migrations exist, per the shared-contracts note in `documentation/initial-scaffold.md`.
@@ -38,7 +33,9 @@ average, lowest, highest, variation, and a conservative weekly figure to plan ar
 - **CPF/MediSave:** modelled as a single editable flat rate in basis points (`cpf_rate_bps`, default 800 =
   8.00%) applied to gross earnings, toggled by `apply_cpf`. This is a simplified prototype estimate, **not**
   the real statutory CPF/MediSave schedule (which depends on age band and Net Trade Income) — out of scope for
-  a one-week build. See `backend/app/features/income_reality/assumptions.py`.
+  a one-week build. When Feature 1 contains a recorded CPF variable cost, that amount overrides the estimate
+  for that week and is removed from aggregate work costs to prevent a double deduction. See
+  `backend/app/features/income_reality/assumptions.py` and `frontend/src/features/income-reality/foundationAdapter.ts`.
 - **Negative values are not floored to zero.** A week where work costs exceed earnings, or essential expenses
   exceed net income, reports the true negative `net_income_cents` / `surplus_cents`. Flooring would hide a real
   deficit and contradict the "every displayed value traceable to formulas" acceptance check.
@@ -53,37 +50,26 @@ average, lowest, highest, variation, and a conservative weekly figure to plan ar
 ## Interfaces
 
 - **Contract:** `contracts/schemas/income-reality.schema.json` (JSON Schema, draft 2020-12) defines
-  `IncomeRealityRequest` / `IncomeRealityResponse` and their nested shapes. Marked as a proposal, not final
-  authority, per `documentation/initial-scaffold.md`.
+  `IncomeRealityRequest` / `IncomeRealityResponse` and their nested shapes.
 - **Fixtures:** `contracts/fixtures/income-reality/` — three paired request/response examples: a typical
   multi-platform week, a zero-income week, and a three-week trend that includes a costs-exceed-earnings
   (deficit) week with CPF applied.
-- **API (unmounted):** `POST /income-reality/breakdown` in `backend/app/features/income_reality/router.py`.
-  Intended mount point for whoever wires `app/main.py`:
-  ```python
-  from app.features.income_reality.router import router as income_reality_router
-  app.include_router(income_reality_router, prefix="/income-reality", tags=["income-reality"])
-  ```
+- **API:** `POST /api/v1/income-reality/breakdown`, mounted by `backend/app/main.py` from the Feature 2 router.
 - **Engine:** `backend/app/features/income_reality/engine.py` — pure, framework-independent functions
   (`calculate_week_breakdown`, `calculate_recent_trend`, `calculate_income_reality`). No FastAPI/Pydantic
   import, so it is unit-testable without the rest of the app existing.
 - **Test config:** `backend/pytest.ini` sets `pythonpath = .` so `from app...` imports resolve when running
   `pytest` from `backend/` (or `pytest backend/tests` from the repo root), without needing a package install or
   `feature/01-foundation-input`'s eventual dependency manifest.
-- **Frontend:** `frontend/src/features/income-reality/` — `types.ts` (mirrors the contract), `api.ts` (fetch
-  wrapper), `format.ts`, and bare-bones components `IncomeBreakdownCard`, `RecentTrendSummary`,
+- **Frontend:** `frontend/src/features/income-reality/` — `types.ts` (mirrors the contract), `api.ts` (shared
+  Feature 1 API client), `format.ts`, and components `IncomeBreakdownCard`, `RecentTrendSummary`,
   `AssumptionsEditor`, assembled by `IncomeRealityView`.
-- **Integration seam for Workstream 1:** `useIncomeRealityBreakdown.ts` (fetch/loading/error/assumptions state,
-  keyed off a JSON-serialised `weeks` value so callers don't need to memoise the array) and `IncomeRealityPage.tsx`
-  (the top-level component: takes `weeks: WeeklyEntryIn[]` as its only prop, handles empty/loading/error states,
-  renders `IncomeRealityView` once data arrives). Whoever builds the app route/navigation in `frontend/src/app/`
-  should render `<IncomeRealityPage weeks={...} />` with the user's actual weekly entries once
-  `feature/01-foundation-input`'s manual-entry data exists — `IncomeRealityPage` doesn't know or care where
-  `weeks` came from. If Workstream 1's persisted entry shape differs from `WeeklyEntryIn`, the fix is a small
-  mapping function at the call site; `IncomeRealityPage`/`useIncomeRealityBreakdown`/`engine.py` should not need
-  to change.
+- **Feature 1 adapter:** `foundationAdapter.ts` aggregates repeated platform rows, excludes drafts, converts
+  monthly snapshots to weekly amounts with Feature 1's `round(amount × 12 ÷ 52)` convention, separates recorded
+  CPF, and orders the request oldest-first. `useIncomeRealityBreakdown.ts` owns fetch/loading/error/assumptions
+  state. `frontend/src/app/App.tsx` renders the page at `/income-reality` inside Feature 1's shared shell.
 
-## Tests performed
+## Original Feature 2 branch verification
 
 Python and Node.js were not installed on the development machine at the start of this session (confirmed via
 `python --version` / `node --version`, both failed — `python.exe` resolved only to the Microsoft Store install
@@ -126,26 +112,20 @@ the following could be actually executed rather than only hand-verified:
 
 ## Known limitations
 
-- Router is not mounted in a committed app; nothing is callable from a real deployment until
-  `feature/01-foundation-input` lands `app/main.py` and the real `frontend/package.json`/Vite setup (the code
-  was verified to actually run via a temporary, uncommitted harness — see Tests performed — not via anything
-  checked into the branch).
-- `IncomeRealityPage` is not yet rendered from anywhere in `frontend/src/app/` (that tree doesn't exist yet) -
-  it is a ready-to-use component, not a mounted route.
 - CPF is a simplified flat-rate estimate, not the statutory schedule.
 - No itemised work-cost breakdown; only an aggregate figure per week.
-- No component-level (Vitest/RTL) frontend tests yet — blocked on Workstream 1 choosing the test tooling.
-- Frontend components are intentionally unstyled.
+- Historical confirmed weeks without Feature 1 expense snapshots calculate from their recorded variable costs
+  only and show a warning. New manual and CSV-created weeks capture snapshots.
 
-## Next integration step
+## Current integration verification and next step
 
-1. Mount the router as documented above once `feature/01-foundation-input` lands `app/main.py`.
-2. Confirm or renegotiate the Monday-start `week_start` convention against the persisted entry schema.
-3. Once Workstream 1's manual-entry data and routing exist, render `<IncomeRealityPage weeks={...} />`
-   (`frontend/src/features/income-reality/IncomeRealityPage.tsx`) from a route in `frontend/src/app/`, mapping
-   Workstream 1's entry shape to `WeeklyEntryIn` first if it differs.
-4. Once Workstream 1 picks frontend test tooling, add component tests colocated with the source (per
-   `frontend/README.md`'s placement rule) for `IncomeBreakdownCard`, `RecentTrendSummary`, `AssumptionsEditor`,
-   and `IncomeRealityPage`.
-5. When Workstream 1's persistence lands, the entry-shape mapping in step 3 is the only place that should need
-   to change — `engine.py`, the router, and `IncomeRealityPage` itself should not.
+- `foundationAdapter.test.ts`: mapping, monthly conversion, platform aggregation, draft filtering, and missing
+  snapshot reporting.
+- Shared-app API integration test: verifies the router at `/api/v1/income-reality/breakdown`.
+- Full backend suite: 24 always-on tests passed; both database-dependent Foundation integration tests also
+  passed with local Supabase running and `RUN_DATABASE_TESTS=1`.
+- Live Playwright test: loaded `/income-reality` against FastAPI and local Supabase seed data, found no console
+  errors, verified the expected `$22.69` surplus, enabled the estimator, and confirmed recorded CPF still won.
+
+Feature 3 should consume `trend.conservative_weekly_income_cents` and weekly surplus through an explicit adapter
+rather than duplicating Feature 2 calculations.

@@ -4,6 +4,7 @@ from backend.app.core.errors import DomainError
 from backend.app.core.settings import get_settings
 from backend.app.db.session import get_engine
 from backend.app.features.foundation_input.routes import router as foundation_router
+from backend.app.features.income_reality.router import router as income_reality_router
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,6 +25,11 @@ app.add_middleware(
     allow_headers=["Content-Type", "Idempotency-Key", "X-Confirm-Reset"],
 )
 app.include_router(foundation_router, prefix="/api/v1")
+app.include_router(
+    income_reality_router,
+    prefix="/api/v1/income-reality",
+    tags=["income-reality"],
+)
 
 
 @app.middleware("http")

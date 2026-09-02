@@ -4,27 +4,24 @@ import { RecentTrendSummary } from "./RecentTrendSummary";
 import { AssumptionsEditor } from "./AssumptionsEditor";
 
 interface IncomeRealityViewProps {
+  assumptions: AssumptionsIn;
   response: IncomeRealityResponse;
-  onAssumptionsChange?: (assumptions: AssumptionsIn) => void;
+  onAssumptionsChange: (assumptions: AssumptionsIn) => void;
 }
 
-// Bare-bones assembly of the Income Reality UI pieces - deliberately no
-// visual design pass this round. A caller (a page in app/, or a manual
-// harness) supplies already-fetched data; see api.ts for the live fetch and
-// contracts/fixtures/income-reality for example data to develop against
-// before the backend is mounted.
-export function IncomeRealityView({ response, onAssumptionsChange }: IncomeRealityViewProps) {
+export function IncomeRealityView({ assumptions, response, onAssumptionsChange }: IncomeRealityViewProps) {
   return (
     <div>
-      <h2>Income Reality</h2>
       <AssumptionsEditor
-        assumptions={response.assumptions_applied}
-        onChange={onAssumptionsChange ?? (() => {})}
+        assumptions={assumptions}
+        onChange={onAssumptionsChange}
       />
-      {response.weeks.map((week) => (
-        <IncomeBreakdownCard key={week.week_start} week={week} />
-      ))}
       <RecentTrendSummary trend={response.trend} />
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        {[...response.weeks].reverse().map((week) => (
+          <IncomeBreakdownCard key={week.week_start} week={week} />
+        ))}
+      </div>
     </div>
   );
 }

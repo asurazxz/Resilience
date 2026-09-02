@@ -2,6 +2,41 @@
 
 Append significant sessions in reverse chronological order. Keep entries concise and factual.
 
+## 2026-09-02 — Add Graphify cross-agent project integration
+
+- Installed Graphify's project-scoped generic Agent Skills bundle at `.agents/skills/graphify/`, complementing the existing Codex `AGENTS.md` integration.
+- Updated `.gitignore` to retain shareable Graphify output while excluding its machine-specific cache, cost tracker, personal memory/reflections, absolute-path metadata, and dated backup snapshots.
+
+## 2026-09-02 — Clarify new-week entry and CPF-estimator behaviour
+
+- Changed both “Add” actions to open a blank new-week flow instead of routing to the current week's existing record; when the current week exists, the form defaults to the following Monday.
+- Verified saved weekly entries appear in Income Reality immediately through the shared Foundation state and the live calculation request.
+- Clarified that recorded CPF amounts take priority and added browser coverage proving the 8% estimator applies to a week without recorded CPF.
+- Reworked browser tests to create and delete their own future-dated temporary records, preserving the user's local entries.
+
+## 2026-09-02 — Repair queued week-entry saves after duplicate-ID errors
+
+- Found that changing the date in an existing weekly entry cloned its weekly/child IDs; PostgreSQL rejected the duplicate key as a 500, leaving later offline mutations queued behind it.
+- New-date saves now generate fresh weekly, earning, and variable-cost IDs; the client also repairs old queued week mutations whose IDs collide with server data before replaying them.
+- The API returns a typed 409 conflict instead of an unhandled 500 for duplicate parent or child IDs. Restarted the local FastAPI listener after the code change.
+- Verified 3 live database API tests, Ruff, 4 frontend unit tests, frontend build, and 3 Playwright journeys; restored the synthetic local seed afterward.
+
+## 2026-09-02 — Restore local PWA mutation sync in embedded browsers
+
+- Diagnosed queued edits that remained pending in the embedded local browser: FastAPI accepted the Foundation writes and its CORS preflight, but the browser blocked the separate `localhost:8000` API origin.
+- Made Vite proxy `/api/*` to the local FastAPI server and made development client requests same-origin, while retaining `VITE_API_BASE_URL` for a production API origin.
+- Added browser coverage that saves assumptions, verifies the profile/recurring/essential writes occur, and waits for the sync queue to drain. Verified the Vite proxy, 4 frontend unit tests, frontend build, and 2 Playwright journeys.
+
+## 2026-09-02 — Integrate Feature 1 foundation with Feature 2 Income Reality
+
+- Mounted the original Feature 2 deterministic router at `/api/v1/income-reality/breakdown` inside Feature 1's FastAPI application and regenerated the committed OpenAPI/TypeScript contract.
+- Added a typed frontend adapter from confirmed Feature 1 weekly entries to Feature 2 inputs: repeated platform rows aggregate, monthly snapshots use Feature 1's weekly conversion, drafts are excluded, and requests are ordered oldest-first.
+- Resolved the CPF overlap per user direction: an actual Feature 1 CPF variable cost is passed separately, removed from aggregate work costs, and overrides Feature 2's percentage estimate for that week.
+- Added the `/income-reality` route to Feature 1's shared shell, retained Feature 2's calculations and assumption controls, and added minimal styling plus warnings for historical entries without expense snapshots.
+- Fixed Feature 2's controlled CPF checkbox to render its local assumption immediately while calculated results remain server-authoritative.
+- Updated CSV-created weeks to capture immutable recurring/essential expense snapshots just like manually created weeks.
+- Added adapter, recorded-CPF engine/router, shared-app route, and live Playwright coverage. Verified 4 frontend unit tests, frontend production build, 24 always-on backend tests plus 2 live-database tests, Ruff, live Supabase/FastAPI API results, and a Playwright browser pass with no console errors.
+
 ## 2026-09-02 — Verify live local Feature 1 stack and document the handoff
 
 - Started the existing local Supabase database, PWA, and FastAPI service; API readiness returned `{"status":"ready"}` and the PWA root returned HTTP 200.

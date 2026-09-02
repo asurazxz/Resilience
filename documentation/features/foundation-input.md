@@ -9,6 +9,7 @@
 - Mobile-first PWA shell with overview, weekly history, CSV import, and assumptions navigation.
 - Anonymous demo onboarding for emergency savings, recurring work costs, and essential household expenses.
 - Editable weekly earnings and variable work costs, including explicit no-income weeks.
+- “Add a new week” opens a blank entry rather than the latest saved week; if the current Monday is already recorded, it starts on the following Monday.
 - Strict Resilience CSV download, server-side validation preview, and user-confirmed conversion into weekly entries.
 - Cached bootstrap data and ordered optimistic writes in IndexedDB. Reconnect triggers replay using mutation UUIDs as idempotency keys.
 - Visible online/offline and queued/failed/conflicted states. Revision conflicts offer “Use server” and “Keep mine.”
@@ -82,7 +83,7 @@ Safe, committed local defaults:
 
 | Variable | Package | Local value/purpose | Secret? |
 |---|---|---|---|
-| `VITE_API_BASE_URL` | frontend | `http://localhost:8000` | No |
+| `VITE_API_BASE_URL` | frontend | Production API origin; local development uses Vite's same-origin proxy | No |
 | `APP_ENV` | backend | `development` | No |
 | `DATABASE_URL` | backend | Local `postgresql+psycopg://postgres:postgres@127.0.0.1:54322/postgres` | Hosted value is secret |
 | `FRONTEND_ORIGIN` | backend | `http://localhost:5173` | No |
@@ -131,6 +132,8 @@ npm run dev:frontend
 
 Open `http://localhost:5173`; use `http://localhost:8000/docs` for the API and `http://127.0.0.1:54323` for local Supabase Studio. Confirm the API is ready with `Invoke-RestMethod http://127.0.0.1:8000/ready`. Stop the API and PWA with `Ctrl+C`, then run `npm run db:stop` to stop Supabase.
 
+In development, the PWA sends `/api/*` requests to its own origin and Vite proxies them to FastAPI at `127.0.0.1:8000`. This avoids embedded browsers blocking a separate `localhost:8000` request; the configured `VITE_API_BASE_URL` remains the production API origin.
+
 The 2026-09-02 live check started this exact stack successfully, received `{"status":"ready"}` from the API, and received HTTP 200 from the PWA root.
 
 For future migrations, one coordinated authenticated teammate should run:
@@ -145,7 +148,7 @@ Do not use `--include-seed` for normal shared-project pushes. Never use `db rese
 
 ## Verification performed
 
-- Frontend: `npm run test:frontend` (2 tests pass), `npm run build:frontend` (TypeScript and production PWA build pass), npm audit (0 vulnerabilities).
+- Frontend: `npm run test:frontend` (4 tests pass), `npm run build:frontend` (TypeScript and production PWA build pass), `npm run test:integration` (4 local browser journeys, including queued assumptions sync, date-changed week saves, live Income Reality updates, and CPF estimation), npm audit (0 vulnerabilities).
 - Backend: 6 unit tests pass; Ruff passes; OpenAPI exports and TypeScript generation succeed.
 - Database: local Supabase starts, migration plus synthetic seed applies, all 13 pgTAP assertions pass, and `supabase db lint --local --level warning` reports no schema errors.
 - Integration: real FastAPI → SQLAlchemy/psycopg → local Supabase bootstrap, weekly create, revision conflict, read, and cleanup pass.
@@ -153,7 +156,7 @@ Do not use `--include-seed` for normal shared-project pushes. Never use `db rese
 
 ## Next integration steps
 
-- Feature 2 should calculate from weekly earnings, variable costs, and immutable input snapshots; it should not reproduce the overview estimate.
+- Feature 2 now calculates from confirmed weekly earnings, variable costs, and immutable input snapshots through `foundationAdapter.ts`; recorded CPF overrides its estimator for that week.
 - Feature 3 should use `goals`/`goal_contributions` and agree its API additions through OpenAPI.
 - Feature 4 should evolve `scheme_rule_versions` by migration and keep eligibility deterministic.
 - Feature 5 should use `scenarios` and the same cents/Monday conventions.

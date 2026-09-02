@@ -1,13 +1,7 @@
 """Income Reality API router.
 
-Not mounted anywhere yet: feature/01-foundation-input owns app/main.py and
-the route composition in app/api/ (see backend/README.md). Whoever wires
-main.py should do:
-
-    from app.features.income_reality.router import router as income_reality_router
-    app.include_router(income_reality_router, prefix="/income-reality", tags=["income-reality"])
-
-This router has no knowledge of its own mount prefix or of persistence -
+The shared Feature 1 application mounts this router at
+``/api/v1/income-reality``. This router has no knowledge of that prefix or persistence:
 it takes a week's entries directly in the request body (see
 documentation/features/income-reality.md for why) and delegates every
 calculation to engine.py, which stays pure and framework-independent.
@@ -45,6 +39,7 @@ def post_breakdown(request: IncomeRealityRequest) -> IncomeRealityResponse:
             ),
             work_costs_cents=week.work_costs_cents,
             essential_expenses_cents=week.essential_expenses_cents,
+            recorded_cpf_cents=week.recorded_cpf_cents,
         )
         for week in request.weeks
     ]

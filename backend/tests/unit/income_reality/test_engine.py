@@ -21,7 +21,7 @@ from app.features.income_reality.engine import (
 WITH_CPF = IncomeAssumptions(apply_cpf=True, cpf_rate_bps=800)
 
 
-def _entry(week_start, platforms, work_costs=0, essential=0):
+def _entry(week_start, platforms, work_costs=0, essential=0, recorded_cpf=None):
     return WeeklyEntry(
         week_start=week_start,
         platform_earnings=tuple(
@@ -29,6 +29,7 @@ def _entry(week_start, platforms, work_costs=0, essential=0):
         ),
         work_costs_cents=work_costs,
         essential_expenses_cents=essential,
+        recorded_cpf_cents=recorded_cpf,
     )
 
 
@@ -82,6 +83,14 @@ def test_cpf_rate_of_zero_bps_is_a_no_op_even_when_enabled():
     breakdown = calculate_week_breakdown(entry, apply_cpf=True, cpf_rate_bps=0)
 
     assert breakdown.cpf_cents == 0
+
+
+def test_recorded_cpf_overrides_estimate_without_double_deduction():
+    entry = _entry("2026-08-24", [("Grab", 100000)], work_costs=12000, recorded_cpf=5000)
+    breakdown = calculate_week_breakdown(entry, apply_cpf=True, cpf_rate_bps=800)
+
+    assert breakdown.cpf_cents == 5000
+    assert breakdown.net_income_cents == 100000 - 12000 - 5000
 
 
 def test_single_week_trend_has_zero_stdev_and_conservative_equals_average():

@@ -20,6 +20,7 @@
     "dev:frontend": "npm run dev --workspace frontend",
     "build:frontend": "npm run build --workspace frontend",
     "test:frontend": "npm run test --workspace frontend",
+    "test:integration": "npm run test:integration --workspace frontend",
     "generate:api": "npm run generate:api --workspace frontend"
   },
   "devDependencies": {

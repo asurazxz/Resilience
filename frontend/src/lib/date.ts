@@ -6,6 +6,12 @@ export function currentMonday(now = new Date()): string {
   return `${singapore.getFullYear()}-${String(singapore.getMonth() + 1).padStart(2, "0")}-${String(singapore.getDate()).padStart(2, "0")}`;
 }
 
+export function nextMonday(weekStart: string): string {
+  const date = new Date(`${weekStart}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + 7);
+  return date.toISOString().slice(0, 10);
+}
+
 export function isMonday(value: string): boolean {
   return new Date(`${value}T00:00:00+08:00`).getDay() === 1;
 }

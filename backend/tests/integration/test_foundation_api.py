@@ -17,7 +17,7 @@ def test_bootstrap_and_week_revision_contract() -> None:
     assert bootstrap.status_code == 200
     assert bootstrap.json()["profile"]["currency"] == "SGD"
 
-    week_start = "2026-09-07"
+    week_start = "2030-01-07"
     week_id = str(uuid4())
     earning_id = str(uuid4())
     payload = {
@@ -39,6 +39,7 @@ def test_bootstrap_and_week_revision_contract() -> None:
     }
 
     try:
+        client.delete(f"/api/v1/foundation/weeks/{week_start}")
         created = client.put(
             f"/api/v1/foundation/weeks/{week_start}",
             headers={"Idempotency-Key": str(uuid4())},
@@ -60,6 +61,59 @@ def test_bootstrap_and_week_revision_contract() -> None:
         assert fetched.json()["earnings"][0]["amountCents"] == 42_050
     finally:
         client.delete(f"/api/v1/foundation/weeks/{week_start}")
+
+
+def test_week_id_cannot_be_reused_for_a_different_week() -> None:
+    client = TestClient(app)
+    source_week = "2030-01-14"
+    target_week = "2030-01-21"
+    entry_id = str(uuid4())
+    payload = {
+        "id": entry_id,
+        "expectedRevision": None,
+        "hadNoIncome": False,
+        "emergencySavingsCents": 125_000,
+        "status": "confirmed",
+        "earnings": [
+            {
+                "id": str(uuid4()),
+                "platformCode": "grab",
+                "platformLabel": None,
+                "amountCents": 10_000,
+            }
+        ],
+        "variableCosts": [],
+        "inputSnapshots": [],
+    }
+    try:
+        client.delete(f"/api/v1/foundation/weeks/{source_week}")
+        client.delete(f"/api/v1/foundation/weeks/{target_week}")
+        created = client.put(
+            f"/api/v1/foundation/weeks/{source_week}",
+            headers={"Idempotency-Key": str(uuid4())},
+            json=payload,
+        )
+        assert created.status_code == 200, created.text
+        duplicate_id = client.put(
+            f"/api/v1/foundation/weeks/{target_week}",
+            headers={"Idempotency-Key": str(uuid4())},
+            json={
+                **payload,
+                "earnings": [
+                    {
+                        "id": str(uuid4()),
+                        "platformCode": "grab",
+                        "platformLabel": None,
+                        "amountCents": 10_000,
+                    }
+                ],
+            },
+        )
+        assert duplicate_id.status_code == 409, duplicate_id.text
+        assert duplicate_id.json()["error"]["code"] == "WEEK_ID_CONFLICT"
+    finally:
+        client.delete(f"/api/v1/foundation/weeks/{target_week}")
+        client.delete(f"/api/v1/foundation/weeks/{source_week}")
 
 
 def test_reset_requires_confirmation_and_returns_empty_profile() -> None:

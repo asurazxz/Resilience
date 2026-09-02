@@ -61,7 +61,8 @@ def test_every_fixture_response_matches_the_engine_output():
                 "week_start": b.week_start,
                 "gross_earnings_cents": b.gross_earnings_cents,
                 "platform_breakdown": [
-                    {"platform": p.platform, "gross_cents": p.gross_cents} for p in b.platform_breakdown
+                    {"platform": p.platform, "gross_cents": p.gross_cents}
+                    for p in b.platform_breakdown
                 ],
                 "work_costs_cents": b.work_costs_cents,
                 "cpf_cents": b.cpf_cents,

@@ -58,6 +58,46 @@ interface FoundationContextValue {
 
 const FoundationContext = createContext<FoundationContextValue | null>(null);
 
+function repairWeekIdCollision(
+  mutation: PendingMutation,
+  current: FoundationBootstrap | undefined
+): unknown {
+  const match = mutation.path.match(/^\/foundation\/weeks\/(\d{4}-\d{2}-\d{2})$/);
+  if (!match || mutation.method !== "PUT" || !mutation.body || typeof mutation.body !== "object") {
+    return mutation.body;
+  }
+  const body = mutation.body as Record<string, unknown>;
+  const otherWeeks = current?.weeklyEntries.filter((entry) => entry.weekStart !== match[1]) ?? [];
+  const usedEntryIds = new Set(otherWeeks.map((entry) => entry.id));
+  const usedEarningIds = new Set(otherWeeks.flatMap((entry) => entry.earnings.map((item) => item.id)));
+  const usedVariableCostIds = new Set(
+    otherWeeks.flatMap((entry) => entry.variableCosts.map((item) => item.id))
+  );
+  const usedSnapshotIds = new Set(
+    otherWeeks.flatMap((entry) => entry.inputSnapshots.map((item) => item.id))
+  );
+  const replaceUsedItemIds = (value: unknown, usedIds: Set<string>) => {
+    if (!Array.isArray(value)) return value;
+    return value.map((item) => {
+      if (!item || typeof item !== "object") return item;
+      const record = item as Record<string, unknown>;
+      return typeof record.id === "string" && usedIds.has(record.id)
+        ? { ...record, id: crypto.randomUUID() }
+        : item;
+    });
+  };
+  const repaired = {
+    ...body,
+    id: typeof body.id === "string" && usedEntryIds.has(body.id) ? crypto.randomUUID() : body.id,
+    expectedRevision:
+      typeof body.id === "string" && usedEntryIds.has(body.id) ? null : body.expectedRevision,
+    earnings: replaceUsedItemIds(body.earnings, usedEarningIds),
+    variableCosts: replaceUsedItemIds(body.variableCosts, usedVariableCostIds),
+    inputSnapshots: replaceUsedItemIds(body.inputSnapshots, usedSnapshotIds)
+  };
+  return JSON.stringify(repaired) === JSON.stringify(body) ? mutation.body : repaired;
+}
+
 export function FoundationProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState(EMPTY_BOOTSTRAP);
   const [loading, setLoading] = useState(true);
@@ -88,10 +128,12 @@ export function FoundationProvider({ children }: { children: ReactNode }) {
       for (const mutation of queue) {
         if (mutation.status === "conflict") break;
         await offlineDb.mutations.update(mutation.id, { status: "syncing", error: undefined });
+        const body = repairWeekIdCollision(mutation, await readCachedBootstrap());
+        if (body !== mutation.body) await offlineDb.mutations.update(mutation.id, { body });
         try {
           await apiRequest(mutation.path, {
             method: mutation.method,
-            body: mutation.body === undefined ? undefined : JSON.stringify(mutation.body)
+            body: body === undefined ? undefined : JSON.stringify(body)
           }, mutation.id);
           await offlineDb.mutations.delete(mutation.id);
         } catch (error) {

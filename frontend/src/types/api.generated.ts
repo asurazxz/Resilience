@@ -178,6 +178,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/income-reality/breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Breakdown */
+        post: operations["post_breakdown_api_v1_income_reality_breakdown_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -216,6 +233,19 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AssumptionsIn */
+        AssumptionsIn: {
+            /**
+             * Apply Cpf
+             * @default false
+             */
+            apply_cpf: boolean;
+            /**
+             * Cpf Rate Bps
+             * @default 800
+             */
+            cpf_rate_bps: number;
+        };
         /** Body_csv_preview_api_v1_foundation_imports_csv_preview_post */
         Body_csv_preview_api_v1_foundation_imports_csv_preview_post: {
             /** File */
@@ -359,6 +389,19 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** IncomeRealityRequest */
+        IncomeRealityRequest: {
+            /** Weeks */
+            weeks: components["schemas"]["WeeklyEntryIn"][];
+            assumptions?: components["schemas"]["AssumptionsIn"];
+        };
+        /** IncomeRealityResponse */
+        IncomeRealityResponse: {
+            /** Weeks */
+            weeks: components["schemas"]["WeekBreakdownOut"][];
+            trend: components["schemas"]["TrendSummaryOut"];
+            assumptions_applied: components["schemas"]["AssumptionsIn"];
+        };
         /** InputSnapshot */
         InputSnapshot: {
             /**
@@ -396,6 +439,20 @@ export interface components {
             /** Firstweekstart */
             firstWeekStart?: string | null;
             firstWeek?: components["schemas"]["WeeklyEntryUpsert"] | null;
+        };
+        /** PlatformEarningIn */
+        PlatformEarningIn: {
+            /** Platform */
+            platform: string;
+            /** Gross Cents */
+            gross_cents: number;
+        };
+        /** PlatformEarningOut */
+        PlatformEarningOut: {
+            /** Platform */
+            platform: string;
+            /** Gross Cents */
+            gross_cents: number;
         };
         /** ProfileResponse */
         ProfileResponse: {
@@ -482,6 +539,21 @@ export interface components {
              */
             updatedAt: string;
         };
+        /** TrendSummaryOut */
+        TrendSummaryOut: {
+            /** Weeks Considered */
+            weeks_considered: number;
+            /** Average Net Income Cents */
+            average_net_income_cents: number;
+            /** Min Net Income Cents */
+            min_net_income_cents: number;
+            /** Max Net Income Cents */
+            max_net_income_cents: number;
+            /** Stdev Net Income Cents */
+            stdev_net_income_cents: number;
+            /** Conservative Weekly Income Cents */
+            conservative_weekly_income_cents: number;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -511,6 +583,50 @@ export interface components {
             label: string;
             /** Amountcents */
             amountCents: number;
+        };
+        /** WeekBreakdownOut */
+        WeekBreakdownOut: {
+            /** Week Start */
+            week_start: string;
+            /** Gross Earnings Cents */
+            gross_earnings_cents: number;
+            /** Platform Breakdown */
+            platform_breakdown: components["schemas"]["PlatformEarningOut"][];
+            /** Work Costs Cents */
+            work_costs_cents: number;
+            /** Cpf Cents */
+            cpf_cents: number;
+            /** Net Income Cents */
+            net_income_cents: number;
+            /** Essential Expenses Cents */
+            essential_expenses_cents: number;
+            /** Surplus Cents */
+            surplus_cents: number;
+        };
+        /** WeeklyEntryIn */
+        WeeklyEntryIn: {
+            /**
+             * Week Start
+             * @description ISO 8601 date, Monday of the week
+             */
+            week_start: string;
+            /** Platform Earnings */
+            platform_earnings?: components["schemas"]["PlatformEarningIn"][];
+            /**
+             * Work Costs Cents
+             * @default 0
+             */
+            work_costs_cents: number;
+            /**
+             * Essential Expenses Cents
+             * @default 0
+             */
+            essential_expenses_cents: number;
+            /**
+             * Recorded Cpf Cents
+             * @description Actual recorded CPF/MediSave amount; overrides the estimate for this week
+             */
+            recorded_cpf_cents?: number | null;
         };
         /** WeeklyEntryResponse */
         WeeklyEntryResponse: {
@@ -1004,6 +1120,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FoundationBootstrap"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_breakdown_api_v1_income_reality_breakdown_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncomeRealityRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomeRealityResponse"];
                 };
             };
             /** @description Validation Error */

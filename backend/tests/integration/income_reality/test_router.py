@@ -48,7 +48,14 @@ def test_breakdown_endpoint_rejects_empty_weeks_list():
 def test_breakdown_endpoint_rejects_negative_gross_cents():
     response = client.post(
         "/income-reality/breakdown",
-        json={"weeks": [{"week_start": "2026-08-24", "platform_earnings": [{"platform": "Grab", "gross_cents": -100}]}]},
+        json={
+            "weeks": [
+                {
+                    "week_start": "2026-08-24",
+                    "platform_earnings": [{"platform": "Grab", "gross_cents": -100}],
+                }
+            ]
+        },
     )
     assert response.status_code == 422
 
@@ -56,9 +63,38 @@ def test_breakdown_endpoint_rejects_negative_gross_cents():
 def test_breakdown_endpoint_defaults_assumptions_when_omitted():
     response = client.post(
         "/income-reality/breakdown",
-        json={"weeks": [{"week_start": "2026-08-24", "platform_earnings": [{"platform": "Grab", "gross_cents": 10000}]}]},
+        json={
+            "weeks": [
+                {
+                    "week_start": "2026-08-24",
+                    "platform_earnings": [{"platform": "Grab", "gross_cents": 10000}],
+                }
+            ]
+        },
     )
     assert response.status_code == 200
     body = response.json()
     assert body["assumptions_applied"] == {"apply_cpf": False, "cpf_rate_bps": 800}
     assert body["weeks"][0]["cpf_cents"] == 0
+
+
+def test_breakdown_endpoint_prefers_recorded_cpf_over_estimate():
+    response = client.post(
+        "/income-reality/breakdown",
+        json={
+            "weeks": [
+                {
+                    "week_start": "2026-08-24",
+                    "platform_earnings": [{"platform": "Grab", "gross_cents": 100000}],
+                    "work_costs_cents": 12000,
+                    "recorded_cpf_cents": 5000,
+                }
+            ],
+            "assumptions": {"apply_cpf": True, "cpf_rate_bps": 800},
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["weeks"][0]["cpf_cents"] == 5000
+    assert body["weeks"][0]["net_income_cents"] == 83000

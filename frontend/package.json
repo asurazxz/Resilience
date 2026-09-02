@@ -12,6 +12,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:integration": "playwright test --config playwright.integration.config.ts",
     "generate:api": "openapi-typescript ../contracts/openapi/openapi.json -o src/types/api.generated.ts"
   },
   "dependencies": {

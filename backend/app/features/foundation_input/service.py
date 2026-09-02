@@ -230,6 +230,32 @@ def _upsert_week(
     existing = session.scalar(
         _week_query(user_id).where(WeeklyEntry.week_start == week_start).with_for_update()
     )
+    record_with_same_id = session.scalar(
+        _week_query(user_id).where(WeeklyEntry.id == payload.id)
+    )
+    if record_with_same_id and record_with_same_id.week_start != week_start:
+        raise DomainError(
+            409,
+            "WEEK_ID_CONFLICT",
+            "This entry is already associated with another week.",
+            {
+                "serverRecord": _week_response(record_with_same_id).model_dump(
+                    mode="json", by_alias=True
+                )
+            },
+        )
+    if existing is None:
+        for model, item_ids in (
+            (WeeklyEarning, [item.id for item in payload.earnings]),
+            (WeeklyVariableCost, [item.id for item in payload.variable_costs]),
+            (WeeklyInputSnapshot, [item.id for item in payload.input_snapshots]),
+        ):
+            if item_ids and session.scalar(select(model.id).where(model.id.in_(item_ids))):
+                raise DomainError(
+                    409,
+                    "ENTRY_ITEM_ID_CONFLICT",
+                    "An earnings or cost item is already associated with another week.",
+                )
     if existing:
         if payload.id != existing.id:
             raise DomainError(

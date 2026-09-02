@@ -2,6 +2,62 @@
 
 Read this file before executing any repository task. Add an entry only after a real error has been encountered and resolved.
 
+## 2026-09-02 — Keep browser integration fixtures isolated from a user's local demo data
+
+- **Symptom:** A browser test that asserted seeded dollar values failed after legitimate local entries had changed the shared development database.
+- **Root cause:** The test assumed a reset synthetic seed while the local API correctly retained user-entered records.
+- **Resolution:** Replaced seed-specific assertions with future-dated records created and deleted by each test.
+- **Prevention:** Browser tests against a shared local service must own their setup and cleanup; never reset user data merely to satisfy a test fixture.
+
+## 2026-09-02 — Never clone persistent child IDs into a new weekly entry
+
+- **Symptom:** Saving an existing week under a different date produced a 500, and the offline queue could not progress beyond that mutation.
+- **Root cause:** The date change represented a new `weekly_entries` row, but the editor reused the old row's UUID plus its earning/variable-cost UUIDs, violating primary-key constraints.
+- **Resolution:** Generate new IDs whenever a date change creates a separate week, repair those collisions in queued legacy mutations, and convert any remaining duplicate-ID request into a typed 409 API error.
+- **Prevention:** When copying persisted aggregate data to create a new record, regenerate every record and child identity; test both the direct save and offline replay path.
+
+## 2026-09-02 — Keep local browser API calls same-origin
+
+- **Symptom:** Foundation mutations stayed queued when edits were made in the embedded local browser, although the API was healthy.
+- **Root cause:** The PWA called `localhost:8000` directly from `localhost:5173`; the embedded browser blocked that separate local origin before the request reached FastAPI.
+- **Resolution:** Used Vite's `/api` proxy during development and made development API URLs relative, so the browser talks only to `localhost:5173` and Vite forwards requests to FastAPI.
+- **Prevention:** For a locally split frontend/API setup that must run in embedded browsers, use a same-origin development proxy and verify a real queued mutation drains through it.
+
+## 2026-09-02 — Controlled inputs should render local intent during refetches
+
+- **Symptom:** Playwright clicked the CPF-estimate checkbox, but the controlled input immediately returned to unchecked until the API response arrived.
+- **Root cause:** The editor rendered `response.assumptions_applied` from the previous response instead of the hook's current local `assumptions` state.
+- **Resolution:** Passed local assumptions separately into `IncomeRealityView`; calculated values still render only from backend responses.
+- **Prevention:** During request-driven edits, bind controls to local state and bind results to server state so network latency cannot visually undo user input.
+
+## 2026-09-02 — Restore synthetic seed data after destructive API tests
+
+- **Symptom:** A browser integration rerun opened onboarding and could not find the Income Reality page after backend database tests passed.
+- **Root cause:** The Foundation integration tests intentionally reset the anonymous demo profile, leaving valid but unseeded state for the next test phase.
+- **Resolution:** Ran the local database reset to reapply the committed synthetic seed before the Playwright journey.
+- **Prevention:** Run state-mutating database tests before a seed reset, then start browser journeys from freshly seeded local data.
+
+## 2026-09-02 — Match immutable array helpers to the configured TypeScript library
+
+- **Symptom:** The integrated frontend build rejected `toSorted` and `toReversed` even though the installed Node runtime supports them.
+- **Root cause:** The frontend TypeScript library target predates ES2023, so those methods are absent from its compile-time types.
+- **Resolution:** Sorted a newly created adapter array in place and reversed a spread copy of the response array, preserving input immutability without changing the compiler target.
+- **Prevention:** Check `tsconfig`'s target/lib before using new ECMAScript helpers; use copy-then-mutate fallbacks when the repository intentionally targets an older library.
+
+## 2026-09-02 — Invoke import-dependent repository scripts as modules
+
+- **Symptom:** Running `python backend/scripts/export_openapi.py` failed to import the top-level `backend` package.
+- **Root cause:** Direct script execution put `backend/scripts` rather than the repository root first on `sys.path`.
+- **Resolution:** Ran `python -m backend.scripts.export_openapi` from the repository root, then regenerated frontend API types.
+- **Prevention:** Invoke repository scripts that use root-package imports with `python -m package.module` from the repository root.
+
+## 2026-09-02 — Verify the exact Vite listener before browser testing
+
+- **Symptom:** The first Playwright check could not find the integrated page, and a corrected Vite launch moved to port 5174.
+- **Root cause:** An extra npm argument was forwarded as a Vite project path, and stopping the wrapper left its child Node listener on port 5173.
+- **Resolution:** Identified the exact listener PIDs, terminated only those stale Vite process trees, restarted the documented `npm run dev:frontend` command on port 5173, and reran the browser test successfully.
+- **Prevention:** Start Vite with the documented project script unless extra arguments are necessary, confirm the reported URL, and verify that the port is released before retrying.
+
 ## 2026-09-02 — Use Python 3.12 or 3.13 for the pinned backend dependencies
 
 - **Symptom:** The existing Python 3.14/MINGW virtual environment could not install the pinned `psycopg-binary` wheel; Uvicorn's optional dependencies and `pydantic-core` also attempted unsupported source builds.

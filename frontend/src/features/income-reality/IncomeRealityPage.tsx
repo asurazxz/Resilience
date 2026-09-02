@@ -19,23 +19,39 @@ interface IncomeRealityPageProps {
 // (grouping by week, one PlatformEarning per platform) - this component
 // and useIncomeRealityBreakdown should not need to change.
 export function IncomeRealityPage({ weeks }: IncomeRealityPageProps) {
-  const { response, loading, error, setAssumptions } = useIncomeRealityBreakdown(weeks);
+  const { response, loading, error, assumptions, setAssumptions } = useIncomeRealityBreakdown(weeks);
 
   if (weeks.length === 0) {
-    return <p>No weekly entries yet. Record a week to see your Income Reality breakdown.</p>;
+    return (
+      <div className="card mt-6 text-slate-600">
+        No confirmed weekly entries yet. Record a week to see your Income Reality breakdown.
+      </div>
+    );
   }
 
   if (error) {
-    return <p style={{ color: "red" }}>Could not load Income Reality: {error}</p>;
+    return (
+      <p className="mt-6 rounded-2xl bg-rose-50 p-4 text-rose-800" role="alert">
+        Could not load Income Reality: {error}
+      </p>
+    );
   }
 
   if (loading && !response) {
-    return <p>Loading...</p>;
+    return <p className="card mt-6 text-slate-600" role="status">Calculating your income reality…</p>;
   }
 
   if (!response) {
     return null;
   }
 
-  return <IncomeRealityView response={response} onAssumptionsChange={setAssumptions} />;
+  return (
+    <div className={loading ? "opacity-70 transition-opacity" : "transition-opacity"}>
+      <IncomeRealityView
+        assumptions={assumptions}
+        response={response}
+        onAssumptionsChange={setAssumptions}
+      />
+    </div>
+  );
 }

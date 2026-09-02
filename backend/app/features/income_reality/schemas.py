@@ -22,6 +22,11 @@ class WeeklyEntryIn(BaseModel):
     platform_earnings: list[PlatformEarningIn] = Field(default_factory=list)
     work_costs_cents: int = Field(default=0, ge=0)
     essential_expenses_cents: int = Field(default=0, ge=0)
+    recorded_cpf_cents: int | None = Field(
+        default=None,
+        ge=0,
+        description="Actual recorded CPF/MediSave amount; overrides the estimate for this week",
+    )
 
 
 class AssumptionsIn(BaseModel):
