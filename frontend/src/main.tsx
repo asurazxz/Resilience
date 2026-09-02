@@ -1,16 +1,15 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 
-import { App } from "./app/App.tsx";
-import "./app/app.css";
+import { App } from './app/App';
+import './index.css';
 
-const rootElement = document.getElementById("root");
-
-if (!rootElement) {
-  throw new Error("Frontend root element was not found.");
+const container = document.getElementById('root');
+if (!container) {
+  throw new Error('Root container #root was not found in index.html');
 }
 
-createRoot(rootElement).render(
+createRoot(container).render(
   <StrictMode>
     <App />
   </StrictMode>,
