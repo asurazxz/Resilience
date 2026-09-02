@@ -81,9 +81,13 @@ test-results/
 Thumbs.db
 Desktop.ini
 
+# Machine-specific editor/agent launch configuration
+.claude/launch.json
+
 # Agent collaboration instructions and memory
 .agent/
 .agent/**
+.claude/
 
 # Graphify: retain the shareable graph and project skill, but exclude
 # machine-specific caches, personal query memory, costs, and backup snapshots.
