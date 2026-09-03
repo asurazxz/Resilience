@@ -10,21 +10,6 @@ export type AppRoute =
   | "profile"
   | "not_found";
 
-export type AppPath =
-  | "/"
-  | "/signin"
-  | "/onboarding"
-  | "/transactions"
-  | "/transactions/new"
-  | "/income-reality"
-  | "/resilience-jar"
-  | "/resilience-jar/plan"
-  | "/savings"
-  | "/scenario-simulator"
-  | "/scheme-navigator"
-  | "/profile"
-  | "/settings";
-
 /**
  * A signed-out visitor sees the landing page at "/" (and any unrecognised
  * path) with "/signin" as its one carve-out for the sign-in form. A

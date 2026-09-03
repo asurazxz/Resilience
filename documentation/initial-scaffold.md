@@ -4,7 +4,9 @@
 
 **Scope:** One-week functional prototype; deployment deferred
 
-> Historical plan: all five branches were merged into `dev` on 2026-09-02. Use this document for the original product boundaries and acceptance criteria; use `README.md`, `documentation/codebase-structure.md`, and the feature documents for current setup and implementation status.
+> **Historical plan.** All five branches were merged into `dev` on 2026-09-02. Use this document for the original product boundaries and acceptance criteria only; use the [root README](../README.md), [`codebase-structure.md`](codebase-structure.md) and the feature documents for current setup and implementation status.
+>
+> What changed since this plan was written: CSV import was built and then retired, and OCR was never built — manual entry is the only input path, alongside dated-range transactions that this plan did not anticipate. "Habit Builder & Resilience Jar" became two separate features, the Emergency Fund and Savings Goals. A deterministic Financial Score, Supabase authentication and a public landing page were added. The Scenario Simulator is presented to users as the Setback planner. The five-branch convention is finished; work now branches from `dev`.
 
 ## Product boundary
 

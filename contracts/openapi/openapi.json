@@ -596,6 +596,63 @@
       }
     },
     "/api/v1/foundation/transactions/{transaction_id}": {
+      "patch": {
+        "tags": [
+          "foundation-input"
+        ],
+        "summary": "Partially update a transaction",
+        "description": "Only the fields present in the request body are changed; omitted fields keep their current value. Sending occurredUntil: null clears a date range. A full body (every field set) behaves like a replace.",
+        "operationId": "transaction_update_api_v1_foundation_transactions__transaction_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "transaction_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Transaction Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransactionPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "tags": [
           "foundation-input"
@@ -1518,6 +1575,32 @@
         }
       }
     },
+    "/api/v1/financial-score": {
+      "get": {
+        "tags": [
+          "financial-score"
+        ],
+        "summary": "Get Financial Score",
+        "operationId": "get_financial_score_api_v1_financial_score_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancialScoreResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -2157,6 +2240,158 @@
           "generated_at"
         ],
         "title": "ExplanationResponse"
+      },
+      "FinancialScoreComponent": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "emergency_fund",
+              "savings_habit",
+              "cash_flow"
+            ],
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "scored",
+              "not_enough_information"
+            ],
+            "title": "Status"
+          },
+          "points": {
+            "type": "integer",
+            "title": "Points"
+          },
+          "maxPoints": {
+            "type": "integer",
+            "title": "Maxpoints"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "status",
+          "points",
+          "maxPoints",
+          "detail"
+        ],
+        "title": "FinancialScoreComponent"
+      },
+      "FinancialScoreMissingInput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "essential_expenses",
+              "emergency_fund_goal",
+              "income_transactions",
+              "savings_plan"
+            ],
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "route": {
+            "type": "string",
+            "title": "Route"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "action",
+          "route"
+        ],
+        "title": "FinancialScoreMissingInput"
+      },
+      "FinancialScoreResponse": {
+        "properties": {
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "band": {
+            "type": "string",
+            "enum": [
+              "building",
+              "steady",
+              "strong",
+              "resilient",
+              "unknown"
+            ],
+            "title": "Band"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generatedat"
+          },
+          "scoredMaxPoints": {
+            "type": "integer",
+            "title": "Scoredmaxpoints"
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/FinancialScoreComponent"
+            },
+            "type": "array",
+            "title": "Components"
+          },
+          "nextStep": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextstep"
+          },
+          "missingInputs": {
+            "items": {
+              "$ref": "#/components/schemas/FinancialScoreMissingInput"
+            },
+            "type": "array",
+            "title": "Missinginputs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "score",
+          "band",
+          "generatedAt",
+          "scoredMaxPoints",
+          "components",
+          "nextStep",
+          "missingInputs"
+        ],
+        "title": "FinancialScoreResponse"
       },
       "FoundationBootstrap": {
         "properties": {
@@ -3565,6 +3800,18 @@
             "type": "string",
             "format": "date",
             "title": "Occurredon"
+          },
+          "occurredUntil": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurreduntil"
           }
         },
         "type": "object",
@@ -3574,6 +3821,77 @@
           "occurredOn"
         ],
         "title": "TransactionInput"
+      },
+      "TransactionPatch": {
+        "properties": {
+          "entryType": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "income",
+                  "cost"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entrytype"
+          },
+          "amountCents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amountcents"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 160
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "occurredOn": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurredon"
+          },
+          "occurredUntil": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurreduntil"
+          }
+        },
+        "type": "object",
+        "title": "TransactionPatch",
+        "description": "Partial update for a transaction: every field is optional.\n\nOnly fields present in the request body (``model_fields_set``) are\napplied; the rest keep the transaction's existing value. Sending\n``occurredUntil: null`` explicitly clears a date range. A full body with\nevery field set behaves like a replace, same as before."
       },
       "TransactionResponse": {
         "properties": {
@@ -3607,6 +3925,18 @@
             "type": "string",
             "format": "date",
             "title": "Occurredon"
+          },
+          "occurredUntil": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurreduntil"
           },
           "id": {
             "type": "string",

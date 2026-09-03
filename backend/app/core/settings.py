@@ -40,12 +40,14 @@ class Settings(BaseSettings):
     supabase_jwt_audience: str = "authenticated"
     db_pool_size: int = Field(default=5, ge=1, le=20)
     db_max_overflow: int = Field(default=5, ge=0, le=20)
-    # x.ai (Grok) powers the Scheme Navigator assistant. With no key the
-    # feature degrades to its deterministic answers rather than failing.
-    xai_api_key: str = ""
-    xai_model: str = "grok-4.6"
-    xai_base_url: str = "https://api.x.ai/v1"
-    xai_timeout_seconds: float = Field(default=30.0, gt=0, le=120)
+    # Gemini powers the Scheme Navigator assistant. With no key the feature
+    # degrades to its deterministic answers rather than failing.
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-3.6-flash"
+    gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
+    # This model reasons by default, and un-budgeted thinking can run for
+    # minutes even on a trivial prompt, so this is generous.
+    gemini_timeout_seconds: float = Field(default=90.0, gt=0, le=180)
 
     @property
     def allowed_origins(self) -> list[str]:

@@ -22,7 +22,6 @@
   --color-ash: #c3c3cc;
   --color-ivory: #ededf3;
   --color-pure: #ffffff;
-  --color-void: #000000;
 
   /* Typography — Font Families (licensed fonts substituted per implementation brief) */
   --font-display: 'DM Serif Display', Georgia, serif;
@@ -32,7 +31,6 @@
   /* Typography — Scale. Only the sizes the semantic classes below consume;
      unreferenced entries were removed so the file stays a true source list. */
   --text-mono-label: 11px;
-  --leading-mono-label: 2;
   --text-body: 16px;
   --leading-body: 1.6;
   --text-subheading: 18px;

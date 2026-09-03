@@ -15,12 +15,10 @@
  */
 
 .jar-page {
-  --jar-canvas: var(--color-onyx, #171721);
   --jar-ink: var(--color-ivory, #ededf3);
   --jar-muted: var(--color-ash, #c3c3cc);
   --jar-accent: var(--color-cobalt, #5266eb);
   --jar-surface: var(--color-graphite-card, #1e1e2a);
-  --jar-surface-hover: var(--color-obsidian-button, #272735);
   --jar-border: rgba(255, 255, 255, 0.1);
   --jar-danger: #e8a08c;
   box-sizing: border-box;

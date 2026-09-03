@@ -1,7 +1,7 @@
 # Scheme Navigator — Questionnaire & Deterministic Evaluator
 
-**Date:** 2026-09-01 (questionnaire + evaluator), 2026-09-02 (AI explainer)
-**Status:** Integrated into the shared app on `dev`
+**Updated:** 2026-09-03
+**Status:** Integrated on `dev`
 **Scope:** Dynamic questionnaire, deterministic rule evaluator, grounded AI explainer, and global chat widget.
 
 ## User-visible scope
@@ -10,7 +10,7 @@ A user answers a short questionnaire (only the fields the loaded scheme rules ac
 
 Each result also offers "Explain this in plain language", which returns a short summary plus two or three next steps. The panel states whether the text was AI-written or came from the built-in template, and repeats that it does not decide eligibility.
 
-Deferred: persistence (answers are in-memory client state only, not saved), MyInfo/pre-fill, and any UI polish beyond functional Tailwind styling.
+Deferred: persistence — answers and results are in-memory client state and are lost on refresh — plus MyInfo pre-fill and any prefill from the user's own Income Reality figures.
 
 A circular bot avatar sits bottom-right on every screen, opening a chat panel. The panel greets the person and offers two or three one-tap suggestions derived from their actual results ("Why didn't I match WIS?", "What other support might be available to me?"), so they are not facing a blank box.
 
@@ -101,13 +101,13 @@ The evaluator decides; the LLM only rephrases. Four things enforce that:
 **Backend**
 - `sources.py` — `CURATED_SOURCES`: hand-written prototype summaries per `rule_id`, each with `source_url` and `retrieved_on`. Not verbatim official text and not verified current policy.
 - `explainer.py` — `build_prompt()` (pure) and `explain(result, client)`. Holds `SYSTEM_PROMPT`, the response JSON schema, and the fallback copy.
-- `app/integrations/ai/client.py` — provider-neutral `LLMClient` protocol plus the current `GroqClient`. Transport only: no rules or prompt content.
+- `app/integrations/ai/client.py` — the provider-neutral `LLMClient` protocol plus the current Groq client. Transport only: no rules, no prompt content.
 
 - `chat.py` — `build_chat_prompt()` (pure) and `chat()`, holding the assistant's tighter system prompt and its canned fallback. History is capped at 8 turns so the prompt cannot grow without bound.
 
 **API**
-- `POST /api/scheme-navigator/explain` `{ result: SchemeResult }` → `ExplanationResponse { summary, next_steps, source_urls, is_ai_generated, generated_at }`. Unknown `rule_id` → 404.
-- `POST /api/scheme-navigator/chat` `{ messages, answers, results }` → `ChatResponse { reply, is_ai_generated, generated_at }`. Never 500s on model failure; the panel is usable before the questionnaire is submitted.
+- `POST /api/v1/scheme-navigator/explain` `{ result: SchemeResult }` → `ExplanationResponse { summary, next_steps, source_urls, is_ai_generated, generated_at }`. Unknown `rule_id` → 404.
+- `POST /api/v1/scheme-navigator/chat` `{ messages, answers, results }` → `ChatResponse { reply, is_ai_generated, generated_at }`. Never 500s on model failure; the panel is usable before the questionnaire is submitted.
 
 **Frontend**
 - `ChatWidget.tsx` — fixed bottom-right avatar launcher and panel. The avatar is an inline SVG bot in a circle, with no binary asset or external request. Suggestion chips are derived client-side from results already in state.
@@ -115,13 +115,19 @@ The evaluator decides; the LLM only rephrases. Four things enforce that:
 
 **Shared-shell integration.** `ChatProvider` and `ChatWidget` are mounted in `frontend/src/app/App.tsx`, so the widget is present on every route. Feature implementation remains under `features/scheme-navigator/`.
 
-**Model call:** Groq via the `groq` SDK, default model `openai/gpt-oss-120b`, `max_tokens=4096`, `response_format={"type": "json_object"}`, no tools, non-streaming.
+**Model call:** Groq through the official `groq` SDK, chat completions, no tools, not streamed — `complete_json` must return one fully parsed object, so a stream would only be reassembled before parsing anyway.
 
-Groq rejected `json_schema` response format for the models on this key, so `GroqClient` asks for `json_object` and describes the schema in the system prompt instead, then parses and shape-checks the reply. Absorbing that quirk is the transport layer's job, so the callers keep one provider-neutral schema.
+Three properties of the configured model, each confirmed against the live API rather than assumed, shape `GroqClient`:
 
-The provider has now changed three times (Anthropic → Gemini → Groq) and on each swap only `client.py`, `config.py`, the route import and `requirements.txt` changed. `explainer.py`, `chat.py`, the prompts and every test were untouched, and the suite passed unchanged each time. That is the `LLMClient` protocol earning its place.
+- It is a reasoning model. `reasoning_format="parsed"` puts the chain of thought in a separate field so `content` holds only the answer; left at the default it arrives inline as a `<think>…</think>` block that would break every JSON parse. Both are handled — the field is requested, and a stray block is stripped.
+- `response_format={"type": "json_object"}` is rejected for this model at `reasoning_effort="default"`, because the raw generation opens with reasoning prose. So the schema is described in the system prompt and the parsed result is shape-checked in the client instead.
+- Reasoning consumes the completion budget before the answer starts, hence `MAX_COMPLETION_TOKENS = 8192`.
 
-**Configuration:** `GROQ_API_KEY` and `EXPLAINER_MODEL`, both optional. Settings are loaded from `backend/.env` via `python-dotenv` (`override=False`, so an exported shell variable wins). `backend/.env` is gitignored and holds the real key; the tracked `.env.example` carries placeholders only. With no key the feature runs on fallbacks, which is the state the UI was verified in.
+A stray ```` ```json ```` fence is also stripped before parsing. Absorbing all of this is the transport layer's job, so the callers keep one provider-neutral schema. The SDK is constructed with the key from settings rather than from the ambient environment, so an unconfigured deployment fails cleanly as `LLMUnavailableError` at construction rather than surfacing later as a request error.
+
+The provider has changed several times over this project. On each swap only `client.py`, the settings module, the route import and the requirements changed. `explainer.py`, `chat.py`, the prompts and every test were untouched and the suite passed unchanged. That is the `LLMClient` protocol earning its place — and it is why no document outside this section should name a vendor.
+
+**Configuration:** `GROQ_API_KEY`, `GROQ_MODEL` and `GROQ_BASE_URL`, all optional, read by `backend/app/core/settings.py` from the process environment falling back to `backend/.env`. That file is gitignored and holds the real key; the tracked `backend/.env.example` carries placeholders only. With no key the feature runs entirely on its deterministic fallbacks, which is the state the UI has been verified in.
 
 ## Current assumptions (reversible)
 
@@ -138,12 +144,12 @@ The provider has now changed three times (Anthropic → Gemini → Groq) and on 
 - `evaluator.py` — `evaluate_rule` / `evaluate_all`: pure functions, no FastAPI/DB/LLM dependency. Missing-required-field always yields `missing_information`, never a guessed `not_matched`.
 
 **API** (`backend/app/api/routes/scheme_navigator.py`):
-- `GET /api/scheme-navigator/questionnaire` → `QuestionnaireField[]`
-- `POST /api/scheme-navigator/evaluate` `{ answers: {...} }` → `EvaluationResponse { generated_at, results: SchemeResult[] }`
+- `GET /api/v1/scheme-navigator/questionnaire` → `QuestionnaireField[]`
+- `POST /api/v1/scheme-navigator/evaluate` `{ answers: {...} }` → `EvaluationResponse { generated_at, results: SchemeResult[] }`
 
 **Frontend** (`frontend/src/features/scheme-navigator/`):
 - `types.ts` — hand-mirrors the backend Pydantic schemas.
-- `api.ts` — fetch wrappers (`VITE_API_BASE_URL`, defaulting to the same-origin Vite proxy in development).
+- `api.ts` — calls the shared `src/lib/api.ts` client, so these routes get the same `/api/v1` prefix, bearer token, 401 retry and error envelope as every other feature. Request bodies are typed against the generated OpenAPI schemas, after a `ruleId`/`rule_id` mismatch shipped undetected.
 - `QuestionnaireForm.tsx` — renders whatever fields the backend returns, dispatching on `field_type`.
 - `ResultsList.tsx` — matched-first ordering, disclaimer banner, official/application links.
 - `SchemeNavigator.tsx` — container: loads questionnaire, holds answer state, calls evaluate, clears stale results when an answer changes.
@@ -156,7 +162,7 @@ No persistence layer yet: answers and results live only in React state for this 
 - `backend/tests/unit/test_scheme_navigator_questionnaire.py` (dedup across rules, unknown-field-key raises, real-rule field set matches expectation, stable preferred ordering).
 - `backend/tests/integration/test_scheme_navigator_api.py` (health, questionnaire shape, evaluate-with-no-answers → all missing, evaluate-with-full-answers → all four schemes matched, plus `/explain` with a stubbed client, `/explain` with no client configured, and unknown-rule → 404).
 - `backend/tests/unit/test_scheme_navigator_explainer.py` (prompt carries the outcome, every curated snippet, and the simplified note; prompt withholds the user's answers; response cannot carry a status; model output used when present; blank summary and blank steps handled; fallback covers all three statuses and never claims eligibility). The LLM is a stub in every test — no test touches the network.
-- The integrated backend suite passes 188 tests with 3 database-dependent tests skipped by default; the integrated frontend suite passes 26 tests.
+- The integrated backend and frontend suites pass; see the [root README](../../README.md#tests) for the commands.
 - Verified end to end on 2026-09-02 with `/health`, questionnaire, evaluation, explanation fallbacks, and the browser UI at `:5173`; the production PWA build passes.
 
 ## Known limitations / follow-up
@@ -165,7 +171,7 @@ No persistence layer yet: answers and results live only in React state for this 
 - `CURATED_SOURCES` snippets are hand-written prototype summaries, not verified quotations from the official pages. They need review by someone checking the live sources before any non-prototype use.
 - **The chatbot's guardrails are prompt-level, and prompts are not a security boundary.** The system prompt forbids eligibility claims, monetary calculation, and off-topic answers, and the prompt tests pin that those instructions stay present — but no test proves the model *obeys* them, and none can. Because the live call has never succeeded (below), the assistant's actual adherence under adversarial questions is entirely unverified. Try to break it before demoing.
 - **This risk grew when the chatbot was allowed to discuss uncurated schemes.** Previously a hallucinated scheme fact was impossible by construction, because the model had only reviewed snippets to work from; that structural guarantee is now gone and has been replaced by an instruction asking the model to self-declare uncertainty. Self-declared uncertainty is exactly the thing language models are least reliable at. The realistic failure is a confident, plausible, wrong statement about a scheme's criteria, delivered to someone deciding whether to apply for financial support. Before the demo, deliberately ask it about a scheme that is *not* one of the four and check it both flags itself as unverified and does not invent criteria.
-- **A live Groq-generated explanation/chat response has not been part of the integrated verification.** The transport and response parsing are unit-tested with stubs, and no-key/provider failures use deterministic fallbacks. Re-test the configured model from an unrestricted network before the demo.
+- **A live model-generated explanation or chat response has not been part of the integrated verification.** The transport and response parsing are unit-tested with stubs, and no-key or provider failures use deterministic fallbacks. Re-test the configured model from an unrestricted network before the demo.
 - No database persistence of answers, goals, or rule versions — in-memory only.
 - Conditional/dependent questions (e.g. only ask `spouse_annual_income` if married) are not modelled; simplified per assumption above.
 - Frontend contract/routing coverage is part of the integrated test suite; dedicated Scheme Navigator component interaction tests remain a follow-up.

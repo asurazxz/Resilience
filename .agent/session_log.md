@@ -2,6 +2,14 @@
 
 Append significant sessions in reverse chronological order. Keep entries concise and factual.
 
+## 2026-09-03 — Financial Score route recovery and critical consistency fixes
+
+- Diagnosed the Home Financial Score error as a stale FastAPI process: `/api/v1/financial-score` returned 404 despite being mounted in current source.
+- Restarted the local API from the updated checkout; the endpoint now returns the expected authenticated response instead of 404.
+- Changed the score refresh key to include transaction and standing-cost values, so editing existing records refreshes the score.
+- Prevented an unknown transaction edit route from silently creating a new transaction; it now renders an unavailable state.
+- Verified the frontend production build and updated Graphify's code graph.
+
 ## 2026-09-03 — Transaction ranges and local-stack recovery
 
 - Added transaction editing and an optional inclusive end date, with server-side ownership/date validation and a non-destructive local Supabase migration.
@@ -9,6 +17,16 @@ Append significant sessions in reverse chronological order. Keep entries concise
 - Removed the duplicate Home emergency-fund card and balance editor, hardened stale cache/money rendering against `NaN`, and made Financial Details display-first with an edit toggle.
 - Started Docker Desktop, applied `20260903150000_transaction_date_ranges.sql` locally, started the API with the working `.venv313` environment, and opened the local PWA.
 - Verified frontend production build and FastAPI readiness. The default `.venv` is Python 3.14 and cannot launch Uvicorn because its dependencies are incomplete; use `.venv313`.
+
+## 2026-09-03 — Groq assistant, readability pass, documentation rewrite, and codebase tidy-up
+
+- Switched the AI assistant to Groq's `qwen/qwen3.6-27b` through the official SDK. Three defects in the supplied configuration were caught only by calling the live API: reasoning tokens arrive inside the message content as a `<think>` block, so every JSON parse would have failed and the assistant would have silently answered from the deterministic fallback forever; a 2048-token ceiling truncates before any answer appears, since reasoning alone consumed over 4096 and a real reply needed 5,294; and this model rejects JSON mode outright with HTTP 400 because the raw generation opens with prose. Fixed by requesting reasoning in a separate field, raising the ceiling to 8192 with a 90-second timeout, and describing the schema in the prompt with a shape check on the result.
+- Verified end to end that a real reply signposts rather than calculates, and that removing the key leaves the same endpoint answering deterministically, so the core journey never depends on the model.
+- Improved readability on the text-heavy screens. The root cause was a deleted custom property still referenced in two files, which voids the declaration and leaves text inheriting an arbitrary colour. Text collapsed from six colours to three roles, Slate removed from text entirely at 3.3:1, line height raised to 1.6, and a prose measure capped near 65 characters.
+- Fixed the scheme assistant being impossible to close on a narrow viewport: expanded, the panel sat beneath the fixed top bar, which physically covered its close control. Also replaced the navigation's "Menu" text with a hamburger icon while keeping the accessible name.
+- Rewrote the README around the problem, the solution, what makes it distinctive, and numbered setup steps with environment tables and troubleshooting. Corrected every feature document; the old set claimed a light palette, a browser-fixture emergency fund, a retired CSV import, wrong route prefixes, environment variables that do not exist, and two documents contradicted each other about the savings screen.
+- Tidied the codebase: removed an unused date module, an orphaned CSV template, an empty OCR package, a dead weekly-entry adapter, dead tokens and 23 stale placeholder files. The regenerated OpenAPI specification gained 330 lines, revealing the committed contract predated the financial score feature and the generated client types were stale with it.
+- Verified: 300 backend tests with the database and Ruff clean, 92 frontend tests, TypeScript and production builds clean, and no API key present in any tracked file.
 
 ## 2026-09-03 — Cobalt palette, public landing page, and the six-month fund default
 

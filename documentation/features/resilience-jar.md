@@ -54,7 +54,8 @@ The feature is mounted in the shared React shell at `/resilience-jar`, with less
 - Activity shows five compact records initially. Each record expands for its note and edit/delete controls, with an explicit option to reveal older records.
 - An actionable alert appears on both views when essential expenses differ from the last saved goal baseline. It shows approximate previous and current monthly amounts and directs the user to review the goal.
 - Client-side history navigation keeps the same API adapter instance, so moving between views does not reset accepted targets or contributions.
-- The local demo hydrates its fixture adapter from the last successful browser cache, so reviewed goals and other demo changes survive a refresh in the same browser origin.
+- Once the goal is reached, the weekly saving target and the recommendation disappear, replaced by a calm confirmation that still makes raising the goal obvious. Contributions, emergency use and the starting-balance correction are unaffected.
+- The offline demo path hydrates the fixture adapter from the last successful browser cache, so reviewed goals and other demo changes survive a refresh in the same browser origin. The signed-in app reads from the API.
 - Direct visits and browser back/forward navigation work for both routes without adding a routing dependency.
 
 ## Interfaces
@@ -83,19 +84,19 @@ The plan stores `goal_expense_baseline_cents`. The summary returns `goal_review`
 
 ## Integration
 
-- The shared Vite shell mounts `ResilienceJarPage` at `/resilience-jar` with `FixtureResilienceJarApi`.
-- `create_router(service, user_id_provider=...)` and `HttpResilienceJarApi` define the backend integration seam; `create_demo_router()` remains available for synthetic demos.
-- Implement the three repository protocols in `repositories.py` using the shared current-user/database primitives and Income Reality's completed-week surplus output.
-- Persist one plan per user and a user-scoped contribution ledger through those adapters and the existing `goals`/`goal_contributions` schema envelope.
-- The last successful summary is cached for read-only offline display. Mutations are clearly disabled offline until a shared mutation queue exists.
+- The shared shell mounts `ResilienceJarPage` at `/resilience-jar` and `/resilience-jar/plan`, lazily, and the page defaults to `HttpResilienceJarApi`. `FixtureResilienceJarApi` is injected only by tests and offline demos.
+- `create_router(service, user_id_provider=...)` is the backend seam; the router resolves the caller through the verified Supabase subject.
+- The three repository protocols in `repositories.py` are implemented against PostgreSQL in `sql_repositories.py`: one plan per user, a user-scoped contribution ledger, and completed weekly surpluses read through the shared `emergency_fund_ledger` aggregates.
+- The Home page and the Income overview read the fund summary through the same client, so the balance shown there cannot diverge from the fund tab.
+- The last successful summary is cached for read-only offline display. Mutations are disabled offline; they do not enter the Foundation mutation queue.
 
 ## Verification performed
 
-- `.venv313/Scripts/python.exe -m pytest backend/tests -q` — 222 passed, 20 skipped (the database-backed tests).
-- `RUN_DATABASE_TESTS=1 .venv313/Scripts/python.exe -m pytest backend/tests -q` — 242 passed against local Supabase.
-- `.venv313/Scripts/python.exe -m ruff check backend` — clean.
+- `python -m pytest backend/tests -q` — green, with the database-backed tests skipped.
+- `RUN_DATABASE_TESTS=1 python -m pytest backend/tests -q` — green against local Supabase.
+- `python -m ruff check backend` — clean.
 - Database-backed seam tests cover the double-count regression, the three ledger functions, the Foundation transaction endpoints, `SqlPlanRepository`/`SqlContributionRepository`/`SqlFinancialContextRepository`, and the jar HTTP routes against the real SQL path, each on a throwaway user that is deleted afterwards.
-- The integrated frontend suite passes 26 tests, including Emergency Fund model, fixture-adapter, and routing coverage.
+- The integrated frontend suite passes, including Emergency Fund model, fixture-adapter, and routing coverage.
 - The TypeScript and production PWA build passes.
 - The shared dev app serves `/resilience-jar` and `/resilience-jar/plan` successfully.
 - Parsed both committed JSON contract artifacts with Python's standard JSON parser.

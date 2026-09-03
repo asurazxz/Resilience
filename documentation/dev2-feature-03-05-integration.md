@@ -2,6 +2,8 @@
 
 **Updated:** 2026-09-02
 
+> **Historical record.** This documents the one-time repair of the shared files after the five feature branches were merged into `dev`. Later sessions added authentication, Savings Goals, the Financial Score, dated-range transactions and the landing page, and replaced the visual system. For the current architecture use [`codebase-structure.md`](codebase-structure.md) and the feature documents; for setup use the [root README](../README.md).
+
 ## Scope
 
 This integration repairs the shared files produced by merging all five feature branches into `dev`. It keeps the Foundation Input, Income Reality, Emergency Fund, Scenario Simulator, and Scheme Navigator slices runnable without changing their deterministic financial or scheme rules.
@@ -28,8 +30,11 @@ This integration repairs the shared files produced by merging all five feature b
 - Both JSON package manifests parsed successfully, Python modules compiled, dependency installation completed, and Git whitespace checks passed.
 - Browser testing at desktop and 375-pixel mobile widths verified the questionnaire, all-matched result flow, deterministic explanation fallback, result-aware chatbot fallback, navigation to both existing features, retained chat state across routes, and an empty error/warning console.
 
-## Limitations
+## Limitations recorded at the time (since resolved)
 
-- Foundation data is persisted through FastAPI and PostgreSQL, but authentication remains deferred; the local app uses one anonymous synthetic demo profile.
-- The production bundle currently triggers Vite's size advisory; route-level code splitting can be added after the shared router lands.
-- Cross-feature data sharing is not yet implemented: the simulator's starting savings do not automatically read the Emergency Fund's browser-local balance.
+These were open at this merge and have since been closed. They are kept here so the record reads honestly rather than being edited into hindsight.
+
+- Authentication was deferred and the app used one anonymous synthetic demo profile. Supabase email/password authentication with locally verified JWTs landed on 2026-09-03.
+- The production bundle triggered Vite's size advisory. Chart-heavy routes were later split out of the initial bundle.
+- Cross-feature data sharing was not implemented: the simulator did not read real balances. The Setback Planner is now seeded from the user's own transactions and expenses through `foundationBaseline.ts`.
+- The Emergency Fund's browser fixture adapter has since been reduced to a test and offline-demo fallback; the feature is database-backed.

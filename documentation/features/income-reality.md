@@ -1,131 +1,55 @@
-# Feature 2 — Income Reality Engine
+# Income Reality
 
-**Date:** 2026-09-02
+**Updated:** 2026-09-03
 
-**Status:** Integrated into the shared app on `dev`
+**Status:** Integrated on `dev`
 
-**Scope:** Deterministic net-income and surplus calculations, a mounted FastAPI API, shared contract and
-fixtures, and a frontend route driven by Feature 1's confirmed weekly entries and immutable expense snapshots.
+**Scope:** Deterministic net-income and surplus calculations, the `/api/v1/income-reality/breakdown` endpoint, the shared contract and fixtures, and the Income overview screen driven by the user's own transactions.
 
 ## User-visible scope
 
-From a set of weekly entries (platform earnings, work costs, essential expenses), the user sees, per week:
-gross earnings by platform, work costs, an optional CPF estimate, net work income, essential expenses, and
-surplus (net income minus essential expenses). Across the supplied weeks, they also see a recent-income trend:
-average, lowest, highest, variation, and a conservative weekly figure to plan around.
+For each recorded week the user sees gross recorded income, work costs, an optional CPF estimate, net work income, essential expenses, and the surplus left after essentials. Across those weeks they also see a trend: average, lowest, highest, variation, and a conservative weekly figure to plan around.
 
-**Explicitly deferred:**
-- Reading entries directly inside the backend endpoint. The Feature 1 frontend bootstrap supplies persisted
-  entries through a typed adapter, keeping the Feature 2 engine storage-independent.
-- Itemised work-cost breakdown (fuel, tolls, commission, etc.) — the engine accepts one aggregate
-  `work_costs_cents` figure per week; itemisation belongs to Foundation Input.
+The screen presents this as a plain-language trend chart — bars for money left after essentials, a line for income after work costs, with hover or tap revealing exact weekly values. A compact list shows each week's remaining amount until the user expands it for the full calculation.
+
+**Deferred:**
+
+- Reading transactions inside the backend endpoint. The client supplies weeks in the request body through a typed adapter, which keeps the engine storage-independent.
+- Itemised work-cost breakdown. The engine takes one aggregate `work_costs_cents` per week; itemisation belongs to Foundation Input.
 
 ## Assumptions and business rules
 
-- **Money:** integer cents at every boundary (per `contracts/README.md`).
-- **Weekly period:** ISO 8601 `week_start` date using Feature 1's confirmed Monday-start convention.
-- **Input shape:** the API takes weekly entries directly in the request body rather than reading from the
-  database. The frontend adapter builds that request from persisted Foundation entries, while fixtures under
-  `contracts/fixtures/income-reality/` keep the storage-independent engine reproducible.
-- **CPF/MediSave:** modelled as a single editable flat rate in basis points (`cpf_rate_bps`, default 800 =
-  8.00%) applied to gross earnings, toggled by `apply_cpf`. This is a simplified prototype estimate, **not**
-  the real statutory CPF/MediSave schedule (which depends on age band and Net Trade Income) — out of scope for
-  a one-week build. When Feature 1 contains a recorded CPF variable cost, that amount overrides the estimate
-  for that week and is removed from aggregate work costs to prevent a double deduction. See
-  `backend/app/features/income_reality/assumptions.py` and `frontend/src/features/income-reality/foundationAdapter.ts`.
-- **Negative values are not floored to zero.** A week where work costs exceed earnings, or essential expenses
-  exceed net income, reports the true negative `net_income_cents` / `surplus_cents`. Flooring would hide a real
-  deficit and contradict the "every displayed value traceable to formulas" acceptance check.
-- **Conservative recent-income figure:** `max(0, round(raw_average - raw_stdev))` (population stdev), computed
-  from the unrounded average/stdev and rounded once — never negative, intended as a safer anchor for a savings
-  recommendation than the plain average. Note this can be a cent off from `average_net_income_cents -
-  stdev_net_income_cents` computed from the two already-rounded display fields, since those are rounded
-  independently (confirmed the hard way: an earlier hand-computed fixture used the rounded-then-subtracted
-  value and `pytest` caught the 1-cent mismatch against the real engine output — see Tests performed). See
-  `backend/app/features/income_reality/engine.py::calculate_recent_trend`.
-
-The integrated UI presents those results as a plain-language trend chart: bars show money left after essentials,
-the line shows income after work costs, and hover/tap reveals exact weekly values. A compact list shows only each
-week's remaining amount until the user expands it for the full calculation.
+- **Money:** integer cents at every boundary.
+- **Weekly period:** ISO 8601 `week_start`, Monday-start, Singapore-local calendar days.
+- **Input shape:** the API takes weekly entries directly in the request body rather than reading from the database. `adaptTransactions` in `frontend/src/features/income-reality/foundationAdapter.ts` builds that request from the user's transactions; the fixtures under `contracts/fixtures/income-reality/` keep the engine reproducible on its own.
+- **The same three deductions as everywhere else.** A week's surplus subtracts variable cost transactions, weekly-normalised recurring work costs, and weekly-normalised essential expenses — the same definition the Emergency Fund's recommendation and the Financial Score use. It is specified in section 6 of [`emergency-fund-model.md`](./emergency-fund-model.md), which is the source of truth. Without the last two deductions this screen reported a larger surplus than every other feature.
+- **Dated ranges spread by day.** A transaction with `occurredUntil` has its amount split evenly across every calendar day in the inclusive range, and each day folded into its own Monday-Sunday week, so one transaction can contribute to several weeks. The rule is defined once in [`emergency-fund-model.md`](./emergency-fund-model.md#spreading-a-dated-range-transaction-across-weeks), implemented in `backend/app/features/transaction_spread.py`, mirrored by `transactionDailyAmounts`, and pinned by `contracts/fixtures/transaction-week-split.json`.
+- **Monthly to weekly** conversion is `round(amount × 12 ÷ 52)`.
+- **CPF/MediSave** is a single editable flat rate in basis points (`cpf_rate_bps`, default 800 = 8.00%) applied to gross earnings and toggled by `apply_cpf`. This is a simplified prototype estimate, **not** the statutory CPF/MediSave schedule, which depends on age band and Net Trade Income. The engine still honours a `recorded_cpf_cents` override for a week — it takes priority over the estimate and is removed from aggregate work costs to prevent a double deduction — but the transaction adapter does not currently populate it, so in the running app the estimate always applies.
+- **Negative values are not floored to zero.** A week where costs exceed earnings, or essentials exceed net income, reports the true negative figure. Flooring would hide a real deficit and break the traceability the feature is built on.
+- **Conservative recent-income figure:** `max(0, round(raw_average - raw_stdev))` using population standard deviation, computed from the unrounded values and rounded once. This can be a cent away from subtracting the two already-rounded display fields, because those are rounded independently. A hand-computed fixture made exactly that mistake and `pytest` caught the one-cent mismatch. See `backend/app/features/income_reality/engine.py::calculate_recent_trend`.
 
 ## Interfaces
 
-- **Contract:** `contracts/schemas/income-reality.schema.json` (JSON Schema, draft 2020-12) defines
-  `IncomeRealityRequest` / `IncomeRealityResponse` and their nested shapes.
-- **Fixtures:** `contracts/fixtures/income-reality/` — three paired request/response examples: a typical
-  multi-platform week, a zero-income week, and a three-week trend that includes a costs-exceed-earnings
-  (deficit) week with CPF applied.
-- **API:** `POST /api/v1/income-reality/breakdown`, mounted by `backend/app/main.py` from the Feature 2 router.
-- **Engine:** `backend/app/features/income_reality/engine.py` — pure, framework-independent functions
-  (`calculate_week_breakdown`, `calculate_recent_trend`, `calculate_income_reality`). No FastAPI/Pydantic
-  import, so it is unit-testable without the rest of the app existing.
-- **Test config:** run the backend suite from the repository root so package-relative imports resolve through
-  the integrated `backend.app` package.
-- **Frontend:** `frontend/src/features/income-reality/` — `types.ts` (mirrors the contract), `api.ts` (shared
-  Feature 1 API client), `format.ts`, and components `IncomeBreakdownCard`, `RecentTrendSummary`,
-  `AssumptionsEditor`, assembled by `IncomeRealityView`.
-- **Feature 1 adapter:** `foundationAdapter.ts` aggregates repeated platform rows, excludes drafts, converts
-  monthly snapshots to weekly amounts with Feature 1's `round(amount × 12 ÷ 52)` convention, separates recorded
-  CPF, and orders the request oldest-first. `useIncomeRealityBreakdown.ts` owns fetch/loading/error/assumptions
-  state. `frontend/src/app/App.tsx` renders the page at `/income-reality` inside Feature 1's shared shell.
+- **Contract:** `contracts/schemas/income-reality.schema.json` (JSON Schema, draft 2020-12) defines `IncomeRealityRequest` and `IncomeRealityResponse`.
+- **Fixtures:** `contracts/fixtures/income-reality/` — three paired request/response examples: a typical multi-platform week, a zero-income week, and a three-week trend including a deficit week with CPF applied.
+- **API:** `POST /api/v1/income-reality/breakdown`.
+- **Engine:** `backend/app/features/income_reality/engine.py` — pure functions (`calculate_week_breakdown`, `calculate_recent_trend`, `calculate_income_reality`) with no FastAPI or Pydantic import, unit-testable on their own.
+- **Frontend:** `frontend/src/features/income-reality/` — `types.ts` mirrors the contract, `api.ts` uses the shared client, `foundationAdapter.ts` builds the request, `useIncomeRealityBreakdown.ts` owns fetch/loading/error/assumption state, and `IncomeRealityPage` renders at `/income-reality`.
 
-## Historical branch verification
+`foundationAdapter.ts` is also consumed outside this feature: the Home screen's current-week card and weekly trend chart, and the Setback Planner's baseline, all derive their weeks from `adaptTransactions` so no two screens group days differently.
 
-The detailed results below record the original isolated feature work. They are retained for provenance and
-are superseded by the integrated verification summary that follows.
+## Tests performed
 
-Python and Node.js were not installed on the development machine at the start of this session (confirmed via
-`python --version` / `node --version`, both failed — `python.exe` resolved only to the Microsoft Store install
-stub). Both were installed mid-session via `winget` (`Python.Python.3.12`, `OpenJS.NodeJS.LTS`) specifically so
-the following could be actually executed rather than only hand-verified:
-
-- `backend/tests/unit/income_reality/test_engine.py` (10 tests) — multiple platforms in one week, zero income,
-  costs exceeding earnings, CPF on/off (including a 0 bps no-op), a single-week trend, a multi-week trend, and
-  a deficit week's effect on the conservative figure. **Executed with `pytest 9.1.1` on Python 3.12.10 — all
-  10 passed.**
-- `backend/tests/unit/income_reality/test_fixtures.py` (1 test) — loads each committed fixture pair and asserts
-  the engine's output matches the committed response exactly. **Executed — caught a real bug on the first run**:
-  the `multi-week-deficit` fixture's `conservative_weekly_income_cents` was hand-computed as
-  `round(average) - round(stdev) = 14627 - 14413 = 214`, but the engine actually computes
-  `round(average - stdev) = round(213.29...) = 213` from the unrounded values. Fixed the fixture to `213` and
-  corrected the schema/doc wording that had implied the two were interchangeable (they are not, whenever the
-  fractional parts being individually rounded don't cancel out). All tests pass after the fix.
-- `backend/tests/integration/income_reality/test_router.py` (4 tests, added this session once Python was
-  available) — mounts the actual router on a throwaway `FastAPI()` app via `TestClient` and checks: all three
-  fixtures produce byte-for-byte matching HTTP responses, an empty `weeks` list is rejected (422), a negative
-  `gross_cents` is rejected (422), and omitted `assumptions` default correctly. **Executed with `fastapi
-  0.141.1` / `pydantic 2.13.5` / `httpx 0.28.1` — all 4 passed.** This was the first time `schemas.py` /
-  `router.py` had been executed at all.
-- **Total: 15/15 backend tests passing.** Run with `pytest tests/unit/income_reality tests/integration/income_reality -v` from `backend/`.
-- **Frontend:** the isolated branch predated the shared test tooling, so its first verification used a temporary
-  local Vite/TypeScript scaffold that was removed afterward:
-  - `tsc --noEmit` (TypeScript 5.6.3, `@types/react` 18.3.12, matching the stack's React 18) over the entire
-    `frontend/src` tree, including `useIncomeRealityBreakdown.ts` / `IncomeRealityPage.tsx`. **0 type errors.**
-  - A genuine live end-to-end demo: `uvicorn` serving the real router (`backend/_demo_main.py`, a throwaway
-    `FastAPI()` app identical in shape to the documented mount point) on `localhost:8000`, and a real Vite dev
-    server on `localhost:5173` rendering `IncomeRealityPage` (via a throwaway `src/demo-entry.tsx` that swaps in
-    different `weeks` values to stand in for the eventual Foundation manual-entry data). Confirmed both servers
-    started cleanly, the backend returned the exact fixture response for a real HTTP POST, and Vite transformed
-    every new/changed module (`demo-entry.tsx`, `useIncomeRealityBreakdown.ts`, `IncomeRealityPage.tsx`) with no
-    compile errors. This is the first time any of the frontend code actually ran in a browser rather than only
-    type-checking. Integrated Vitest coverage was added later and is summarized below.
+- `backend/tests/unit/income_reality/test_engine.py` — multiple platforms in one week, zero income, costs exceeding earnings, CPF on and off including a 0 bps no-op, single-week and multi-week trends, and a deficit week's effect on the conservative figure.
+- `backend/tests/unit/income_reality/test_fixtures.py` — loads each committed fixture pair and asserts the engine's output matches exactly. This caught the rounding error described above on its first run.
+- `backend/tests/integration/income_reality/test_router.py` — the mounted router via `TestClient`: all three fixtures match byte for byte, an empty `weeks` list is rejected (422), a negative `gross_cents` is rejected (422), and omitted `assumptions` default correctly.
+- `foundationAdapter.test.ts` — transaction grouping, the daily spread against the shared fixture, monthly normalisation, and platform aggregation.
+- A live Playwright pass loaded `/income-reality` against FastAPI and seeded data with no console errors, verified the expected surplus, and confirmed the CPF toggle behaviour.
 
 ## Known limitations
 
-- CPF is a simplified flat-rate estimate, not the statutory schedule.
+- CPF is a simplified flat-rate estimate, not the statutory schedule, and the recorded-CPF override is unreachable from the current UI.
 - No itemised work-cost breakdown; only an aggregate figure per week.
-- Historical confirmed weeks without Feature 1 expense snapshots calculate from their recorded variable costs
-  only and show a warning. Newly created weeks capture snapshots.
-
-## Current integration verification and follow-up
-
-- `foundationAdapter.test.ts`: mapping, monthly conversion, platform aggregation, draft filtering, and missing
-  snapshot reporting.
-- Shared-app API integration test: verifies the router at `/api/v1/income-reality/breakdown`.
-- Full backend suite: 188 tests passed with 3 database-dependent tests skipped by default; Ruff passed.
-- Full frontend suite: 26 tests passed and the production PWA build completed successfully.
-- Live Playwright test: loaded `/income-reality` against FastAPI and local Supabase seed data, found no console
-  errors, verified the expected `$22.69` surplus, enabled the estimator, and confirmed recorded CPF still won.
-
-The Emergency Fund still uses its browser fixture adapter. Its future HTTP/database adapter should consume
-`trend.conservative_weekly_income_cents` and weekly surplus rather than duplicating these calculations.
+- The transaction adapter labels all income as a single "Recorded income" platform, so the per-platform breakdown the engine supports is not currently populated by the app.
+- Weeks with no recorded transactions do not appear at all, rather than appearing as a zero week.

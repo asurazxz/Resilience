@@ -1,166 +1,263 @@
-**AI AGENTS: Before inspecting, planning, editing, or running anything in this repository, read [`.agent/RULES.md`](.agent/RULES.md) and follow it.**
-
 # Resilience
 
-Resilience is a mobile-first progressive web application for Singapore platform workers whose earnings change from week to week. It turns earnings, work costs, essential expenses, and existing savings into a transparent financial-resilience plan: understand actual income, set a flexible savings target, find potentially relevant government support, and prepare for financial shocks.
+A mobile-first PWA that helps Singapore platform workers plan around income that changes every week.
 
-This repository contains Team Zephyrries' integrated prototype for the Singapore Management University Ellipsis Tech Series 2026 Hackathon. All five product features now run in one PWA and FastAPI service on the `dev` branch.
+Team Zephyrries' prototype for the Singapore Management University Ellipsis Tech Series 2026 Hackathon.
 
-> Resilience provides estimates and navigation, not financial advice. Scheme eligibility is determined by maintained rules and confirmed only by the relevant agency. AI may explain results, but it must never calculate finances or decide eligibility.
+> Resilience provides estimates and navigation, not financial advice. Scheme eligibility is pre-screening only and is confirmed solely by the relevant agency.
 
-## Prototype scope
-The one-week prototype follows this user journey:
+## The problem
 
-1. Record weekly platform earnings, work costs, essential expenses, and current emergency savings.
-2. See estimated net work income, available surplus, and recent income variation.
-3. Build an adjustable emergency fund and track its essential-expense coverage.
-4. Answer a short questionnaire to find potentially relevant support schemes and official application links.
-5. Simulate an income interruption or unexpected cost and see estimated cash-flow and buffer impact.
+A delivery rider or private-hire driver earns a different amount every week. Almost every budgeting tool assumes a monthly salary, so it asks for one number the worker does not have, then reports a monthly surplus that no real week matches. The advice that follows is built on a figure that was never true.
 
-Manual entry is the primary input path. A strict, review-before-save CSV import is included; OCR remains deferred and must not block the core journey.
+The same workers are also the ones government support schemes are aimed at, and those schemes are hard to navigate: scattered across agencies, written in eligibility language, and easy to give up on before finding the one that applies.
 
-## Integrated features
+## What Resilience does
 
-Each area has its own UI, deterministic logic or rules, tests, and feature documentation. The shared React and FastAPI shells compose those slices behind stable routes and contracts.
+| Area | What the user gets |
+|---|---|
+| Transactions | Records income and costs against a date, or a date range — a month's insurance or a multi-day gig is spread evenly across every day it covers, so it lands in the weeks it actually belongs to. |
+| Income overview | Weekly net work income and surplus after work costs, recurring costs and essentials, with a trend across recent weeks and every deduction shown. |
+| Emergency fund | A database-backed fund with a default goal of 26 weeks — about six months — of essential expenses. Deposits, recorded emergency use, coverage in weeks, and a projected completion date. |
+| Savings goals | Named goals beside the fund, each with its own contributions and cumulative-progress chart. Savings-goal money never touches the emergency fund. |
+| Financial score | A deterministic score out of 100 over emergency fund, savings habit and cash flow, with a component breakdown and a named next step. |
+| Setback planner | Simulates an income shock — earnings drop, weeks affected, a one-off cost — and reports weekly cash flow, buffer runway and any shortfall. |
+| Scheme navigator | A short questionnaire drives a deterministic eligibility pre-screen against versioned rules, with official sources and links. An AI assistant explains the results in plain language. |
+| Landing page | A public front door for signed-out visitors, with one call to action. |
 
-| # | Feature | Current implementation |
+Everything sits behind Supabase email/password authentication. Access tokens are verified locally by the API.
+
+## What makes it different
+
+**Every displayed figure traces to a documented formula.** The emergency fund, the financial score and the weekly surplus are each specified in `documentation/features/`, down to the rounding. Nothing on screen is a number the user cannot follow back to their own inputs.
+
+**AI never calculates money and never decides eligibility.** The scheme evaluator is a pure function over versioned rules; the assistant receives its decisions and rephrases them. Switch the model off entirely and the whole core journey still works — the assistant answers from the evaluator's own matched facts and unmatched reasons instead of a generated summary.
+
+**One definition of weekly surplus, pinned by a fixture.** The API and the Income overview screen compute a week's surplus from the same three deductions, and both implementations of the date-range spread are checked against the committed fixture `contracts/fixtures/transaction-week-split.json`. The two cannot drift apart without a test failing.
+
+**It works offline.** Bootstrap data is cached in IndexedDB and writes go into an ordered mutation queue with idempotency keys, replayed in sequence on reconnect. These users are frequently on patchy mobile data, which is exactly when they are between jobs and have a moment to record one.
+
+## Stack
+
+- **Client:** React 19, TypeScript 5.9, Vite 8, Tailwind CSS 4, React Router 7, Recharts, Dexie, vite-plugin-pwa.
+- **API:** Python 3.13 (3.12 supported), FastAPI, Pydantic, SQLAlchemy, psycopg. Every route is mounted under `/api/v1` and every failure renders one error envelope.
+- **Database:** Supabase-managed PostgreSQL, reached only through FastAPI. The browser never receives database credentials.
+- **AI:** Groq, optional. Configured by `GROQ_API_KEY`; without it the assistant falls back to deterministic answers.
+
+Deployment, containers and CI are out of scope for this prototype.
+
+## Getting started
+
+### Prerequisites
+
+| Tool | Version | Notes |
 |---|---|---|
-| 1 | **Foundation & data intake** | PWA shell, onboarding, manual weekly entries, assumptions, strict CSV preview/import, IndexedDB cache, ordered offline queue, FastAPI persistence, and PostgreSQL migrations. |
-| 2 | **Income Reality Engine** | Deterministic net-income and surplus calculations, recent-week trend, recorded-CPF handling, FastAPI endpoint, and transparent UI. |
-| 3 | **Emergency Fund & Savings** | Database-backed emergency fund with a default 26-week (about six months) essential-expense goal, opening balance plus deposit/withdrawal ledger, coverage and reached state, weekly targets and projection. A separate Savings tab tracks named savings goals on top of that baseline. See [`documentation/features/emergency-fund-model.md`](documentation/features/emergency-fund-model.md). |
-| 4 | **Scheme Navigator & AI explainer** | Deterministic scheme pre-screening, official sources, missing-information states, optional Groq explanations, and a cross-route chatbot with deterministic fallbacks. |
-| 5 | **Scenario Simulator** | Deterministic cash-flow and buffer-runway calculations, adjustable shocks and recovery, preparatory actions, API integration, and estimate disclaimers. |
+| Git | any recent | |
+| Node.js | 24.x (`.nvmrc` pins `24`) | npm 11 or newer |
+| Python | 3.13, or 3.12 | Python 3.14 does not work — the pinned `psycopg-binary`, `pydantic-core` and Uvicorn extras have no compatible wheels for it |
+| Docker | Desktop, running | Required by the local Supabase stack |
+| Supabase CLI | 2.116.0 | Installed by `npm install` at the repository root. Do not install a different global version |
 
-The original ownership boundaries and acceptance checks are preserved as historical context in [`documentation/initial-scaffold.md`](documentation/initial-scaffold.md).
-
-## Technology stack
-
-The stack below reflects the integrated prototype. Deployment remains out of scope.
-
-- **Client:** Node.js 24, React 19, TypeScript 5.9, Vite 8, Tailwind CSS 4, Dexie-backed offline queueing, and PWA service-worker support.
-- **API:** Python 3.12 or 3.13, FastAPI, Pydantic, SQLAlchemy, and psycopg.
-- **Financial logic:** deterministic Python functions with automated tests; AI is excluded from all calculations.
-- **Scheme logic:** versioned structured rules stored as JSON or PostgreSQL records, including official source, effective date, and last-reviewed date.
-- **AI explanation:** optional Groq calls grounded with curated official-source summaries; explanation and navigation only, with deterministic fallbacks and safety guardrails.
-- **Database:** Supabase-managed PostgreSQL for shared integration and demo data, accessed through FastAPI using a standard `DATABASE_URL`. Local PostgreSQL remains supported for isolated development.
-- **Data intake:** manual entry plus strict CSV preview/import. OCR is deferred.
-- **Source control:** Git and GitHub.
-- **Future deployment:** containerised hosting is part of the architecture, but is out of scope for the initial feature sprint.
-
-## Repository structure
-
-```text
-frontend/       React and TypeScript PWA, organised by product feature
-backend/        FastAPI application, deterministic engines, and external integrations
-supabase/       Version-controlled PostgreSQL migrations and database tests
-contracts/      Shared API schemas, OpenAPI artifacts, and synthetic fixtures
-documentation/  Architecture, feature decisions, validation, and handoff notes
-```
-
-Frontend and backend feature folders mirror the same five product boundaries. See [`documentation/codebase-structure.md`](documentation/codebase-structure.md) for the current directory map and dependency rules.
-
-## Local setup
-
-The development app runs all five features in one React shell. Every feature, including the Emergency Fund and Savings goals, is served by FastAPI under `/api/v1` with one error envelope. The Scheme Navigator chatbot is available across all routes.
-
-All commands below are verified on Windows with Node.js 24.13, npm 11.6, Python 3.13, Docker Desktop 29.1, and the repository-pinned Supabase CLI 2.116.0. Python 3.12 is also supported. macOS/Linux users can use the equivalent activation and copy commands.
-
-### 1. Clone and read the agent rules
+### 1. Clone and install the root tooling
 
 ```bash
 git clone <repository-url>
 cd Resilience
-cat .agent/RULES.md
-cat .agent/lessons_learnt.md
-```
-
-On PowerShell, use `Get-Content .agent/RULES.md` and `Get-Content .agent/lessons_learnt.md`.
-
-### 2. Install prerequisites
-
-- Git
-- Node.js 24.x and npm 11+
-- Python 3.12 or 3.13 with virtual-environment support
-- Access to the team's Supabase project, or local PostgreSQL for isolated development
-- Supabase CLI only when creating, applying, or testing database migrations locally
-- Access to the shared Supabase project only when working against the hosted integration database
-
-The Supabase CLI is installed by `npm install`; do not install a different global version.
-
-### 3. Install and configure
-
-From the repository root:
-
-```powershell
 npm install
-py -3.13 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r backend\requirements-dev.txt
-Copy-Item frontend\.env.example frontend\.env
-Copy-Item backend\.env.example backend\.env
 ```
 
-The example frontend configuration uses Vite's same-origin `/api` proxy to reach FastAPI on port 8000.
+`npm install` installs the frontend workspace and the pinned Supabase CLI.
 
-If your machine has only Python 3.12, replace `-3.13` with `-3.12`. If an existing `.venv` was created with Python 3.14, leave it alone and create a compatible replacement such as `.venv313` with `py -3.13 -m venv .venv313`, then use that directory in the API commands. The currently pinned `psycopg-binary`, `pydantic-core`, and Uvicorn optional dependencies do not provide compatible wheels for the local Python 3.14/MINGW environment used during Feature 1 verification.
+### 2. Create and activate a Python virtual environment
 
-### 4. Start the local stack
+Windows (PowerShell):
 
 ```powershell
+py -3.13 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+macOS and Linux:
+
+```bash
+python3.13 -m venv .venv
+source .venv/bin/activate
+```
+
+If only Python 3.12 is available, substitute it. If an existing `.venv` was created with Python 3.14, leave it and create a separate one (`py -3.13 -m venv .venv313`), then use that path everywhere below.
+
+### 3. Install the backend dependencies
+
+```bash
+python -m pip install -r backend/requirements-dev.txt
+```
+
+`requirements-dev.txt` includes `requirements.txt` plus pytest and Ruff.
+
+### 4. Create the environment files
+
+Windows (PowerShell):
+
+```powershell
+Copy-Item backend\.env.example backend\.env
+Copy-Item frontend\.env.example frontend\.env
+```
+
+macOS and Linux:
+
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+Both `.env` files are gitignored. Never commit one, and never paste a real key into documentation.
+
+**`backend/.env`**
+
+| Variable | Purpose | Required |
+|---|---|---|
+| `APP_ENV` | Environment marker. Defaults to `development`. | Optional |
+| `DATABASE_URL` | SQLAlchemy connection string. Must use the psycopg dialect (`postgresql+psycopg://…`). The example already points at local Supabase. | Optional locally, required when pointing at a hosted database |
+| `FRONTEND_ORIGIN` | Origin allowed by CORS. `localhost:5173` and `127.0.0.1:5173` are always allowed. | Optional |
+| `CORS_ALLOW_ORIGINS` | Comma-separated extra allowed origins. | Optional |
+| `SUPABASE_URL` | Supabase project URL. Used to build the JWKS URL and the `/auth/v1/user` fallback. | Required to sign in |
+| `SUPABASE_PUBLISHABLE_KEY` | Publishable key sent as `apikey` on the remote token-check fallback. | Optional |
+| `SUPABASE_JWT_SECRET` | HS256 secret. Local Supabase signs HS256, so this is what makes local sign-in work. Copy `JWT_SECRET` from `npx supabase status`. | Required locally |
+| `SUPABASE_JWT_AUDIENCE` | Expected `aud` claim. Defaults to `authenticated`. | Optional |
+| `DB_POOL_SIZE` | SQLAlchemy pool size. Defaults to `5`. | Optional |
+| `DB_MAX_OVERFLOW` | SQLAlchemy overflow. Defaults to `5`. | Optional |
+| `GROQ_API_KEY` | Enables AI-written scheme explanations and chat replies. Leave blank and both fall back to deterministic answers. | Optional |
+| `GROQ_MODEL` | Model id. Has a default. | Optional |
+| `GROQ_BASE_URL` | Groq host root (the SDK appends its own path). Has a default. | Optional |
+| `GROQ_TIMEOUT_SECONDS` | Request timeout, 0–180. Defaults to `90`. Not in `.env.example`. | Optional |
+
+**`frontend/.env`**
+
+| Variable | Purpose | Required |
+|---|---|---|
+| `VITE_API_BASE_URL` | Public API origin for a built bundle. In development Vite proxies `/api` to `127.0.0.1:8000`, so leave it blank. | Optional locally |
+| `VITE_SUPABASE_URL` | Supabase URL the browser signs in against. Local: `http://127.0.0.1:54321`. | Required to sign in |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key. Copy `PUBLISHABLE_KEY` from `npx supabase status`. | Required to sign in |
+
+No database URL, password, secret key or service-role key belongs in `frontend/.env`. All persistence goes through FastAPI.
+
+### 5. Start Supabase and apply the migrations
+
+With Docker running, from the repository root:
+
+```bash
 npm run db:start
 npm run db:reset
 ```
 
-Run the API and client in separate terminals from the repository root:
+`db:reset` rebuilds the local database from every file in `supabase/migrations/` and applies the synthetic seed. Then read the local credentials and paste them into the two `.env` files:
 
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --reload --port 8000
+```bash
+npx supabase status
+```
+
+Copy `JWT_SECRET` into `SUPABASE_JWT_SECRET`, `PUBLISHABLE_KEY` into `VITE_SUPABASE_PUBLISHABLE_KEY`, and set `SUPABASE_URL` and `VITE_SUPABASE_URL` to `http://127.0.0.1:54321`.
+
+### 6. Run the API
+
+In its own terminal, from the repository root, with the virtual environment active:
+
+```bash
+python -m uvicorn backend.app.main:app --reload --port 8000
+```
+
+Run it from the repository root, not from `backend/` — every module imports through the single `backend.app…` root.
+
+### 7. Run the client
+
+In a third terminal, from the repository root:
+
+```bash
 npm run dev:frontend
 ```
 
-Open `http://localhost:5173`. The API documentation is at `http://localhost:8000/docs`; Supabase Studio is at `http://127.0.0.1:54323`.
+### 8. Confirm it works
 
-To stop the local stack, press `Ctrl+C` in the API and frontend terminals, then run `npm run db:stop` when you no longer need the database containers.
+| Check | Expected |
+|---|---|
+| `curl http://127.0.0.1:8000/health` | `{"status":"ok"}` |
+| `curl http://127.0.0.1:8000/ready` | `{"status":"ready"}` — this one opens a database connection |
+| `http://localhost:8000/docs` | Interactive API documentation listing routes under `/api/v1` |
+| `http://127.0.0.1:54323` | Supabase Studio |
+| `http://localhost:5173` | The landing page. Create an account, complete onboarding, add a transaction, and the Home page shows a financial score. |
 
-### 5. Verify changes
+On PowerShell use `Invoke-RestMethod http://127.0.0.1:8000/ready` instead of `curl`.
 
-```powershell
+To stop: `Ctrl+C` in the API and client terminals, then `npm run db:stop`.
+
+## Troubleshooting
+
+**A route returns 404 that the code clearly defines.** `uvicorn --reload` picks up edits to existing files, but a process started before a route module existed will keep answering 404 for it. This cost real debugging time on the financial-score route. Restart the API process.
+
+**The AI assistant answers, but blandly.** With no `GROQ_API_KEY`, the explainer and chat fall back to deterministic text and never raise an error — by design, so the core journey cannot depend on a model. The response carries `is_ai_generated: false`; check that field before concluding the model is misbehaving.
+
+**Sign-in fails or every API call returns 401.** The JWT secret in `backend/.env` must be the one the local Supabase instance is signing with. Re-run `npx supabase status` after any `db:start` and re-copy `JWT_SECRET`.
+
+**Uvicorn will not start, or psycopg fails to import.** The virtual environment is probably Python 3.14. Recreate it with 3.13 or 3.12.
+
+**`ModuleNotFoundError: backend`.** The API was started from inside `backend/`. Start it from the repository root.
+
+**Queued writes never clear.** The client queues mutations while offline and replays them in order; one failed mutation blocks the ones behind it. The sync status panel names the failure.
+
+## Tests
+
+```bash
+# Backend: unit and integration tests, plus lint
+python -m pytest backend/tests -q
+python -m ruff check backend
+
+# Backend including the tests that need a running local Supabase
+RUN_DATABASE_TESTS=1 python -m pytest backend/tests -q
+
+# Frontend: Vitest plus the Node test-runner suites
 npm run test:frontend
 npm run build:frontend
-.\.venv\Scripts\python.exe -m pytest backend\tests -q
-.\.venv\Scripts\python.exe -m ruff check backend
+
+# Database
 npm run db:test
 npm run db:lint
 ```
 
-After changing FastAPI schemas, regenerate the shared contract before committing:
+On PowerShell, set the database-test flag with `$env:RUN_DATABASE_TESTS = "1"` before the pytest command.
 
-```powershell
-.\.venv\Scripts\python.exe -m backend.scripts.export_openapi
+After changing any FastAPI schema, regenerate the shared contract:
+
+```bash
+python -m backend.scripts.export_openapi
 npm run generate:api
 ```
 
-Do not commit `.env`, credentials, user uploads, local databases, or real financial data. See [`documentation/features/foundation-input.md`](documentation/features/foundation-input.md) for persistence and environment details.
+## Repository layout
 
-## Team workflow
+```text
+frontend/       React and TypeScript PWA, organised by product feature
+backend/        FastAPI application and deterministic engines
+supabase/       Ordered PostgreSQL migrations and database tests
+contracts/      Shared OpenAPI export, JSON Schemas, and synthetic fixtures
+documentation/  Architecture, feature specifications, and decisions
+```
 
-1. Branch from the latest `dev` using `feature/short-name`, `fix/short-name`, or `docs/short-name`; merge reviewed work back into `dev`.
-2. Agree shared request/response schemas before implementing dependent UI and API work.
-3. Keep commits small and use clear conventional prefixes such as `feat:`, `fix:`, `test:`, `docs:`, and `chore:`.
-4. Add automated tests for deterministic calculations and rule evaluation. Mock the LLM in automated tests.
-5. Rebase or merge the latest `dev` before opening a pull request; do not commit directly to `main`.
-6. Update `documentation/` after every significant feature and follow the session-memory requirements in [`.agent/RULES.md`](.agent/RULES.md).
+See [`documentation/codebase-structure.md`](documentation/codebase-structure.md) for the full directory map and dependency rules.
 
-## Repository guidance
+## Documentation
 
-- [`documentation/codebase-structure.md`](documentation/codebase-structure.md) — current architecture, dependency boundaries, and placement rules.
-- [`documentation/dev2-feature-03-05-integration.md`](documentation/dev2-feature-03-05-integration.md) — post-merge integration and verification record.
-- Feature notes: [Foundation Input](documentation/features/foundation-input.md), [Income Reality](documentation/features/income-reality.md), [Emergency Fund](documentation/features/resilience-jar.md), [Emergency Fund model](documentation/features/emergency-fund-model.md), [Savings Goals](documentation/features/savings-goals.md), [Scheme Navigator](documentation/features/scheme-navigator.md), and [Scenario Simulator](documentation/features/scenario-simulator.md).
-- [`documentation/initial-scaffold.md`](documentation/initial-scaffold.md) — historical sprint plan and original acceptance boundaries.
-- [`.agent/RULES.md`](.agent/RULES.md) — mandatory operating rules for coding agents.
-- [`.agent/session_log.md`](.agent/session_log.md) — concise record of significant agent sessions.
-- [`.agent/lessons_learnt.md`](.agent/lessons_learnt.md) — durable lessons from errors that were actually encountered and resolved.
+- [Codebase structure](documentation/codebase-structure.md) — architecture, boundaries, and placement rules.
+- [Emergency fund and savings model](documentation/features/emergency-fund-model.md) — the single source of truth for the fund, weekly surplus, and date-range spread formulas.
+- [Financial score](documentation/features/financial-score.md)
+- [Foundation input](documentation/features/foundation-input.md) · [Income reality](documentation/features/income-reality.md) · [Emergency fund](documentation/features/resilience-jar.md) · [Savings goals](documentation/features/savings-goals.md) · [Scheme navigator](documentation/features/scheme-navigator.md) · [Setback planner](documentation/features/scenario-simulator.md)
+- [Integration record](documentation/dev2-feature-03-05-integration.md) and [initial scaffold](documentation/initial-scaffold.md) — historical context.
+- [`.agent/RULES.md`](.agent/RULES.md), [`.agent/session_log.md`](.agent/session_log.md), [`.agent/lessons_learnt.md`](.agent/lessons_learnt.md) — operating rules and project memory for coding agents.
 
-The source materials in `context/` are intentionally excluded from Git because they contain personal information. Team members receive them privately and may unzip them into the repository root; Git will keep the resulting local `context/` directory untracked.
+## Contributing
+
+Branch from `dev` as `feature/short-name`, `fix/short-name` or `docs/short-name`, and merge reviewed work back into `dev`. Never commit directly to `main`. Add tests for every deterministic calculation and rule change, mock the model in tests, and update `documentation/` in the same change.
+
+Do not commit `.env` files, credentials, database dumps, or real financial data. The `context/` directory is gitignored because the source materials contain personal information; team members receive them privately.
 
 ## License
 

@@ -813,6 +813,20 @@ export interface components {
             /** Detail */
             detail: string;
         };
+        /** FinancialScoreMissingInput */
+        FinancialScoreMissingInput: {
+            /**
+             * Id
+             * @enum {string}
+             */
+            id: "essential_expenses" | "emergency_fund_goal" | "income_transactions" | "savings_plan";
+            /** Label */
+            label: string;
+            /** Action */
+            action: string;
+            /** Route */
+            route: string;
+        };
         /** FinancialScoreResponse */
         FinancialScoreResponse: {
             /** Score */
@@ -833,6 +847,8 @@ export interface components {
             components: components["schemas"]["FinancialScoreComponent"][];
             /** Nextstep */
             nextStep: string | null;
+            /** Missinginputs */
+            missingInputs: components["schemas"]["FinancialScoreMissingInput"][];
         };
         /** FoundationBootstrap */
         FoundationBootstrap: {

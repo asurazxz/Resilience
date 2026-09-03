@@ -272,3 +272,29 @@ nextStep -> emergency_fund (cap fired; forced regardless of lowest ratio)
 
 This matches the seeded integration test in
 `backend/tests/integration/test_financial_score_api.py`.
+
+## Tests performed
+
+- `backend/tests/unit/test_financial_score_calculator.py` — the pure
+  calculator: each component's scoring and `not_enough_information` paths, the
+  rescaling over `scoredMaxPoints`, the band table, both band caps, the
+  `nextStep` selection including the cap override, and `missingInputs`
+  membership and ordering.
+- `backend/tests/integration/test_financial_score_api.py` (gated by
+  `RUN_DATABASE_TESTS=1`) — the route against a seeded user, reproducing the
+  worked example above.
+- Frontend: `financialScore.test.ts` and `FinancialScoreCard.test.tsx` cover
+  the client's presentation of the response, including the withheld-score and
+  missing-input states.
+
+## Limitations
+
+- The weightings (40 / 30 / 30), the 20% cash-flow ceiling, the four-week
+  achievement window and the two band-cap ratios are calibrated by judgement
+  for a prototype, not derived from research on platform-worker outcomes. They
+  are named constants in `calculator.py` so they can be re-tuned in one place.
+- The score is computed on every request and never stored, so there is no
+  history and no way to show whether it is improving.
+- `savings_habit` measures recorded contributions. Resilience never sees a bank
+  account, so money genuinely set aside but not recorded scores as nothing.
+- A score is not a financial assessment and must not be presented as one.

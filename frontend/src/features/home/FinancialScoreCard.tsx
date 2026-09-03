@@ -70,13 +70,19 @@ export function FinancialScoreCard() {
   // regenerates on every bootstrap response even when nothing changed and
   // would otherwise cause a refetch storm on every context refresh.
   const { data } = useFoundation();
-  const refetchKey = [
-    data.transactions.length,
-    data.profile.emergencyFundBalanceCents,
-    data.recurringWorkCosts.length,
-    data.essentialExpenses.length,
-    data.profile.onboardingCompleted,
-  ].join(":");
+  // Include values, not merely list lengths: editing an existing transaction
+  // or regular-cost amount must refresh the score just like adding a row.
+  // Deliberately omit server-generated syncedAt to avoid a refetch loop.
+  const refetchKey = JSON.stringify({
+    onboardingCompleted: data.profile.onboardingCompleted,
+    emergencyFundBalanceCents: data.profile.emergencyFundBalanceCents,
+    transactions: data.transactions.map(({ id, entryType, amountCents, occurredOn, occurredUntil }) =>
+      [id, entryType, amountCents, occurredOn, occurredUntil]),
+    recurringWorkCosts: data.recurringWorkCosts.map(({ id, amountCents, cadence, isActive }) =>
+      [id, amountCents, cadence, isActive]),
+    essentialExpenses: data.essentialExpenses.map(({ id, amountCents, cadence, isActive }) =>
+      [id, amountCents, cadence, isActive]),
+  });
   const { score, loading, failed } = useFinancialScore(refetchKey);
   const basisNote = score ? partialBasisNote(score) : null;
   const missingInputs = score?.missingInputs ?? [];

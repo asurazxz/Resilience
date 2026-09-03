@@ -17,9 +17,15 @@ inside it.
 versa.** Nothing in `backend/app/features/savings_goals/` reads or writes
 `profiles.latest_emergency_savings_cents` or
 `resilience.emergency_fund_contributions`, and there is a database-backed test
-asserting exactly that. The Savings screen pins a read-only Emergency Fund
-overview at the top so the baseline stays visible while the user builds the
-habit below it.
+asserting exactly that.
+
+The Savings screen shows savings goals only. It previously pinned a read-only
+Emergency Fund overview at the top; that was removed when the screen was
+redesigned to match the Emergency Fund layout, because the fund already has its
+own tab and its own card on Home, and repeating it here invited the two
+balances to be read as one. The add-goal form and each goal's detail sit behind
+keyboard-operable disclosures, and each goal carries a cumulative-savings chart
+with a dashed target line and an accessible text summary.
 
 Resilience never holds or moves money. A contribution records money the user
 set aside outside the app.
@@ -120,6 +126,9 @@ ORM models are `SavingsGoal` and `SavingsGoalContribution` in
   every endpoint, the separation from the emergency fund, and the error cases.
   Each test runs as a throwaway `uuid4()` user whose profile row is deleted
   afterwards.
+- Frontend: `SavingsPage.test.tsx` covers the screen, and
+  `SavingsGoalChart.test.ts` / `SavingsGoalChart.render.test.tsx` cover the
+  per-goal cumulative chart's series construction and its rendering.
 
 ## Limitations and follow-up
 

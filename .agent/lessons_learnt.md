@@ -2,6 +2,20 @@
 
 Read this file before executing any repository task. Add an entry only after a real error has been encountered and resolved.
 
+## 2026-09-03 — Call a new model's API before trusting the sample parameters
+
+- **Symptom:** A supplied snippet for `qwen/qwen3.6-27b` on Groq looked complete, but every part of it would have broken the JSON contract in a way that failed silently.
+- **Root cause:** Three separate issues, none visible from the snippet. Reasoning tokens arrive inside `message.content` as a `<think>` block, so parsing fails and the caller degrades to its fallback rather than erroring. The sample's 2048-token ceiling truncates before any answer, because reasoning spends the budget first. And the model rejects JSON mode with HTTP 400, since the raw generation opens with prose.
+- **Resolution:** Probed the live API before writing the parser: requested reasoning in a separate field, measured that a real reply needs 5,294 completion tokens and set the ceiling to 8192, and fell back to describing the schema in the prompt with a shape check.
+- **Prevention:** For any new model, send one real request and read the raw response before writing the client. A reasoning model in particular will not behave like the chat model it superficially resembles, and a graceful fallback means the failure never surfaces as an error.
+
+## 2026-09-03 — A deleted CSS variable silently unstyles text
+
+- **Symptom:** Text-heavy pages read as messy and hard to follow after a palette change, with no obvious cause.
+- **Root cause:** A custom property removed during the palette swap was still referenced by `var()` in two files. An undefined custom property with no fallback makes the whole declaration invalid, so the text quietly inherited whatever colour sat above it instead of failing visibly.
+- **Resolution:** Audited every `var(--...)` reference against the tokens actually defined, and mapped the dead ones to current tokens.
+- **Prevention:** When removing a design token, grep for its `var()` references in the same change. Check both directions: an undefined reference is far worse than an unused definition, because it changes rendering without any error.
+
 ## 2026-09-03 — Changing a default does not change rows that already exist
 
 - **Symptom:** A user asked why their emergency fund goal was not the six months the product promised, even though the constant in the code was already 26 weeks.

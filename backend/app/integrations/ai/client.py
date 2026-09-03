@@ -4,8 +4,8 @@ This module knows how to talk to a model and nothing else -- no scheme
 rules, no eligibility logic, no prompt content. Feature code depends on the
 ``LLMClient`` protocol rather than on a specific vendor, which is what lets
 the tests run without a network call or an API key, and what has let this
-swap providers (Anthropic -> Gemini -> Groq -> Grok) without ``explainer.py``
-or ``chat.py`` changing at all.
+swap providers (Anthropic -> Gemini -> Grok -> Groq -> Gemini) without
+``explainer.py`` or ``chat.py`` changing at all.
 """
 
 from __future__ import annotations
@@ -17,8 +17,20 @@ import httpx
 
 from ...core.settings import get_settings
 
-# Covers the answer plus any reasoning tokens the model emits before it.
-MAX_OUTPUT_TOKENS = 4096
+# Reasoning is billed against this same ceiling. ``thinkingConfig`` cannot
+# be used to disable or size it (see ``GeminiClient``) -- the model thinks
+# internally regardless, invisibly spending roughly 1,600 tokens before the
+# answer starts. Measured against a full Scheme Navigator chat prompt
+# (system prompt plus all four scheme snippets, ~10k characters): at 2048
+# the invisible thinking alone ate the ceiling and the answer came back
+# truncated (``finishReason: MAX_TOKENS``, unparseable JSON); at 8192 the
+# same prompt finished with ``STOP`` using only ~293 answer tokens. Do not
+# lower this back toward 2048.
+MAX_OUTPUT_TOKENS = 8192
+
+# Sampling settings supplied with the model choice.
+TEMPERATURE = 0.6
+TOP_P = 0.95
 
 
 class LLMUnavailableError(RuntimeError):
@@ -54,133 +66,185 @@ def _strip_code_fence(text: str) -> str:
     return body[:closing].strip() if closing != -1 else text
 
 
-class GrokClient:
-    """x.ai (Grok) implementation of ``LLMClient``.
+def _to_gemini_schema(schema: dict[str, Any]) -> dict[str, Any]:
+    """Translates a caller's JSON Schema into Gemini's restricted dialect.
 
-    Talks to the Responses API (``POST {base_url}/responses``) directly over
-    ``httpx``; no vendor SDK is involved, which keeps the dependency list to
-    one HTTP library that the project already uses.
+    Gemini's ``responseSchema`` is a subset of OpenAPI 3.0's schema object,
+    not full JSON Schema, and it rejects unknown keywords outright --
+    notably ``additionalProperties``, which every schema in this codebase
+    sets. Recognised keywords (``type``, ``properties``, ``items``,
+    ``required``, ``description``, ``enum``) pass through unchanged; the
+    caller's exact JSON Schema still gets described in the prompt and
+    checked against the parsed result, so a keyword dropped here does not
+    silently lose that constraint.
+    """
 
-    The Responses API returns the answer inside a list of output items
-    rather than a single message, so ``_extract_text`` walks that structure:
-    each item may be reasoning (skipped), a refusal, or a message whose
-    ``content`` parts carry ``output_text``. ``status`` is checked first so
-    a truncated or failed generation is reported as such instead of
-    surfacing as unparseable JSON.
+    if not isinstance(schema, dict):
+        return schema
 
-    The schema is described in the system prompt and the reply is parsed and
-    shape-checked here, the same approach the previous provider needed.
-    Absorbing that quirk is this layer's job; the callers keep one
-    provider-neutral schema.
+    allowed = {
+        "type",
+        "properties",
+        "items",
+        "required",
+        "description",
+        "enum",
+        "format",
+        "nullable",
+    }
+    result: dict[str, Any] = {}
+    for key, value in schema.items():
+        if key not in allowed:
+            continue
+        if key == "properties" and isinstance(value, dict):
+            result[key] = {k: _to_gemini_schema(v) for k, v in value.items()}
+        elif key == "items" and isinstance(value, dict):
+            result[key] = _to_gemini_schema(value)
+        else:
+            result[key] = value
+    return result
+
+
+class GeminiClient:
+    """Google Gemini implementation of ``LLMClient``.
+
+    Talks to the ``generateContent`` REST endpoint directly with ``httpx``
+    rather than the ``google-genai`` SDK -- one POST does not justify the
+    dependency. Constructed with the key from settings rather than the
+    ambient environment so that an unconfigured deployment fails here, as a
+    clean ``LLMUnavailableError``, instead of surfacing later as a request
+    error.
+
+    Four things about this API shape this code, all confirmed against the
+    live API rather than assumed:
+
+    - Auth is the ``X-goog-api-key`` header, not ``Authorization: Bearer``.
+    - There is no ``messages`` array or system role. The system prompt goes
+      in a top-level ``systemInstruction``; the user turn goes in
+      ``contents``. Generation parameters (including the token ceiling)
+      live under ``generationConfig``.
+    - ``gemini-flash-latest`` looks like the obvious default and appears in
+      the model list claiming to support ``generateContent``, but a real
+      POST to it never returns -- it hung past 90 seconds in testing while
+      every other model on the same key errored or answered in under 16.
+      Do not switch the default back to it; use ``gemini-3.6-flash``.
+    - This is a reasoning model, and thinking is *not* free: it happens
+      internally regardless of any setting, and the model does not surface
+      it in the response text (``candidates[0].content.parts[0].text``
+      comes back as clean JSON either way; ignore the ``thoughtSignature``
+      field alongside it). ``generationConfig.thinkingConfig`` -- including
+      ``thinkingBudget: 0`` to try to disable it -- is rejected outright
+      with HTTP 400 on this model, so it is not sent at all. Because the
+      thinking is invisible but not free, it still consumes tokens against
+      ``maxOutputTokens`` before the visible answer starts (roughly 1,600
+      of them observed), which is why that ceiling is 8192 and not smaller
+      -- see ``MAX_OUTPUT_TOKENS``.
+
+    Unlike the previous OpenAI-compatible providers, this API supports
+    structured output natively (``responseMimeType: "application/json"``
+    with a ``responseSchema``), which is used here instead of describing
+    the schema in the prompt and hoping. Its schema dialect is a restricted
+    subset of OpenAPI/JSON Schema, so the caller's schema is translated by
+    ``_to_gemini_schema`` rather than passed through -- passing
+    ``additionalProperties`` straight through is rejected outright by the
+    API. Parsing and shape-checking the result stays in place as a
+    backstop regardless.
+
+    Not streamed: ``complete_json`` has to return one fully parsed object,
+    so a stream would only be reassembled in full before parsing.
     """
 
     def __init__(self, model: str | None = None) -> None:
         settings = get_settings()
-        if not settings.xai_api_key:
-            raise LLMUnavailableError("XAI_API_KEY is not configured")
+        if not settings.gemini_api_key:
+            raise LLMUnavailableError("GEMINI_API_KEY is not configured")
 
-        self._model = model or settings.xai_model
-        self._api_key = settings.xai_api_key
-        self._url = settings.xai_base_url.rstrip("/") + "/responses"
-        self._timeout = settings.xai_timeout_seconds
+        self._model = model or settings.gemini_model
+        self._base_url = settings.gemini_base_url.rstrip("/")
+        self._api_key = settings.gemini_api_key
+        self._timeout = settings.gemini_timeout_seconds
 
     def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
-        required = ", ".join(schema.get("required", [])) or "the fields above"
-        instructions = (
-            f"{system}\n\n"
-            "Reply with a single JSON object and nothing else -- no prose "
-            "before or after it, and no markdown fences. It must match this "
-            f"JSON Schema exactly:\n{json.dumps(schema)}\n"
-            f"Required keys: {required}."
-        )
-
-        payload = {
-            "model": self._model,
-            "max_output_tokens": MAX_OUTPUT_TOKENS,
-            "input": [
-                {"role": "system", "content": instructions},
-                {"role": "user", "content": user},
-            ],
+        body = {
+            "systemInstruction": {"parts": [{"text": system}]},
+            "contents": [{"role": "user", "parts": [{"text": user}]}],
+            "generationConfig": {
+                "temperature": TEMPERATURE,
+                "topP": TOP_P,
+                "maxOutputTokens": MAX_OUTPUT_TOKENS,
+                "responseMimeType": "application/json",
+                "responseSchema": _to_gemini_schema(schema),
+                # No thinkingConfig here: see the class docstring -- this
+                # model rejects it with HTTP 400 regardless of the value.
+            },
         }
 
         try:
             response = httpx.post(
-                self._url,
+                f"{self._base_url}/models/{self._model}:generateContent",
                 headers={
-                    "Authorization": f"Bearer {self._api_key}",
+                    "X-goog-api-key": self._api_key,
                     "Content-Type": "application/json",
                 },
-                json=payload,
+                json=body,
                 timeout=self._timeout,
             )
-        except Exception as exc:  # noqa: BLE001 - any transport failure degrades the same way
+        except httpx.HTTPError as exc:
             raise LLMUnavailableError(f"chat request failed: {exc}") from exc
 
-        if response.status_code < 200 or response.status_code >= 300:
-            raise LLMUnavailableError(f"model returned HTTP {response.status_code}")
+        if response.status_code != 200:
+            raise LLMUnavailableError(
+                f"chat request failed: HTTP {response.status_code} {response.text[:500]}"
+            )
 
         try:
-            body = response.json()
-        except Exception as exc:  # noqa: BLE001 - httpx raises several decoder types
-            raise LLMUnavailableError("model returned an unparseable body") from exc
+            payload = response.json()
+        except ValueError as exc:
+            raise LLMUnavailableError("model response was not valid JSON") from exc
 
-        if not isinstance(body, dict):
-            raise LLMUnavailableError("model returned a non-object body")
+        return _parse_response(payload)
 
-        text = _strip_code_fence(self._extract_text(body))
-        if not text:
-            raise LLMUnavailableError("model returned no text content")
 
-        try:
-            parsed = json.loads(text)
-        except json.JSONDecodeError as exc:
-            raise LLMUnavailableError("model returned unparseable JSON") from exc
+def _parse_response(payload: dict[str, Any]) -> dict[str, Any]:
+    """Turns a ``generateContent`` response body into the parsed JSON object.
 
-        if not isinstance(parsed, dict):
-            raise LLMUnavailableError("model returned a non-object JSON value")
-        return parsed
+    Truncation is reported separately from malformed output because only
+    one of the two is fixed by raising ``MAX_OUTPUT_TOKENS``. A blocked
+    prompt or an unsafe/recitation finish are also reported distinctly from
+    a generic empty response, since -- unlike a transport failure -- these
+    are Gemini actively declining to answer, and matter for anyone auditing
+    why a legitimate question (e.g. about financial hardship) got no reply.
+    """
 
-    @staticmethod
-    def _extract_text(body: dict[str, Any]) -> str:
-        """Pulls the assistant text out of a Responses API body.
+    block_reason = (payload.get("promptFeedback") or {}).get("blockReason")
+    if block_reason:
+        raise LLMUnavailableError(f"prompt was blocked by the model: {block_reason}")
 
-        Raises rather than returning "" when the response carries an
-        explicit failure, truncation, or refusal signal, so those are not
-        misreported downstream as an empty answer.
-        """
+    candidates = payload.get("candidates") or []
+    if not candidates:
+        raise LLMUnavailableError("model returned no candidates")
 
-        error = body.get("error")
-        if error:
-            raise LLMUnavailableError(f"model reported an error: {error}")
+    candidate = candidates[0]
+    finish_reason = candidate.get("finishReason")
+    if finish_reason in ("SAFETY", "RECITATION"):
+        raise LLMUnavailableError(f"model declined to answer: {finish_reason}")
+    if finish_reason == "MAX_TOKENS":
+        raise LLMUnavailableError("model response was truncated before the JSON was complete")
 
-        status = body.get("status")
-        if status == "incomplete":
-            details = body.get("incomplete_details") or {}
-            reason = details.get("reason") if isinstance(details, dict) else None
-            raise LLMUnavailableError(f"model response was incomplete: {reason or 'unknown'}")
-        if status == "failed":
-            raise LLMUnavailableError("model response failed")
+    parts = (candidate.get("content") or {}).get("parts") or []
+    raw = "".join(part.get("text", "") for part in parts if isinstance(part, dict))
+    if not isinstance(raw, str) or not raw.strip():
+        raise LLMUnavailableError("model returned no text content")
 
-        chunks: list[str] = []
-        for item in body.get("output") or []:
-            if not isinstance(item, dict) or item.get("type") != "message":
-                continue
-            content = item.get("content")
-            if isinstance(content, str):
-                chunks.append(content)
-                continue
-            for part in content or []:
-                if not isinstance(part, dict):
-                    continue
-                if part.get("type") == "refusal":
-                    raise LLMUnavailableError(f"model refused: {part.get('refusal')}")
-                if isinstance(part.get("text"), str):
-                    chunks.append(part["text"])
+    text = _strip_code_fence(raw.strip()).strip()
+    if not text:
+        raise LLMUnavailableError("model returned no text content")
 
-        if not chunks:
-            # Some responses carry only the flattened convenience field.
-            flattened = body.get("output_text")
-            if isinstance(flattened, str):
-                chunks.append(flattened)
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise LLMUnavailableError("model returned unparseable JSON") from exc
 
-        return "".join(chunks).strip()
+    if not isinstance(parsed, dict):
+        raise LLMUnavailableError("model returned a non-object JSON value")
+    return parsed
