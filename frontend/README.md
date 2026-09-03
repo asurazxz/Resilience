@@ -38,7 +38,7 @@ npm run build:frontend   # tsc -b && vite build
 npm run generate:api     # regenerate src/types/api.generated.ts from contracts/openapi/openapi.json
 ```
 
-`npm run test:integration` runs the Playwright suite and needs the API and database running.
+`npm run test:integration` runs the Playwright suite and needs the API and database running. It is out of date with the current transaction-ledger screens — it still drives the retired weekly-entry form and `/settings` route — so treat a failure there as a stale test, not a regression, until it is rewritten.
 
 ## Placement rules
 

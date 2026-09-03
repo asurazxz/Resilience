@@ -15,15 +15,13 @@ The Emergency Fund is a mobile-first feature slice for building a safety buffer 
 
 The feature is mounted in the shared React shell at `/resilience-jar`, with less-frequent plan controls at `/resilience-jar/plan`. It is backed by PostgreSQL through `sql_repositories.py`; the typed browser fixture adapter and the in-memory repositories remain for offline demos and unit tests.
 
-## 2026-09-03 changes
+## Design decisions
 
-- **The emergency-fund double count is fixed.** Saving a weekly entry no longer writes the displayed balance back into `profiles.latest_emergency_savings_cents`. The weekly `emergency_savings_cents` value and the `emergency_savings_snapshots` row stay as historical snapshots. Previously an opening balance of S$1,000 plus a S$50 deposit displayed S$1,050, and saving a week turned it into S$1,100.
-- **One balance function.** `backend/app/features/emergency_fund_ledger.py` owns `emergency_fund_balance()`, `weekly_essential_expenses_cents()`, and `weekly_recurring_work_costs_cents()`. Each is a single SQL aggregate. The Foundation bootstrap, the jar summary, and the surplus calculation all call it, so the three previously duplicated implementations can no longer drift.
-- **`E` is essentials only.** Recurring work costs no longer inflate the coverage goal: the fund covers weeks the user cannot work, so vehicle rental and similar work costs are not what it has to replace. They are still deducted from the weekly surplus.
-- **The default coverage goal is 26 weeks** (about six months), replacing 4.
-- **`progress` gains `goal_reached` and `remaining_cents`**, so the UI can show "S$X to go" without recomputing the target.
-- **`profile.emergencyFundBalanceCents`** is the derived balance `B` and is what screens should show. `profile.latestEmergencySavingsCents` now returns the raw stored opening balance `O`.
-- **Savings Goals** are a separate feature; see [`savings-goals.md`](./savings-goals.md). They never touch the emergency-fund tables.
+- One balance function, `emergency_fund_balance()` in `backend/app/features/emergency_fund_ledger.py` (a single SQL aggregate), is called by the Foundation bootstrap, the jar summary, and the surplus calculation, so they cannot drift.
+- `profile.emergencyFundBalanceCents` is the derived balance `B` and is what screens show; `profile.latestEmergencySavingsCents` is the raw stored opening balance `O`. Saving a weekly entry never writes `O` — only deposits and withdrawals change it, so the balance cannot double-count.
+- `E` (weekly essential expenses) excludes recurring work costs on purpose: the fund covers weeks the user cannot work, so vehicle rental and similar work costs are not what it has to replace. They are still deducted from the weekly surplus.
+- The default coverage goal is 26 weeks (about six months).
+- Savings Goals are a separate feature; see [`savings-goals.md`](./savings-goals.md). They never touch the emergency-fund tables.
 
 ## Business rules
 
@@ -43,20 +41,11 @@ The feature is mounted in the shared React shell at `/resilience-jar`, with less
 
 ## Frontend flow
 
-- The Emergency Fund view presents all analytics first: current fund balance and the derived coverage goal as paired primary metrics, projected completion, milestones, and the balance trend. Coverage goals keep their number of expense weeks directly beneath the prominent monetary goal. Contribution and emergency-use controls follow as the action area.
-- A deterministic projected completion card, milestone tracker, and Recharts balance-over-time line chart update after every plan or ledger change. Hovering over a chart date shows that day's aggregated contributions, withdrawals, and closing balance. The chart uses numeric labels and does not rely on colour alone.
-- The emergency-use action opens a separate withdrawal form, validates against the tracked fund balance, and repeats that Resilience does not move money.
-- The compact fund summary links to a separate Emergency Fund Settings view containing recommendation method, target acceptance/editing, and coverage-goal configuration.
-- One prominent “Edit emergency plan” action now owns that settings journey; expense-change alerts point to it instead of adding a duplicate goal-edit button.
-- Plan Settings lets users preview and save either a weekly or monthly target. Recommendation cards and confirmations follow the selected cadence, while the underlying recommendation formula remains weekly.
-- Successful recommendation acceptance, manual target saves, and goal saves produce a brief accessible confirmation containing the updated target amount or goal basis. Failed saves continue to use the existing error alert and never show a success confirmation.
-- Coverage-goal settings show the derived dollar amount from the latest essential expenses before save. The save confirmation repeats that amount so the result is explicit.
-- Activity shows five compact records initially. Each record expands for its note and edit/delete controls, with an explicit option to reveal older records.
-- An actionable alert appears on both views when essential expenses differ from the last saved goal baseline. It shows approximate previous and current monthly amounts and directs the user to review the goal.
-- Client-side history navigation keeps the same API adapter instance, so moving between views does not reset accepted targets or contributions.
-- Once the goal is reached, the weekly saving target and the recommendation disappear, replaced by a calm confirmation that still makes raising the goal obvious. Contributions, emergency use and the starting-balance correction are unaffected.
-- The offline demo path hydrates the fixture adapter from the last successful browser cache, so reviewed goals and other demo changes survive a refresh in the same browser origin. The signed-in app reads from the API.
-- Direct visits and browser back/forward navigation work for both routes without adding a routing dependency.
+- `/resilience-jar` leads with the current balance and derived coverage goal, projected completion, milestones, and a Recharts balance-over-time chart (hover shows that day's contributions, withdrawals and closing balance; labelled numerically, not by colour alone), then contribution and emergency-use controls.
+- `/resilience-jar/plan` holds recommendation method, target acceptance/editing, and coverage-goal configuration. Users can preview and save a weekly or monthly target; the underlying recommendation formula stays weekly regardless of the cadence shown.
+- An alert appears on both routes when essential expenses have changed since the last saved goal baseline, and links to the plan route to review it.
+- Once the goal is reached, the weekly target and recommendation are replaced by a confirmation; contributions, emergency use and the starting-balance correction remain available.
+- The offline demo path hydrates the fixture adapter from the last successful browser cache; the signed-in app reads from the API.
 
 ## Interfaces
 
@@ -90,18 +79,9 @@ The plan stores `goal_expense_baseline_cents`. The summary returns `goal_review`
 - The Home page and the Income overview read the fund summary through the same client, so the balance shown there cannot diverge from the fund tab.
 - The last successful summary is cached for read-only offline display. Mutations are disabled offline; they do not enter the Foundation mutation queue.
 
-## Verification performed
+## Tests
 
-- `python -m pytest backend/tests -q` — green, with the database-backed tests skipped.
-- `RUN_DATABASE_TESTS=1 python -m pytest backend/tests -q` — green against local Supabase.
-- `python -m ruff check backend` — clean.
-- Database-backed seam tests cover the double-count regression, the three ledger functions, the Foundation transaction endpoints, `SqlPlanRepository`/`SqlContributionRepository`/`SqlFinancialContextRepository`, and the jar HTTP routes against the real SQL path, each on a throwaway user that is deleted afterwards.
-- The integrated frontend suite passes, including Emergency Fund model, fixture-adapter, and routing coverage.
-- The TypeScript and production PWA build passes.
-- The shared dev app serves `/resilience-jar` and `/resilience-jar/plan` successfully.
-- Parsed both committed JSON contract artifacts with Python's standard JSON parser.
-
-Tests cover both formulas, cent rounding, weak/negative weeks, insufficient history, weekly/monthly target persistence and conversion, both goal modes, expense changes and goal-review acknowledgement, over-goal progress, target stability, pause/resume retention, contribution CRUD, withdrawal balance enforcement, completion projections, milestone states, signed chart timelines, future-date validation, user isolation, typed fixture behavior, money input, monthly display conversion, visual fill capping, and Singapore dates.
+Database-backed seam tests (`RUN_DATABASE_TESTS=1`) cover the balance-double-count regression, the three shared ledger functions, and `SqlPlanRepository`/`SqlContributionRepository`/`SqlFinancialContextRepository` against the real SQL path, each on a throwaway user. Unit tests cover both recommendation formulas, cent rounding, weak/negative weeks, weekly/monthly target conversion, both goal modes, expense-change review, withdrawal balance enforcement, completion projections, and milestone states. See the [root README](../../README.md#tests) for the commands.
 
 ## Limitations and follow-up
 

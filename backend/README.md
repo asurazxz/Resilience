@@ -75,9 +75,9 @@ Every feature route resolves the caller through `current_user_id`. A record belo
 
 ## AI configuration
 
-The Scheme Navigator assistant is optional and powered by Groq: `GROQ_API_KEY`, `GROQ_MODEL` and `GROQ_BASE_URL` in `backend/.env` (gitignored). Without a key, the explainer and the chat widget return deterministic answers built from the evaluator's own matched facts and unmatched reasons, so the core journey never depends on the model. See [`documentation/features/scheme-navigator.md`](../documentation/features/scheme-navigator.md).
+The Scheme Navigator assistant is optional and powered by Google Gemini (`gemini-3.6-flash`): `GEMINI_API_KEY`, `GEMINI_MODEL` and `GEMINI_BASE_URL` in `backend/.env` (gitignored). Without a key, the explainer and the chat widget return deterministic answers built from the evaluator's own matched facts and unmatched reasons, so the core journey never depends on the model. See [`documentation/features/scheme-navigator.md`](../documentation/features/scheme-navigator.md).
 
-The model is reached through the `LLMClient` protocol in `app/integrations/ai/client.py`, which wraps the official `groq` SDK. That layer owns transport only — no rules, no prompt content — which is what has let the provider change without `explainer.py`, `chat.py`, the prompts or any test changing. `GROQ_BASE_URL` is the host root; the SDK appends its own OpenAI-compatible path.
+The model is reached through the `LLMClient` protocol in `app/integrations/ai/client.py`, which talks to Gemini's `generateContent` REST endpoint directly over `httpx`. That layer owns transport only — no rules, no prompt content — which is what has let the provider change without `explainer.py`, `chat.py`, the prompts or any test changing. Two behaviours worth knowing: `gemini-flash-latest` is deliberately not the default because a real request to it hangs rather than returning, and this is a reasoning model, so its (invisible, non-optional) thinking is billed against the same output-token ceiling as the answer.
 
 ## Environment
 

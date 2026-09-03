@@ -37,11 +37,11 @@ These were **read in a browser, not fetched server-side** — SupportGoWhere is 
 
 `test_every_rule_links_to_support_go_where` and `test_every_rule_has_curated_sources` stop a scheme being added without either.
 
-> **Corrected 2026-09-02:** the ComCare threshold was `$700` per capita, guessed when the rule was written. SupportGoWhere states **$800 and below**. The old figure produced false negatives for anyone between $700 and $800 — telling people they did not match when they may well have qualified. WIS's thresholds were checked at the same time and were already correct.
+ComCare's per-capita threshold is `$800` and below, per SupportGoWhere (corrected 2026-09-02 from an earlier `$700` guess). Verify thresholds against SupportGoWhere before relying on any of them.
 
 ## The chatbot may discuss schemes the app has not verified
 
-**This reverses the feature's original grounding rule, deliberately, on the product owner's instruction (2026-09-02.)** The chatbot was first built to answer only from `CURATED_SOURCES`. It is now permitted to discuss *any* Singapore government support scheme, which means speaking from the model's own knowledge about schemes nobody on this team has curated or reviewed.
+By deliberate product decision, the chatbot is permitted to discuss *any* Singapore government support scheme, not only the four curated ones — which means it can speak from the model's own knowledge about schemes nobody on this team has reviewed.
 
 What still holds, unchanged:
 - It must never assert eligibility, for any scheme, curated or not.
@@ -73,11 +73,7 @@ Everything else in the boundary below applies to the chatbot too: no eligibility
 
 ## "Why am I eligible?" does not need the model
 
-The evaluator already produced `matched_facts` and `unmatched_reasons`. When the model is unreachable — outage, exhausted quota, no key — `_results_summary()` builds the answer from those directly: one line per scheme, each naming the criteria that decided it, still framed as pre-screening and still routing onward.
-
-This was a real defect, found on 2026-09-02 by someone asking the running app "why am I eligible?" and getting generic signpost text. The app was holding the exact answer and throwing it away because the *rephrasing* layer was down. It inverted the architecture's own principle: deterministic logic owns the reasoning, the model only rephrases it — so losing the model should cost polish, not the answer.
-
-`test_no_client_still_explains_the_results` and `test_unreachable_model_still_explains_the_results` cover it. The generic reply now appears only when there is genuinely nothing to explain (no results yet).
+The evaluator already produced `matched_facts` and `unmatched_reasons`. When the model is unreachable — outage, exhausted quota, no key — `_results_summary()` builds the answer from those directly: one line per scheme, each naming the criteria that decided it, still framed as pre-screening and still routing onward. Deterministic logic owns the reasoning; the model only rephrases it, so losing the model costs polish, not the answer. `test_no_client_still_explains_the_results` and `test_unreachable_model_still_explains_the_results` cover it; the generic reply appears only when there is genuinely nothing to explain (no results yet).
 
 ## No dead ends
 
@@ -101,7 +97,7 @@ The evaluator decides; the LLM only rephrases. Four things enforce that:
 **Backend**
 - `sources.py` — `CURATED_SOURCES`: hand-written prototype summaries per `rule_id`, each with `source_url` and `retrieved_on`. Not verbatim official text and not verified current policy.
 - `explainer.py` — `build_prompt()` (pure) and `explain(result, client)`. Holds `SYSTEM_PROMPT`, the response JSON schema, and the fallback copy.
-- `app/integrations/ai/client.py` — the provider-neutral `LLMClient` protocol plus the current Groq client. Transport only: no rules, no prompt content.
+- `app/integrations/ai/client.py` — the provider-neutral `LLMClient` protocol plus the current Gemini client. Transport only: no rules, no prompt content.
 
 - `chat.py` — `build_chat_prompt()` (pure) and `chat()`, holding the assistant's tighter system prompt and its canned fallback. History is capped at 8 turns so the prompt cannot grow without bound.
 
@@ -115,19 +111,19 @@ The evaluator decides; the LLM only rephrases. Four things enforce that:
 
 **Shared-shell integration.** `ChatProvider` and `ChatWidget` are mounted in `frontend/src/app/App.tsx`, so the widget is present on every route. Feature implementation remains under `features/scheme-navigator/`.
 
-**Model call:** Groq through the official `groq` SDK, chat completions, no tools, not streamed — `complete_json` must return one fully parsed object, so a stream would only be reassembled before parsing anyway.
+**Model call:** Google Gemini (`gemini-3.6-flash`), called directly against the `generateContent` REST endpoint over `httpx` (no SDK), not streamed — `complete_json` must return one fully parsed object, so a stream would only be reassembled before parsing anyway.
 
-Three properties of the configured model, each confirmed against the live API rather than assumed, shape `GroqClient`:
+Properties of the configured model, confirmed against the live API rather than assumed, shape `GeminiClient` in `app/integrations/ai/client.py`:
 
-- It is a reasoning model. `reasoning_format="parsed"` puts the chain of thought in a separate field so `content` holds only the answer; left at the default it arrives inline as a `<think>…</think>` block that would break every JSON parse. Both are handled — the field is requested, and a stray block is stripped.
-- `response_format={"type": "json_object"}` is rejected for this model at `reasoning_effort="default"`, because the raw generation opens with reasoning prose. So the schema is described in the system prompt and the parsed result is shape-checked in the client instead.
-- Reasoning consumes the completion budget before the answer starts, hence `MAX_COMPLETION_TOKENS = 8192`.
+- It is a reasoning model. Thinking happens internally regardless of any setting and is never free — it consumes tokens against `maxOutputTokens` before the visible answer starts (roughly 1,600 of them), which is why `MAX_OUTPUT_TOKENS = 8192` and not smaller.
+- `gemini-flash-latest` looks like the obvious default and claims `generateContent` support, but a real request to it hangs indefinitely rather than returning. Use `gemini-3.6-flash`.
+- Structured output is native (`responseSchema`), used instead of describing the schema in the prompt and hoping — but its schema dialect rejects `additionalProperties` and other JSON Schema keywords, so the caller's schema is translated to Gemini's restricted dialect before being sent.
 
-A stray ```` ```json ```` fence is also stripped before parsing. Absorbing all of this is the transport layer's job, so the callers keep one provider-neutral schema. The SDK is constructed with the key from settings rather than from the ambient environment, so an unconfigured deployment fails cleanly as `LLMUnavailableError` at construction rather than surfacing later as a request error.
+Absorbing all of this is the transport layer's job, so the callers keep one provider-neutral schema. The client is constructed with the key from settings rather than from the ambient environment, so an unconfigured deployment fails cleanly as `LLMUnavailableError` at construction rather than surfacing later as a request error.
 
 The provider has changed several times over this project. On each swap only `client.py`, the settings module, the route import and the requirements changed. `explainer.py`, `chat.py`, the prompts and every test were untouched and the suite passed unchanged. That is the `LLMClient` protocol earning its place — and it is why no document outside this section should name a vendor.
 
-**Configuration:** `GROQ_API_KEY`, `GROQ_MODEL` and `GROQ_BASE_URL`, all optional, read by `backend/app/core/settings.py` from the process environment falling back to `backend/.env`. That file is gitignored and holds the real key; the tracked `backend/.env.example` carries placeholders only. With no key the feature runs entirely on its deterministic fallbacks, which is the state the UI has been verified in.
+**Configuration:** `GEMINI_API_KEY`, `GEMINI_MODEL` and `GEMINI_BASE_URL`, all optional, read by `backend/app/core/settings.py` from the process environment falling back to `backend/.env`. That file is gitignored and holds the real key; the tracked `backend/.env.example` carries placeholders only. With no key the feature runs entirely on its deterministic fallbacks, which is the state the UI has been verified in.
 
 ## Current assumptions (reversible)
 
@@ -156,14 +152,9 @@ The provider has changed several times over this project. On each swap only `cli
 
 No persistence layer yet: answers and results live only in React state for this pass.
 
-## Tests performed
+## Tests
 
-- `backend/tests/unit/test_scheme_navigator_evaluator.py` (41 assertions across matched, not-matched, missing-information — including "missing takes priority over a false field" and `None`-as-missing — and boundary values for income/age/annual-value on both sides of each threshold, plus full operator coverage via a synthetic rule).
-- `backend/tests/unit/test_scheme_navigator_questionnaire.py` (dedup across rules, unknown-field-key raises, real-rule field set matches expectation, stable preferred ordering).
-- `backend/tests/integration/test_scheme_navigator_api.py` (health, questionnaire shape, evaluate-with-no-answers → all missing, evaluate-with-full-answers → all four schemes matched, plus `/explain` with a stubbed client, `/explain` with no client configured, and unknown-rule → 404).
-- `backend/tests/unit/test_scheme_navigator_explainer.py` (prompt carries the outcome, every curated snippet, and the simplified note; prompt withholds the user's answers; response cannot carry a status; model output used when present; blank summary and blank steps handled; fallback covers all three statuses and never claims eligibility). The LLM is a stub in every test — no test touches the network.
-- The integrated backend and frontend suites pass; see the [root README](../../README.md#tests) for the commands.
-- Verified end to end on 2026-09-02 with `/health`, questionnaire, evaluation, explanation fallbacks, and the browser UI at `:5173`; the production PWA build passes.
+`test_scheme_navigator_evaluator.py` covers matched, not-matched and missing-information across all four rules, including boundary values on both sides of each threshold and "missing takes priority over a false field". `test_scheme_navigator_questionnaire.py` covers field dedup and ordering. `test_scheme_navigator_api.py` covers the routes including `/explain` with a stubbed and with no client configured. `test_scheme_navigator_explainer.py` covers prompt content, that the response cannot carry a status, and that the fallback never claims eligibility. The LLM is a stub in every test — no test touches the network. See the [root README](../../README.md#tests) for the commands.
 
 ## Known limitations / follow-up
 
@@ -173,5 +164,6 @@ No persistence layer yet: answers and results live only in React state for this 
 - **This risk grew when the chatbot was allowed to discuss uncurated schemes.** Previously a hallucinated scheme fact was impossible by construction, because the model had only reviewed snippets to work from; that structural guarantee is now gone and has been replaced by an instruction asking the model to self-declare uncertainty. Self-declared uncertainty is exactly the thing language models are least reliable at. The realistic failure is a confident, plausible, wrong statement about a scheme's criteria, delivered to someone deciding whether to apply for financial support. Before the demo, deliberately ask it about a scheme that is *not* one of the four and check it both flags itself as unverified and does not invent criteria.
 - **A live model-generated explanation or chat response has not been part of the integrated verification.** The transport and response parsing are unit-tested with stubs, and no-key or provider failures use deterministic fallbacks. Re-test the configured model from an unrestricted network before the demo.
 - No database persistence of answers, goals, or rule versions — in-memory only.
+- The configured Gemini key is a rate-limited free-tier quota. Exhausting it degrades the explainer and chat to their deterministic fallbacks the same way a missing key does — expected behaviour, not an outage, but worth knowing before a demo that leans on the AI explanations.
 - Conditional/dependent questions (e.g. only ask `spouse_annual_income` if married) are not modelled; simplified per assumption above.
 - Frontend contract/routing coverage is part of the integrated test suite; dedicated Scheme Navigator component interaction tests remain a follow-up.

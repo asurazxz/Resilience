@@ -19,46 +19,29 @@ The user adjusts three things about a possible setback — how far earnings drop
 - preparatory prompts and official Singapore government links;
 - estimate and non-advice notices attached to every result.
 
-The screen reads as three numbered steps — your money now, the situation, what
-it would mean — so it states what it needs before showing an answer. Step 2
-carries the earnings-drop, duration, one-off cost and recovery controls
-directly. It briefly offered three preset situations (work drying up, injury, a
-sudden repair) that filled the controls in; the picker was removed when the
-screen was reworded for a general reader, because it added a decision before
-the one the page is actually about. Step 3 leads with a
-plain sentence answering the question, and the chart and week-by-week table sit
-behind a "See how this was worked out" toggle so the working stays checkable
-without dominating the screen. The chart opens with a "Now" bar for the starting savings and marks that level with a dashed line, because bars scaled
-only against each other gave the reader nothing to check them against: a
-scenario that drained savings and one that grew them looked alike. Pointing at,
-tapping, or arrowing onto a bar names that week and its figures in a readout
-above the chart; the readout is fixed in place rather than following the
-pointer, so it cannot be clipped and touch behaves the same as hover.
+The screen is three numbered steps — your money now, the situation, what it
+would mean. Step 1 ("Your usual week") shows five editable baseline figures
+seeded from the user's own records: `foundationBaseline.ts` averages the two
+variable figures over the last four Monday-Sunday weeks of recorded activity
+(anchored on the most recent transaction, not today) and takes the two fixed
+figures from standing costs, using the same day-spread and week-grouping
+rules as Income Reality. Edits in this panel are not persisted and are lost
+on refresh; the derived net income and surplus shown there come from the API
+response, never recalculated in the browser. With no transactions at all, the
+page falls back to example figures and says so explicitly.
 
-Step 1 is seeded from the user's own records: `foundationBaseline.ts` averages
-the two variable figures over the last four Monday-Sunday weeks of recorded
-activity and takes the two fixed figures from the standing costs already
-entered, using the same day-spread and week-grouping rules as Income Reality.
-The window is anchored on the most recent transaction rather than on today, so
-the function is pure and someone who records in bursts still gets a baseline
-built from real weeks. Quiet weeks inside the window count, so they pull the
-average down rather than disappearing.
+Step 2 carries the earnings-drop, duration, one-off cost and recovery
+controls. Time away from work is not a separate control — it is modelled as a
+100 percent earnings drop, so the two cannot produce inconsistent figures.
 
-When the user has no transactions at all, the page falls back to example
-figures and step 1 carries an explicit "Example figures" notice. Without it the
-page presented sample data as though it were the user's own, which is a trust
-problem rather than a cosmetic one.
-
-The headline sentence is assembled in the UI from figures the engine returned.
-Wording is chosen there; no amount is derived there.
-
-A "Your usual week" panel makes the five baseline figures editable on the page,
-so the user can correct or explore a figure the seeded baseline got wrong. Edits
-are not persisted and are lost on refresh. The derived net income and surplus shown in that panel
-come from the API response; they are not recalculated in the browser, so those
-figures are only ever worked out in one place.
-
-Time away from work is not a separate control. It is the same model as a 100 percent earnings drop, so the two cannot produce inconsistent figures.
+Step 3 leads with a plain sentence answering the question (assembled in the
+UI from figures the engine returned — no amount is derived there), with the
+chart and week-by-week table behind a "See how this was worked out" toggle.
+The chart opens with a "Now" bar for starting savings, marked with a dashed
+line so a scenario is checked against a real starting point rather than only
+against itself. Pointing, tapping or arrowing onto a bar names that week's
+figures in a fixed-position readout above the chart, so it cannot be clipped
+and touch behaves the same as hover.
 
 ## Deferred
 
@@ -122,26 +105,11 @@ Two more files compose the feature into the application:
 
 The engine is importable without FastAPI, pydantic, a database, or a network. `__init__.py` deliberately does not re-export `router`, so importing the engine does not require the web framework.
 
-## Tests and checks actually performed
+## Tests
 
-Run from the repository root as part of the backend suite:
+`python -m pytest backend/tests/unit/test_scenario_simulator.py -q` covers the acceptance checks in `documentation/initial-scaffold.md` (no buffer, zero/negative cash flow, one-off costs, partial income, recovery) plus horizon defaults and caps, determinism, and disclaimer presence. Transport-contract tests assert `schemas.py`'s field names match the engine's actual input/output, so the response models cannot drift while Pydantic is uninstalled. The committed fixtures are generated by running the engine, so they cannot disagree with it. See the [root README](../../README.md#tests) for the full command set.
 
-```bash
-python -m pytest backend/tests/unit/test_scenario_simulator.py -q
-```
-
-- The unit tests pass using the standard library only. They cover the acceptance checks in `documentation/initial-scaffold.md`: no buffer, zero cash flow, negative cash flow, one-off costs, partial income, and recovery — plus horizon defaults and caps, input validation, determinism, integer-only outputs, disclaimer presence, and resource de-duplication.
-- **Transport contract tests** parse `schemas.py` and assert its field names match the engine's actual output and input, so the response models cannot drift while pydantic is uninstalled.
-- **Static frontend check**: every JSX tag and every local import in the feature resolves to a real exported symbol.
-- The committed fixtures were generated by running the engine, so they cannot disagree with it.
-
-The integrated layers were also verified by running them:
-
-- **API confirmed live.** `uvicorn app.main:app` starts; `GET /health` returns `{"status":"ok"}`; `POST /scenario-simulator/simulate` returns `200` with figures identical to the engine called directly, and an out-of-range `income_reduction_percent` returns `422`. Generated OpenAPI exposes both routes and 11 component schemas.
-- **Frontend typechecks and builds.** `tsc --noEmit` passes under `strict` with `noUnusedLocals` and `noUnusedParameters`; `vite build` succeeds.
-- **UI confirmed working in a browser** at 375x812. Controls, summary stats, SVG chart, week-by-week table, prompts, resource links, and disclaimers all render from live API data. Moving the earnings slider to 100 percent recalculated to a weekly work income of -S$250, a one-week runway, and the `buffer-runs-out-during-shock` prompt, matching the engine.
-
-One caveat on the UI itself: the official source links the API returns are not rendered on this screen. Scheme Navigator owns the curated source registry and the user-facing scheme links.
+One caveat on the UI: the official source links the API returns are not rendered on this screen. Scheme Navigator owns the curated source registry and the user-facing scheme links.
 
 ## Known limitations
 

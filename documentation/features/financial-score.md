@@ -273,19 +273,9 @@ nextStep -> emergency_fund (cap fired; forced regardless of lowest ratio)
 This matches the seeded integration test in
 `backend/tests/integration/test_financial_score_api.py`.
 
-## Tests performed
+## Tests
 
-- `backend/tests/unit/test_financial_score_calculator.py` — the pure
-  calculator: each component's scoring and `not_enough_information` paths, the
-  rescaling over `scoredMaxPoints`, the band table, both band caps, the
-  `nextStep` selection including the cap override, and `missingInputs`
-  membership and ordering.
-- `backend/tests/integration/test_financial_score_api.py` (gated by
-  `RUN_DATABASE_TESTS=1`) — the route against a seeded user, reproducing the
-  worked example above.
-- Frontend: `financialScore.test.ts` and `FinancialScoreCard.test.tsx` cover
-  the client's presentation of the response, including the withheld-score and
-  missing-input states.
+`test_financial_score_calculator.py` covers each component's scoring and `not_enough_information` paths, the band table, both band caps, `nextStep` selection, and `missingInputs` ordering. `test_financial_score_api.py` (gated by `RUN_DATABASE_TESTS=1`) reproduces the worked example above against a seeded user. `financialScore.test.ts` / `FinancialScoreCard.test.tsx` cover the client's presentation, including the withheld-score state.
 
 ## Limitations
 

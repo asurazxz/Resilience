@@ -42,7 +42,7 @@ Everything sits behind Supabase email/password authentication. Access tokens are
 - **Client:** React 19, TypeScript 5.9, Vite 8, Tailwind CSS 4, React Router 7, Recharts, Dexie, vite-plugin-pwa.
 - **API:** Python 3.13 (3.12 supported), FastAPI, Pydantic, SQLAlchemy, psycopg. Every route is mounted under `/api/v1` and every failure renders one error envelope.
 - **Database:** Supabase-managed PostgreSQL, reached only through FastAPI. The browser never receives database credentials.
-- **AI:** Groq, optional. Configured by `GROQ_API_KEY`; without it the assistant falls back to deterministic answers.
+- **AI:** Google Gemini (`gemini-3.6-flash`), optional. Configured by `GEMINI_API_KEY`; without it the assistant falls back to deterministic answers.
 
 Deployment, containers and CI are out of scope for this prototype.
 
@@ -126,10 +126,10 @@ Both `.env` files are gitignored. Never commit one, and never paste a real key i
 | `SUPABASE_JWT_AUDIENCE` | Expected `aud` claim. Defaults to `authenticated`. | Optional |
 | `DB_POOL_SIZE` | SQLAlchemy pool size. Defaults to `5`. | Optional |
 | `DB_MAX_OVERFLOW` | SQLAlchemy overflow. Defaults to `5`. | Optional |
-| `GROQ_API_KEY` | Enables AI-written scheme explanations and chat replies. Leave blank and both fall back to deterministic answers. | Optional |
-| `GROQ_MODEL` | Model id. Has a default. | Optional |
-| `GROQ_BASE_URL` | Groq host root (the SDK appends its own path). Has a default. | Optional |
-| `GROQ_TIMEOUT_SECONDS` | Request timeout, 0–180. Defaults to `90`. Not in `.env.example`. | Optional |
+| `GEMINI_API_KEY` | Enables AI-written scheme explanations and chat replies. Leave blank and both fall back to deterministic answers. | Optional |
+| `GEMINI_MODEL` | Model id. Defaults to `gemini-3.6-flash`. Do not switch to `gemini-flash-latest` — it hangs indefinitely on this API. | Optional |
+| `GEMINI_BASE_URL` | Gemini API host root. Has a default. | Optional |
+| `GEMINI_TIMEOUT_SECONDS` | Request timeout in seconds, 0–180. Defaults to `90` (generous because thinking tokens are billed and invisible). Not in `.env.example`. | Optional |
 
 **`frontend/.env`**
 
@@ -194,11 +194,11 @@ To stop: `Ctrl+C` in the API and client terminals, then `npm run db:stop`.
 
 **A route returns 404 that the code clearly defines.** `uvicorn --reload` picks up edits to existing files, but a process started before a route module existed will keep answering 404 for it. This cost real debugging time on the financial-score route. Restart the API process.
 
-**The AI assistant answers, but blandly.** With no `GROQ_API_KEY`, the explainer and chat fall back to deterministic text and never raise an error — by design, so the core journey cannot depend on a model. The response carries `is_ai_generated: false`; check that field before concluding the model is misbehaving.
+**The AI assistant answers, but blandly.** With no `GEMINI_API_KEY` configured, or when the provider is rate-limited (Gemini's free tier), the explainer and chat fall back to deterministic text built from the evaluator's own matched facts and never raise an error — by design, so the core journey cannot depend on a model. The response carries `is_ai_generated: false`; check that field before concluding the model is misbehaving.
 
 **Sign-in fails or every API call returns 401.** The JWT secret in `backend/.env` must be the one the local Supabase instance is signing with. Re-run `npx supabase status` after any `db:start` and re-copy `JWT_SECRET`.
 
-**Uvicorn will not start, or psycopg fails to import.** The virtual environment is probably Python 3.14. Recreate it with 3.13 or 3.12.
+**Uvicorn will not start, or psycopg fails to import.** The virtual environment is probably Python 3.14. In this checkout, `.venv` is Python 3.14 and cannot run the app — use `.venv313` (Python 3.13), or recreate your own with 3.13 or 3.12.
 
 **`ModuleNotFoundError: backend`.** The API was started from inside `backend/`. Start it from the repository root.
 

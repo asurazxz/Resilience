@@ -116,19 +116,7 @@ ORM models are `SavingsGoal` and `SavingsGoalContribution` in
 
 ## Tests
 
-- `backend/tests/unit/test_savings_goals.py` covers the pure calculations —
-  `weeks_until`, `suggested_weekly_cents` across no target date, a reached goal,
-  a past date, an exact number of weeks, a rounded-up remainder, and a partial
-  week — plus the request-model validation rules.
-- `backend/tests/integration/test_savings_goals_api.py` (gated by
-  `RUN_DATABASE_TESTS=1`) covers the full CRUD and contribution flow, list
-  ordering across the three statuses, ownership isolation between two users on
-  every endpoint, the separation from the emergency fund, and the error cases.
-  Each test runs as a throwaway `uuid4()` user whose profile row is deleted
-  afterwards.
-- Frontend: `SavingsPage.test.tsx` covers the screen, and
-  `SavingsGoalChart.test.ts` / `SavingsGoalChart.render.test.tsx` cover the
-  per-goal cumulative chart's series construction and its rendering.
+`test_savings_goals.py` covers `weeks_until` and `suggested_weekly_cents` (no target date, reached goal, past date, exact/partial weeks) plus request validation. `test_savings_goals_api.py` (gated by `RUN_DATABASE_TESTS=1`) covers full CRUD, list ordering, ownership isolation, and separation from the emergency fund, each on a throwaway user. `SavingsPage.test.tsx` and `SavingsGoalChart.test.ts` cover the screen and the per-goal chart.
 
 ## Limitations and follow-up
 

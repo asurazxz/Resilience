@@ -78,14 +78,9 @@ For the shared hosted database, distribute outside Git and chat: Supabase projec
 
 Apply schema only through committed migrations. One coordinated, authenticated teammate runs `npx supabase migration list --linked`, then `db push --dry-run`, then `db push`. Do not use `--include-seed` on a shared project, and never `db reset --linked` against a non-throwaway project.
 
-## Verification performed
+## Notable fixes
 
-- Frontend: the integrated suite and the production PWA build pass.
-- Backend: the integrated suite passes, including the database-backed tests with `RUN_DATABASE_TESTS=1`; Ruff clean.
-- Database: local Supabase starts, migrations plus the synthetic seed apply, the pgTAP assertions pass, and `supabase db lint --local --level warning` reports no errors.
-- Integration: real FastAPI → SQLAlchemy/psycopg → local Supabase bootstrap, weekly create, revision conflict, read and cleanup.
-- Hosted Supabase: migration parity confirmed; RLS enabled on every application table; `anon` schema usage and `authenticated` weekly-entry SELECT both denied; remote security and performance advisors clean.
-- A real `500` was found and fixed by live probing: the bootstrap created a profile without committing it, and the essential-expense and recurring-cost writes never ensured one, so a new user's first write failed a foreign key. Both paths are covered by database-backed regression tests.
+A real `500` was found and fixed by live probing: the bootstrap created a profile without committing it, and the essential-expense and recurring-cost writes never ensured one, so a new user's first write failed a foreign key. Both paths are covered by database-backed regression tests. See the [root README](../../README.md#tests) for how to run the suite, including the database-backed tests (`RUN_DATABASE_TESTS=1`).
 
 ## Limitations
 

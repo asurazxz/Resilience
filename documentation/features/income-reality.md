@@ -45,7 +45,7 @@ The screen presents this as a plain-language trend chart — bars for money left
 - `backend/tests/unit/income_reality/test_fixtures.py` — loads each committed fixture pair and asserts the engine's output matches exactly. This caught the rounding error described above on its first run.
 - `backend/tests/integration/income_reality/test_router.py` — the mounted router via `TestClient`: all three fixtures match byte for byte, an empty `weeks` list is rejected (422), a negative `gross_cents` is rejected (422), and omitted `assumptions` default correctly.
 - `foundationAdapter.test.ts` — transaction grouping, the daily spread against the shared fixture, monthly normalisation, and platform aggregation.
-- A live Playwright pass loaded `/income-reality` against FastAPI and seeded data with no console errors, verified the expected surplus, and confirmed the CPF toggle behaviour.
+- `frontend/tests/income-reality.e2e.ts` (Playwright, `npm run test:integration`) exercised this screen when it was written, but it drives routes and a weekly-entry save form (`/settings`, `/entries/:weekStart`) that predate the current transaction-ledger UI (`/profile`, `/transactions`). It has not been updated for the current screens — see Known limitations.
 
 ## Known limitations
 
@@ -53,3 +53,4 @@ The screen presents this as a plain-language trend chart — bars for money left
 - No itemised work-cost breakdown; only an aggregate figure per week.
 - The transaction adapter labels all income as a single "Recorded income" platform, so the per-platform breakdown the engine supports is not currently populated by the app.
 - Weeks with no recorded transactions do not appear at all, rather than appearing as a zero week.
+- The Playwright end-to-end journey (`frontend/tests/income-reality.e2e.ts`) targets the retired weekly-entry save form and settings route; it is out of date with the current transactions-based screens and does not currently exercise them.

@@ -1,16 +1,40 @@
-# Environment variables and secrets
+# =============================================================================
+# Resilience — ignore rules
+#
+# This repository is published publicly. Anything holding a credential, a
+# personal path, or machine-specific state must be listed here.
+#
+# NOTE: these rules only affect files Git is not already tracking. Adding a
+# path here does NOT remove a file that has already been committed — use
+# `git rm --cached <path>` for that.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Secrets and credentials — never commit these
+# -----------------------------------------------------------------------------
 .env
 .env.*
 !.env.example
 *.pem
 *.key
+*.crt
+*.p12
+*.pfx
+*.keystore
+id_rsa*
+id_ed25519*
+.netrc
 credentials*.json
+service-account*.json
 secrets/
+*.bak
 
-# Private hackathon source material shared outside Git
+# Private source material shared outside Git
 /context/
 
-# Node / React
+# -----------------------------------------------------------------------------
+# Node / React / Vite
+# -----------------------------------------------------------------------------
 node_modules/
 .pnpm-store/
 dist/
@@ -18,14 +42,18 @@ build/
 coverage/
 .nyc_output/
 .vite/
+.eslintcache
 *.tsbuildinfo
+stats.html
 
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# -----------------------------------------------------------------------------
 # Python / FastAPI
+# -----------------------------------------------------------------------------
 __pycache__/
 *.py[cod]
 *$py.class
@@ -39,6 +67,8 @@ env/
 .mypy_cache/
 .ruff_cache/
 .hypothesis/
+.tox/
+.nox/
 
 .coverage
 .coverage.*
@@ -47,50 +77,78 @@ htmlcov/
 *.egg-info/
 .eggs/
 
-# Local databases and PostgreSQL volumes
+# -----------------------------------------------------------------------------
+# Databases and local Supabase state
+# -----------------------------------------------------------------------------
 *.db
 *.sqlite
 *.sqlite3
 *.dump
 postgres-data/
 
-# User-uploaded and generated data
+# Local Supabase CLI working state. Migrations, seed.sql, config.toml and
+# tests are tracked; the CLI's own scratch directories are not.
+supabase/.branches/
+supabase/.temp/
+
+# -----------------------------------------------------------------------------
+# Generated and user-supplied data
+# -----------------------------------------------------------------------------
 uploads/
-ocr-output/
 data/private/
 tmp/
 logs/
 *.log
 
+# -----------------------------------------------------------------------------
 # Test and browser output
+# -----------------------------------------------------------------------------
 playwright-report/
+blob-report/
 test-results/
+.playwright/
 
-# Future deployment platform state
+# -----------------------------------------------------------------------------
+# Deployment platform state
+# -----------------------------------------------------------------------------
 .vercel/
 .netlify/
 
-# Editors
+# -----------------------------------------------------------------------------
+# Editors and IDEs
+# -----------------------------------------------------------------------------
 .vscode/
 .idea/
+.history/
+*.code-workspace
 *.swp
 *.swo
 
+# -----------------------------------------------------------------------------
 # Operating systems
+# -----------------------------------------------------------------------------
 .DS_Store
 Thumbs.db
 Desktop.ini
+$RECYCLE.BIN/
 
-# Machine-specific editor/agent launch configuration
-.claude/launch.json
-
-# Agent collaboration instructions and memory
+# -----------------------------------------------------------------------------
+# AI agent tooling, instructions and memory
+#
+# These hold development process notes and machine-specific configuration
+# rather than product code.
+# -----------------------------------------------------------------------------
 .agent/
-.agent/**
 .claude/
+.codex/
 
-# Graphify: retain the shareable graph and project skill, but exclude
-# machine-specific caches, personal query memory, costs, and backup snapshots.
+# -----------------------------------------------------------------------------
+# Graphify
+#
+# The shareable code graph is committed on purpose so the repository can be
+# navigated without regenerating it. Everything below is machine-specific:
+# caches, personal query memory, cost tracking, and dated backup snapshots.
+# -----------------------------------------------------------------------------
 graphify-out/cache/
 graphify-out/cost.json
 graphify-out/memory/

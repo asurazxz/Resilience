@@ -118,16 +118,6 @@ Every failure the API returns uses one shape, rendered by the global handlers in
 
 Every response carries an `X-Request-ID` header. A client-supplied one is used when it matches `^[A-Za-z0-9._-]{1,128}$`; otherwise the middleware generates a UUID.
 
-## Validation performed
-
-At the last full verification pass on `dev`:
-
-- Backend suite green with `RUN_DATABASE_TESTS=1` against local Supabase, and Ruff clean.
-- Frontend suite green; `tsc -b` and the production PWA build clean.
-- OpenAPI exported and the frontend TypeScript contract regenerated from it.
-- Migrations and the synthetic seed applied to local Supabase; pgTAP checks and `supabase db lint` clean.
-- Environment examples confirmed to contain local placeholders and defaults only, with real `.env` files ignored.
-
 ## Deferred work
 
 - End-user RLS policies matching the verified Supabase Auth subject. Ownership is currently enforced in the API layer, and the backend connects as a trusted role.
