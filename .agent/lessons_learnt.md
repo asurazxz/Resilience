@@ -2,6 +2,62 @@
 
 Read this file before executing any repository task. Add an entry only after a real error has been encountered and resolved.
 
+## 2026-09-03 — Changing a default does not change rows that already exist
+
+- **Symptom:** A user asked why their emergency fund goal was not the six months the product promised, even though the constant in the code was already 26 weeks.
+- **Root cause:** The default only applies when a plan row is first created. Rows written before the change kept the previous four-week value, so long-standing users saw the old behaviour while new users saw the new one.
+- **Resolution:** Added a migration moving coverage plans off the old default, and recorded in both the migration and the documentation that a deliberate four-week choice is indistinguishable from the old default and was overwritten.
+- **Prevention:** When a default changes, decide explicitly what happens to existing rows. Shipping only the new constant leaves two populations of users with different behaviour and no way to tell them apart.
+
+## 2026-09-03 — Assign colour roles by measured contrast, not by palette order
+
+- **Symptom:** A new brand palette listed its accent first, which invites using it for headings and links.
+- **Root cause:** The accent reached only 3.4:1 against the canvas, below the 4.5:1 needed for body text, while reading as the most prominent colour in the list.
+- **Resolution:** Computed every pairing before assigning roles, confined the accent to fills, borders, focus rings and chart strokes, and used white on the accent fill for the primary action. This also exposed pre-existing text that had been coloured with the previous accent.
+- **Prevention:** Derive colour roles from measured ratios rather than from how a palette is presented. A swatch's prominence in a list says nothing about where it is legible.
+
+## 2026-09-03 — A 404 from a stale dev server looks exactly like a feature bug
+
+- **Symptom:** A user reported their Financial Score was never calculated. Every scoring rule and test passed, and live database probes returned a correct score.
+- **Root cause:** The running uvicorn process had been started before the score route existed and was not reloading. It served `savings-goals` but not `financial-score`, so the browser received 404 and the card fell back to its quiet failure state.
+- **Resolution:** Compared the running server's own `/openapi.json` against the route list in the code, which showed the gap immediately, and told the developer to restart rather than changing any code.
+- **Prevention:** When a feature works in tests but not in the browser, ask the running server what routes it actually serves before touching the implementation.
+
+## 2026-09-03 — Never key a refetch off a server-generated timestamp
+
+- **Symptom:** Opening the Home page fired eight identical score requests within about 95 milliseconds.
+- **Root cause:** The refetch key included the bootstrap `syncedAt` field, which the server sets to the current time on every response. Each of the several bootstrap refreshes during start-up therefore produced a new key, and React StrictMode doubled each one.
+- **Resolution:** Built the key from the user's own data instead, and added a request sequence guard so a superseded response cannot overwrite a newer one.
+- **Prevention:** An effect dependency must describe the data, not the moment it was fetched. If a field changes when nothing the user did changed, it does not belong in a dependency list.
+
+## 2026-09-03 — A subagent asked to implement may delegate instead
+
+- **Symptom:** An agent briefed to restyle three feature folders reported that it had spawned three of its own subagents and would "report back", then terminated. The folders were left partly converted, with 86 light-theme utilities remaining.
+- **Root cause:** The brief described the work but never said to perform it directly, so the agent treated orchestration as a valid strategy and returned before its children finished.
+- **Resolution:** Checked file modification times, found the orphaned children still writing, waited for them to go quiet rather than dispatching a replacement that would have collided, then verified the finished result.
+- **Prevention:** State explicitly that an implementation agent must do the work itself. When any agent reports completion, verify the artefacts on disk before acting on the claim.
+
+## 2026-09-03 — Probe a score with real data before trusting its design
+
+- **Symptom:** The new Financial Score passed every unit test, yet a live probe showed a user with no emergency fund scoring 100 out of 100 and the label "resilient", while a brand-new user with no data scored a demoralising 0.
+- **Root cause:** Rescaling the score over only the measurable components inflated it when a major component was missing, and the rule that a missing savings plan is a real zero made the "not enough information" branch unreachable. Both flaws were in the specification, so the tests encoded them faithfully.
+- **Resolution:** Capped the band downward when the emergency fund is unmeasured or under half its target, and withheld the score entirely until the fund or cash flow can be measured. Added tests for both rules.
+- **Prevention:** For any composite score or index, run the extreme inputs end to end against real data before writing the tests. Unit tests written from the same specification cannot reveal a flaw that lives in the specification.
+
+## 2026-09-03 — A write path needs its own parent row, not the reader's
+
+- **Symptom:** A brand-new user's first `PUT` of an essential expense returned 500 with a foreign key violation against `profiles`, even though the bootstrap call before it had returned 200 with a profile.
+- **Root cause:** The bootstrap's `ensure_profile` flushed without committing, so the row vanished when the request session closed, and the essential-expense and recurring-cost writes never called `ensure_profile` at all, unlike the transaction write.
+- **Resolution:** The bootstrap commits a profile it actually created, and every write path ensures the parent row before inserting.
+- **Prevention:** A flush is not a commit. When one endpoint depends on a row another endpoint creates, make the write path establish that row itself rather than assuming a read path persisted it.
+
+## 2026-09-03 — Duplicated derivations drift the moment one side changes
+
+- **Symptom:** Adding a date range to transactions silently split the app in two: the frontend spread the amount across days while the backend kept it all in the start week, so the same transaction produced different weekly figures in different screens.
+- **Root cause:** The weekly-bucket derivation existed independently in TypeScript and SQL, and only one was updated. The backend function's docstring still claimed both agreed.
+- **Resolution:** Reimplemented the rule once per language against a shared fixture in `contracts/fixtures/`, asserted by tests on both sides, so a future change to one implementation fails the other's test.
+- **Prevention:** When the same derivation must exist in two languages, pin both to a committed fixture of worked examples. A comment claiming agreement is not a check.
+
 ## 2026-09-03 — Never write a derived total back into its own base column
 
 - **Symptom:** Saving a weekly entry raised the emergency-fund balance by the sum of all contributions each time (S$1,050 became S$1,100 with no new deposit).

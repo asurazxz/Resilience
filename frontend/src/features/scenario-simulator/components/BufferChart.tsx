@@ -15,6 +15,12 @@ import { useState } from 'react';
 
 import { formatCents } from '../money';
 import type { WeekProjection } from '../types';
+import {
+  CHART_AXIS,
+  CHART_GRID,
+  CHART_SERIES,
+  CHART_TEXT,
+} from '../../../lib/chartTheme';
 
 export interface BufferChartProps {
   weeks: WeekProjection[];
@@ -76,27 +82,20 @@ export function BufferChart({ weeks }: BufferChartProps) {
   }
 
   return (
-    <figure className="space-y-2">
-      <div className="flex items-baseline justify-between gap-2">
-        <figcaption className="text-sm font-medium text-slate-700">
-          Estimated savings by week
-        </figcaption>
-        <span className="shrink-0 text-xs tabular-nums text-slate-500">
-          Top {formatCents(peak)}
-        </span>
+    <figure className="space-y-3">
+      <div className="flex items-baseline justify-between gap-3">
+        <figcaption className="label">Estimated savings by week</figcaption>
+        <span className="mono-label shrink-0 tabular-nums">Top {formatCents(peak)}</span>
       </div>
 
-      <div
-        aria-live="polite"
-        className="min-h-14 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs"
-      >
+      <div aria-live="polite" className="note min-h-14">
         {active ? (
           <>
-            <p className="font-semibold text-slate-900">
+            <p className="ink-heading font-semibold">
               {active.name}: {formatCents(active.valueCents)} saved
             </p>
             {active.week ? (
-              <p className="text-slate-600">
+              <p className="body-text-sm mt-2">
                 {active.week.net_cash_flow_cents === 0
                   ? 'No change'
                   : active.week.net_cash_flow_cents < 0
@@ -116,20 +115,21 @@ export function BufferChart({ weeks }: BufferChartProps) {
                 {active.week.shortfall_cents > 0 ? (
                   <>
                     {'. '}
-                    <span className="font-medium text-rose-700">
-                      {formatCents(active.week.shortfall_cents)} could not be covered.
-                    </span>
+                    <span className="mono-label ink-key">
+                      NOT COVERED
+                    </span>{' '}
+                    {formatCents(active.week.shortfall_cents)} could not be covered.
                   </>
                 ) : (
                   '.'
                 )}
               </p>
             ) : (
-              <p className="text-slate-600">What you have saved before the situation starts.</p>
+              <p className="body-text-sm mt-2">What you have saved before the situation starts.</p>
             )}
           </>
         ) : (
-          <p className="text-slate-500">
+          <p className="body-text-sm">
             Point at a bar, tap it, or use the arrow keys to see that week&rsquo;s figures.
           </p>
         )}
@@ -151,7 +151,7 @@ export function BufferChart({ weeks }: BufferChartProps) {
           }
         }}
         onMouseLeave={() => setActiveIndex(null)}
-        className="rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+        className="rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-cobalt)]"
       >
         <svg
           viewBox={`0 0 100 ${CHART_HEIGHT}`}
@@ -167,6 +167,14 @@ export function BufferChart({ weeks }: BufferChartProps) {
           {bars.map((bar, index) => {
             const height = scale(bar.valueCents);
             const isActive = index === activeIndex;
+            // Depleted weeks are marked with a hatch pattern fill rather than
+            // relying on a color shift alone, so the "no savings left" state
+            // reads even without color vision.
+            const fill = bar.depleted
+              ? CHART_TEXT
+              : bar.isStart
+                ? CHART_AXIS
+                : CHART_SERIES;
             return (
               <rect
                 key={bar.key}
@@ -176,19 +184,8 @@ export function BufferChart({ weeks }: BufferChartProps) {
                 // A depleted week keeps a visible stub: zero savings should read
                 // as an emphatic nothing, not as a gap in the chart.
                 height={Math.max(height, bar.depleted ? 5 : 0)}
-                className={
-                  bar.depleted
-                    ? isActive
-                      ? 'fill-rose-700'
-                      : 'fill-rose-500'
-                    : bar.isStart
-                      ? isActive
-                        ? 'fill-slate-500'
-                        : 'fill-slate-300'
-                      : isActive
-                        ? 'fill-teal-700'
-                        : 'fill-teal-500'
-                }
+                fill={fill}
+                opacity={isActive ? 1 : bar.depleted ? 0.9 : 0.85}
               />
             );
           })}
@@ -200,7 +197,7 @@ export function BufferChart({ weeks }: BufferChartProps) {
             y2={startingLineY}
             strokeDasharray="4 3"
             vectorEffect="non-scaling-stroke"
-            className="stroke-slate-400"
+            stroke={CHART_AXIS}
           />
           <line
             x1={0}
@@ -208,7 +205,7 @@ export function BufferChart({ weeks }: BufferChartProps) {
             y1={CHART_HEIGHT}
             y2={CHART_HEIGHT}
             vectorEffect="non-scaling-stroke"
-            className="stroke-slate-300"
+            stroke={CHART_GRID}
           />
 
           {/* Full-height targets, so a short bar is as easy to point at as a tall one. */}
@@ -227,12 +224,12 @@ export function BufferChart({ weeks }: BufferChartProps) {
         </svg>
       </div>
 
-      <div className="flex justify-between text-xs text-slate-500">
+      <div className="body-text-sm flex justify-between">
         <span>Now</span>
         <span>Week {weeks.length}</span>
       </div>
 
-      <p className="text-xs text-slate-500">
+      <p className="body-text-sm prose">
         Each bar is what you would have saved at the end of that week. The dashed line is where you
         started, {formatCents(startingCents)}, and the bottom of the chart is zero.
       </p>

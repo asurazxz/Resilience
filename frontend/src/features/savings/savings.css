@@ -1,0 +1,135 @@
+/* Savings-specific layout. Page chrome, cards, buttons, banners and the
+   disclosure-row pattern come from resilience-jar/sharedCard.css, which
+   carries the dark Origin-style palette shared with the Emergency Fund tab. */
+
+.savings-add-form {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.savings-add-form h3 {
+  color: var(--jar-ink);
+  font-weight: 400;
+  margin: 0;
+}
+
+.savings-add-form label,
+.savings-edit-form label {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.savings-goal-list {
+  gap: 0;
+  margin-top: 1rem;
+  padding: 0.25rem 2rem;
+}
+
+.jar-disclosure-trigger.savings-goal-trigger {
+  grid-template-columns: minmax(8rem, 1.4fr) minmax(9rem, 1.3fr) auto;
+}
+
+.savings-goal-name {
+  display: block;
+}
+
+.savings-goal-progress {
+  color: var(--jar-muted);
+  font-size: 0.9rem;
+}
+
+.savings-goal-trailing {
+  align-items: center;
+  display: flex;
+  gap: 0.6rem;
+  justify-self: end;
+}
+
+.savings-edit-form {
+  border-top: 1px dashed var(--jar-border);
+  display: grid;
+  gap: 0.6rem;
+  padding-top: 0.75rem;
+}
+
+.savings-edit-link {
+  align-self: start;
+  padding-left: 0;
+}
+
+.savings-contribution-history {
+  display: grid;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+}
+
+.savings-contribution-history h4 {
+  color: var(--jar-ink);
+  font-weight: 400;
+  margin: 0;
+}
+
+.savings-contribution-history li {
+  align-items: center;
+  border-top: 1px solid var(--jar-border);
+  color: var(--jar-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  gap: 0.5rem;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+}
+
+.savings-contribution-amount {
+  align-items: center;
+  color: var(--jar-accent);
+  display: flex;
+  gap: 0.6rem;
+}
+
+.savings-delete-goal {
+  color: #e8a08c;
+}
+
+.savings-goal-chart {
+  margin: 0.75rem 0 0;
+}
+
+.savings-goal-chart figcaption {
+  color: var(--jar-ink);
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.savings-goal-chart-canvas {
+  height: 14rem;
+  margin-top: 0.6rem;
+  min-width: 18rem;
+  overflow-x: auto;
+  width: 100%;
+}
+
+.savings-goal-chart-scroll {
+  overflow-x: auto;
+}
+
+@media (max-width: 44rem) {
+  .jar-disclosure-trigger.savings-goal-trigger {
+    grid-template-columns: 1fr auto;
+  }
+
+  .savings-goal-progress {
+    grid-column: 1;
+  }
+
+  .savings-goal-trailing {
+    align-items: flex-end;
+    flex-direction: column;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}

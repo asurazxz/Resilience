@@ -1,9 +1,11 @@
 /**
- * Scenario Simulator screen.
+ * Setback planner screen.
  *
- * Reads as three steps — your money, the situation, what it means — so the
+ * Reads as three steps — your money, the setback, what it means — so the
  * page states what it needs before it shows an answer, and the answer arrives
- * as a sentence rather than as a grid of figures.
+ * as a sentence rather than as a grid of figures. Written for someone with no
+ * finance background: short sentences, everyday words, honest about being an
+ * estimate.
  */
 
 import { BaselineEditor } from './components/BaselineEditor';
@@ -13,7 +15,6 @@ import { PreparatoryActions } from './components/PreparatoryActions';
 import { ResultDetails } from './components/ResultDetails';
 import { ScenarioControls } from './components/ScenarioControls';
 import { ScenarioSummary } from './components/ScenarioSummary';
-import { SituationPresets } from './components/SituationPresets';
 import { StepSection } from './components/StepSection';
 import type { BaselineFinancesPayload } from './types';
 import { useScenarioSimulator } from './useScenarioSimulator';
@@ -40,29 +41,30 @@ export function ScenarioSimulatorPage({ baseline }: ScenarioSimulatorPageProps) 
   } = useScenarioSimulator(baseline);
 
   return (
-    <main className="mx-auto w-full max-w-screen-sm space-y-8 px-4 py-6">
-      <header className="space-y-1">
-        <h1 className="text-xl font-semibold text-slate-900">Plan for a setback</h1>
-        <p className="text-sm text-slate-600">
-          Work out how long your savings would last if your earnings dropped, you had to stop
-          working, or a sudden cost landed.
+    <main className="mx-auto w-full max-w-2xl space-y-10 py-8">
+      <header>
+        <h1 className="display-lg">Setback planner</h1>
+        <p className="mt-3 body-text prose">
+          See how long your savings would last if you earned less, could not work for a
+          while, or had to pay for something unexpected.
         </p>
       </header>
 
       <StepSection
         step={1}
         title="Your money now"
-        description="A normal week for you. Change anything that does not match."
+        description="What a normal week looks like for you. Change any figure that is not right."
         badge={
           !usingExampleBaseline ? (
             baselineEdited ? null : (
-              <p className="inline-block rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
-                From your own records — your last four weeks and your regular costs
+              <p className="note">
+                These figures come from your own records — your last four weeks and your
+                regular costs.
               </p>
             )
           ) : baselineEdited ? null : (
-            <p className="inline-block rounded-md bg-amber-100 px-2 py-1 text-xs font-medium text-amber-900">
-              Example figures — edit them to see your own situation
+            <p className="note">
+              These are example numbers. Edit them below to see your own situation.
             </p>
           )
         }
@@ -77,35 +79,28 @@ export function ScenarioSimulatorPage({ baseline }: ScenarioSimulatorPageProps) 
       <StepSection
         step={2}
         title="What are you planning for?"
-        description="Pick a situation, then adjust it if you need to."
+        description="Set the details of the setback you want to check."
       >
-        <div className="space-y-3">
-          <SituationPresets
-            scenario={scenario}
-            onSelect={(preset) => setScenario(preset.scenario)}
-          />
-          <ScenarioControls scenario={scenario} onChange={setScenario} />
-        </div>
+        <ScenarioControls scenario={scenario} onChange={setScenario} />
       </StepSection>
 
       <StepSection
         step={3}
-        title="What it would mean"
-        description="An estimate based on the figures above."
+        title="What it would mean for you"
+        description="An estimate based on the numbers above. Not a prediction and not financial advice."
       >
         {source === 'preview' ? (
-          <p
-            role="status"
-            className="mb-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"
-          >
-            Showing example results because the server could not be reached
-            {error ? ` (${error})` : ''}. These are not your own numbers.
+          <p role="status" className="note mb-6">
+            <span className="mono-label">Offline estimate</span>
+            <br />
+            We could not reach the server, so this is an example result, not your own
+            numbers{error ? ` (${error})` : ''}.
           </p>
         ) : null}
 
         {result ? (
           <div
-            className={`space-y-4 transition-opacity ${isLoading ? 'opacity-60' : 'opacity-100'}`}
+            className={`space-y-6 transition-opacity ${isLoading ? 'opacity-60' : 'opacity-100'}`}
             aria-busy={isLoading}
           >
             <HeadlineAnswer scenario={result.scenario} />
@@ -115,7 +110,7 @@ export function ScenarioSimulatorPage({ baseline }: ScenarioSimulatorPageProps) 
             <EstimateDisclaimers disclaimers={result.disclaimers} />
           </div>
         ) : (
-          <p className="text-sm text-slate-600">Working out your estimate…</p>
+          <p className="body-text">Working out your estimate…</p>
         )}
       </StepSection>
     </main>

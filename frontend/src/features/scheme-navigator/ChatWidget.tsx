@@ -11,7 +11,8 @@ const GREETING =
 function BotAvatar({ className = "h-8 w-8" }: { className?: string }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-md bg-emerald-700 text-white ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-md ${className}`}
+      style={{ background: "var(--color-cobalt)", color: "var(--color-pure)" }}
       aria-hidden="true"
     >
       <svg
@@ -114,7 +115,8 @@ export function ChatWidget() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open the scheme assistant"
-        className="fixed bottom-4 right-4 z-50 rounded-md shadow-lg ring-2 ring-white transition hover:scale-105"
+        className="nav-glass fixed bottom-4 right-4 z-50 transition hover:scale-105"
+        style={{ borderRadius: "9999px", padding: "4px" }}
       >
         <BotAvatar className="h-14 w-14" />
       </button>
@@ -124,11 +126,27 @@ export function ChatWidget() {
   return (
     <section
       aria-label="Scheme assistant"
-      className={`fixed z-50 flex flex-col border border-slate-300 bg-white shadow-2xl transition-[inset,width,height] ${expanded ? "inset-3 h-auto w-auto rounded-xl md:inset-8" : "bottom-4 right-4 h-[30rem] w-[min(22rem,calc(100vw-2rem))] rounded-lg"}`}
+      /* Expanded, the panel is pinned below the fixed app top bar rather than
+         to the viewport top, so its header controls can never sit underneath
+         that chrome. Horizontal insets keep it inside the viewport at 390px. */
+      className={`nav-glass fixed z-50 flex flex-col overflow-hidden transition-[inset,width,height] ${
+        expanded
+          ? "inset-x-3 bottom-3 md:inset-x-8 md:bottom-8"
+          : "bottom-4 right-4 h-[30rem] w-[min(22rem,calc(100vw-2rem))]"
+      }`}
+      style={{
+        borderRadius: "16px",
+        ...(expanded ? { top: "calc(var(--topbar-height, 4rem) + 12px)" } : {}),
+      }}
     >
-      <header className="flex items-center gap-2 border-b border-slate-200 px-3 py-2">
+      {/* Single row, but every control is shrink-0 and only the title may
+          collapse, so the close button survives a 390px-wide viewport. */}
+      <header className="divider flex items-center gap-2 border-b px-3 py-2">
         <BotAvatar className="h-8 w-8" />
-        <h2 className="flex-1 text-sm font-semibold text-slate-900">
+        <h2
+          className="body-text min-w-0 flex-1 truncate"
+          style={{ color: "var(--color-ivory)", fontWeight: 500 }}
+        >
           Scheme assistant
         </h2>
         <button
@@ -136,24 +154,35 @@ export function ChatWidget() {
           onClick={() => setExpanded((value) => !value)}
           aria-label={expanded ? "Return the scheme assistant to the corner" : "Expand the scheme assistant"}
           aria-expanded={expanded}
-          className="rounded px-2 py-1 text-sm font-semibold text-slate-600 hover:bg-slate-100"
+          className="mono-label inline-flex h-11 min-w-11 shrink-0 items-center justify-center rounded px-2 transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cobalt"
         >
-          {expanded ? "Corner view" : "Full window"}
+          {/* The wording is what pushed the close button off-screen on mobile;
+              below `sm` the same control shows as a glyph instead. */}
+          <span className="hidden sm:inline">{expanded ? "Corner view" : "Full window"}</span>
+          <span aria-hidden="true" className="text-base leading-none sm:hidden">
+            {expanded ? "⤡" : "⤢"}
+          </span>
         </button>
         <button
           type="button"
           onClick={() => { setExpanded(false); setOpen(false); }}
           aria-label="Close the scheme assistant"
-          className="rounded px-2 text-lg leading-none text-slate-500"
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded text-xl leading-none transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cobalt"
+          style={{ color: "var(--color-ash)" }}
         >
-          ×
+          <span aria-hidden="true">×</span>
         </button>
       </header>
 
-      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-3 py-3">
-        <div className="flex gap-2">
+      {/* 24px between turns so a long reply reads as its own block rather
+          than merging into the next one. */}
+      <div ref={scrollRef} className="flex-1 space-y-6 overflow-y-auto p-4">
+        <div className="flex gap-3">
           <BotAvatar className="h-7 w-7" />
-          <p className="rounded bg-slate-100 px-3 py-2 text-sm text-slate-700">
+          <p
+            className="body-text prose rounded-lg px-3 py-2"
+            style={{ background: "var(--surface-obsidian-button)" }}
+          >
             {GREETING}
           </p>
         </div>
@@ -162,37 +191,41 @@ export function ChatWidget() {
           message.role === "user" ? (
             <p
               key={`user-${index}`}
-              className="ml-8 rounded bg-emerald-700 px-3 py-2 text-sm text-white"
+              className="body-text prose ml-10 rounded-lg px-3 py-2"
+              style={{ background: "var(--color-cobalt)", color: "var(--color-pure)" }}
             >
               {message.content}
             </p>
           ) : (
-            <div key={`bot-${index}`} className="flex gap-2">
+            <div key={`bot-${index}`} className="flex gap-3">
               <BotAvatar className="h-7 w-7" />
               {/* whitespace-pre-line keeps the line breaks the backend sends;
                   without it the bulleted answers collapse into one paragraph. */}
-              <p className="whitespace-pre-line rounded bg-slate-100 px-3 py-2 text-sm leading-relaxed text-slate-800">
+              <p
+                className="body-text prose whitespace-pre-line rounded-lg px-3 py-2"
+                style={{ background: "var(--surface-obsidian-button)" }}
+              >
                 {message.content}
               </p>
             </div>
           ),
         )}
 
-        {sending && <p className="pl-9 text-xs text-slate-500">Thinking...</p>}
+        {sending && <p className="mono-label pl-10">Thinking...</p>}
         {errorMessage && (
-          <p className="whitespace-pre-line text-xs text-red-600">{errorMessage}</p>
+          <p className="mono-label prose whitespace-pre-line">{errorMessage}</p>
         )}
 
         {/* Suggestions replace the blank-box problem, and steer people to
             questions the assistant can actually answer well. */}
         {!sending && (
-          <div className="flex flex-wrap gap-1.5 pt-1">
+          <div className="flex flex-wrap gap-2 pt-3">
             {suggestionsFor(results).map((suggestion) => (
               <button
                 key={suggestion}
                 type="button"
                 onClick={() => void send(suggestion)}
-                className="rounded-md border border-emerald-700 px-2.5 py-1 text-xs text-emerald-800"
+                className="button-pill px-3 py-2 text-xs"
               >
                 {suggestion}
               </button>
@@ -206,7 +239,7 @@ export function ChatWidget() {
           event.preventDefault();
           void send(draft.trim());
         }}
-        className="border-t border-slate-200 p-2"
+        className="divider border-t p-3"
       >
         <div className="flex gap-2">
           <input
@@ -215,21 +248,21 @@ export function ChatWidget() {
             onChange={(event) => setDraft(event.target.value)}
             placeholder="Ask about a scheme..."
             aria-label="Your question"
-            className="min-w-0 flex-1 rounded border border-slate-300 px-2 py-1.5 text-sm"
+            className="field min-w-0 flex-1 py-1.5 text-sm"
           />
           <button
             type="submit"
             disabled={sending || !draft.trim()}
-            className="rounded bg-emerald-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+            className="button-primary shrink-0 px-3 py-1.5 text-sm"
           >
             Send
           </button>
         </div>
-        <p className="mt-1.5 text-xs text-slate-500">
+        <p className="mono-label prose mt-3 normal-case tracking-normal">
           Does not decide eligibility or calculate amounts. Anything outside the
           schemes screened here is unverified — confirm on SupportGoWhere.
         </p>
-        <p className="mt-1 text-right text-[0.68rem] text-slate-400">{draft.length}/500</p>
+        <p className="mono-label mt-3 text-right normal-case tracking-normal">{draft.length}/500</p>
       </form>
     </section>
   );

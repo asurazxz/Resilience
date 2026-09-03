@@ -80,6 +80,29 @@ export function weeklyNormalisedTotal(
     .reduce((total, item) => total + weeklyAmount(item.amountCents, item.cadence), 0);
 }
 
+function addDays(date: string, days: number): string {
+  const next = new Date(`${date}T00:00:00Z`);
+  next.setUTCDate(next.getUTCDate() + days);
+  return next.toISOString().slice(0, 10);
+}
+
+function daysInclusive(start: string, end: string): number {
+  return Math.round((Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / 86_400_000) + 1;
+}
+
+/** Splits a date-range amount exactly across its calendar days (including cents). */
+export function transactionDailyAmounts(transaction: Transaction): Array<{ date: string; amountCents: number }> {
+  const start = transaction.occurredOn;
+  const end = transaction.occurredUntil && transaction.occurredUntil >= start
+    ? transaction.occurredUntil : start;
+  const days = daysInclusive(start, end);
+  const base = Math.floor(transaction.amountCents / days);
+  const remainder = transaction.amountCents % days;
+  return Array.from({ length: days }, (_, index) => ({
+    date: addDays(start, index), amountCents: base + (index < remainder ? 1 : 0),
+  }));
+}
+
 /**
  * Group individual ledger items into Monday-to-Sunday actuals for irregular work.
  *
@@ -97,14 +120,16 @@ export function adaptTransactions(
   const weeklyEssentialExpenses = weeklyNormalisedTotal(essentialExpenses);
   const grouped = new Map<string, { income: number; costs: number }>();
   for (const transaction of transactions) {
-    const occurred = new Date(`${transaction.occurredOn}T00:00:00Z`);
-    const monday = new Date(occurred);
-    monday.setUTCDate(occurred.getUTCDate() - ((occurred.getUTCDay() + 6) % 7));
-    const weekStart = monday.toISOString().slice(0, 10);
-    const totals = grouped.get(weekStart) ?? { income: 0, costs: 0 };
-    if (transaction.entryType === "income") totals.income += transaction.amountCents;
-    else totals.costs += transaction.amountCents;
-    grouped.set(weekStart, totals);
+    for (const daily of transactionDailyAmounts(transaction)) {
+      const occurred = new Date(`${daily.date}T00:00:00Z`);
+      const monday = new Date(occurred);
+      monday.setUTCDate(occurred.getUTCDate() - ((occurred.getUTCDay() + 6) % 7));
+      const weekStart = monday.toISOString().slice(0, 10);
+      const totals = grouped.get(weekStart) ?? { income: 0, costs: 0 };
+      if (transaction.entryType === "income") totals.income += daily.amountCents;
+      else totals.costs += daily.amountCents;
+      grouped.set(weekStart, totals);
+    }
   }
   return {
     weeks: Array.from(grouped, ([week_start, totals]) => ({

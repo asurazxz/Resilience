@@ -12,6 +12,7 @@ from backend.app.features.resilience_jar.calculations import (
     weekly_cents_to_target_amount,
 )
 from backend.app.features.resilience_jar.models import (
+    DEFAULT_COVERAGE_WEEKS,
     AmountGoal,
     CoverageGoal,
     JarPlan,
@@ -106,8 +107,15 @@ class ProgressTests(unittest.TestCase):
     def test_coverage_goal_defaults_to_twenty_six_weeks(self) -> None:
         result = calculate_progress(CoverageGoal(), [0], 30_461)
 
-        self.assertEqual(26, CoverageGoal().weeks)
+        self.assertEqual(DEFAULT_COVERAGE_WEEKS, CoverageGoal().weeks)
         self.assertEqual(791_986, result.goal_target_cents)
+
+    def test_new_jar_plan_defaults_its_goal_to_the_default_coverage_weeks(self) -> None:
+        plan = JarPlan(user_id="user-a")
+
+        self.assertIsInstance(plan.goal, CoverageGoal)
+        self.assertEqual(DEFAULT_COVERAGE_WEEKS, plan.goal.weeks)
+        self.assertEqual(26, DEFAULT_COVERAGE_WEEKS)
 
     def test_goal_is_reached_once_the_balance_meets_the_target(self) -> None:
         exact = calculate_progress(AmountGoal(100_000), [100_000], 70_000)

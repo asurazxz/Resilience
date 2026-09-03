@@ -26,10 +26,10 @@ def build_demo_service() -> ResilienceJarService:
     context.set_surpluses(
         DEMO_USER_ID,
         [
-            WeeklySurplus(recent_completed_week, 48_000),
-            WeeklySurplus(recent_completed_week - timedelta(days=7), 62_000),
-            WeeklySurplus(recent_completed_week - timedelta(days=14), 35_000),
-            WeeklySurplus(recent_completed_week - timedelta(days=21), 55_000),
+            WeeklySurplus(recent_completed_week, 48_000, 118_000),
+            WeeklySurplus(recent_completed_week - timedelta(days=7), 62_000, 132_000),
+            WeeklySurplus(recent_completed_week - timedelta(days=14), 35_000, 105_000),
+            WeeklySurplus(recent_completed_week - timedelta(days=21), 55_000, 125_000),
         ],
     )
     context.set_weekly_essential_expenses_cents(DEMO_USER_ID, 70_000)

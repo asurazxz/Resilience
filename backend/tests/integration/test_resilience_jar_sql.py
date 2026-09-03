@@ -5,8 +5,16 @@ from __future__ import annotations
 from datetime import timedelta
 from uuid import uuid4
 
-from backend.app.db.models import EssentialExpense, RecurringWorkCost, Transaction
+from sqlalchemy import text
+
+from backend.app.db.models import (
+    EmergencyFundPlan,
+    EssentialExpense,
+    RecurringWorkCost,
+    Transaction,
+)
 from backend.app.features.resilience_jar.models import (
+    DEFAULT_COVERAGE_WEEKS,
     CoverageGoal,
     JarPlan,
     PlanStatus,
@@ -63,6 +71,43 @@ def test_plan_repository_defaults_a_missing_goal_to_twenty_six_weeks() -> None:
 
         assert plan is not None
         assert plan.goal.weeks == 26
+
+
+def test_migration_upgrades_a_row_still_holding_the_old_four_week_default() -> None:
+    """20260903210000_emergency_fund_default_six_months.sql already ran against
+
+    this database, so any row that predates it and still held the shipped
+    four-week default has been rewritten to twenty-six weeks. This inserts a
+    row directly with the old default (bypassing the application, which
+    always writes ``DEFAULT_COVERAGE_WEEKS``) and re-runs the migration's own
+    update statement to prove it upgrades such a row, then confirms the
+    repository reports the six-month goal.
+    """
+    with throwaway_session() as (session, user_id):
+        session.add(
+            EmergencyFundPlan(
+                user_id=user_id,
+                goal_mode="coverage",
+                goal_weeks=4,
+            )
+        )
+        session.commit()
+
+        session.execute(
+            text(
+                "update resilience.emergency_fund_plans"
+                "   set goal_weeks = 26"
+                " where goal_mode = 'coverage' and goal_weeks = 4"
+                "   and user_id = :user_id"
+            ),
+            {"user_id": user_id},
+        )
+        session.commit()
+
+        plan = SqlPlanRepository(session).get(str(user_id))
+
+        assert plan is not None
+        assert plan.goal.weeks == DEFAULT_COVERAGE_WEEKS == 26
 
 
 def test_contribution_repository_round_trips_and_scopes_by_user() -> None:

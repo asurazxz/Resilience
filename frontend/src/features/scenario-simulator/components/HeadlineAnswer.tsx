@@ -41,22 +41,11 @@ export function HeadlineAnswer({ scenario }: HeadlineAnswerProps) {
   }
 
   return (
-    <div
-      className={`rounded-xl border p-4 ${
-        holds ? 'border-teal-200 bg-teal-50' : 'border-rose-200 bg-rose-50'
-      }`}
-    >
-      <p
-        className={`text-2xl font-semibold tabular-nums ${
-          holds ? 'text-teal-900' : 'text-rose-900'
-        }`}
-      >
-        {figure}
-      </p>
-      <p className={`mt-1 text-sm font-medium ${holds ? 'text-teal-900' : 'text-rose-900'}`}>
-        {headline}
-      </p>
-      <p className={`mt-1 text-sm ${holds ? 'text-teal-800' : 'text-rose-800'}`}>{support}</p>
+    <div className={holds ? 'tile tile-accent' : 'tile tile-muted'}>
+      <span className="mono-label">{holds ? '✓ ON TRACK' : '⚠ SHORTFALL'}</span>
+      <p className="display-lg ink-key mt-3 tabular-nums">{figure}</p>
+      <p className={`subheading mt-3 ${holds ? 'ink-key' : 'ink-heading'}`}>{headline}</p>
+      <p className={`mt-3 prose ${holds ? 'ink-key' : 'body-text-sm'}`}>{support}</p>
     </div>
   );
 }

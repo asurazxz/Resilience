@@ -26,11 +26,11 @@ export function MoneyRows({
   const update = (index: number, changes: Partial<EditableMoneyRow>) =>
     onChange(rows.map((row, rowIndex) => (rowIndex === index ? { ...row, ...changes } : row)));
   return (
-    <fieldset className="space-y-3">
+    <fieldset className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <legend className="font-semibold text-slate-900">{title}</legend>
+        <legend className="subheading">{title}</legend>
         <button
-          className="text-sm font-semibold text-indigo-700"
+          className="mono-label ink-heading"
           type="button"
           onClick={() =>
             onChange([
@@ -42,9 +42,9 @@ export function MoneyRows({
           + Add item
         </button>
       </div>
-      {rows.length === 0 && <p className="text-sm text-slate-500">No items added.</p>}
+      {rows.length === 0 && <p className="body-text">No items added.</p>}
       {rows.map((row, index) => (
-        <div className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-3 md:grid-cols-[1fr_1.4fr_1fr_auto_auto]" key={row.id}>
+        <div className="grid gap-3 rounded-lg p-4 md:grid-cols-[1fr_1.4fr_1fr_auto_auto]" style={{ background: "var(--surface-obsidian-button)" }} key={row.id}>
           <select aria-label={`${title} category ${index + 1}`} value={row.category} onChange={(event) => update(index, { category: event.target.value })}>
             {categories.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           </select>
@@ -56,7 +56,7 @@ export function MoneyRows({
               <option value="monthly">Monthly</option>
             </select>
           )}
-          <button className="text-sm text-rose-700" type="button" onClick={() => onChange(rows.filter((_, rowIndex) => rowIndex !== index))}>Remove</button>
+          <button className="mono-label" type="button" onClick={() => onChange(rows.filter((_, rowIndex) => rowIndex !== index))}>Remove</button>
         </div>
       ))}
     </fieldset>

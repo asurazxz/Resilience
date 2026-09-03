@@ -115,7 +115,7 @@ the following could be actually executed rather than only hand-verified:
 - CPF is a simplified flat-rate estimate, not the statutory schedule.
 - No itemised work-cost breakdown; only an aggregate figure per week.
 - Historical confirmed weeks without Feature 1 expense snapshots calculate from their recorded variable costs
-  only and show a warning. New manual and CSV-created weeks capture snapshots.
+  only and show a warning. Newly created weeks capture snapshots.
 
 ## Current integration verification and follow-up
 

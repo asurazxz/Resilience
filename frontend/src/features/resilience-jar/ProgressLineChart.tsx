@@ -16,6 +16,12 @@ import {
   type BalanceChartPoint,
 } from "./model.ts";
 import type { Contribution } from "./types.ts";
+import {
+  CHART_AXIS,
+  CHART_GRID,
+  CHART_SERIES,
+  CHART_TEXT,
+} from "../../lib/chartTheme";
 
 interface ProgressLineChartProps {
   contributions: Contribution[];
@@ -47,16 +53,16 @@ export function ProgressLineChart({
             margin={{ top: 18, right: 18, bottom: 4, left: 4 }}
             accessibilityLayer
           >
-            <CartesianGrid stroke="#dce7e1" strokeDasharray="3 3" />
+            <CartesianGrid stroke={CHART_GRID} strokeDasharray="3 3" />
             <XAxis
               dataKey="date"
               tickFormatter={shortDate}
-              stroke="#5d6f68"
-              tick={{ fontSize: 12 }}
+              stroke={CHART_AXIS}
+              tick={{ fontSize: 12, fill: CHART_TEXT }}
             />
             <YAxis
-              stroke="#5d6f68"
-              tick={{ fontSize: 12 }}
+              stroke={CHART_AXIS}
+              tick={{ fontSize: 12, fill: CHART_TEXT }}
               tickFormatter={compactMoney}
               width={62}
             />
@@ -64,18 +70,18 @@ export function ProgressLineChart({
             {goalTargetCents !== null && (
               <ReferenceLine
                 y={goalTargetCents}
-                stroke="#d89e24"
+                stroke={CHART_TEXT}
                 strokeDasharray="6 4"
-                label={{ value: "Goal", fill: "#72500d", position: "insideTopRight" }}
+                label={{ value: "Goal", fill: CHART_TEXT, position: "insideTopRight" }}
               />
             )}
             <Line
               dataKey="balance_cents"
               name="Emergency fund balance"
               type="monotone"
-              stroke="#227a5b"
+              stroke={CHART_SERIES}
               strokeWidth={3}
-              dot={{ fill: "#227a5b", r: 4 }}
+              dot={{ fill: CHART_SERIES, r: 4 }}
               activeDot={{ r: 6 }}
             />
           </LineChart>

@@ -12,6 +12,7 @@ from .api.routes.scheme_navigator import router as scheme_navigator_router
 from .core.errors import DomainError
 from .core.settings import get_settings
 from .db.session import get_engine
+from .features.financial_score.routes import router as financial_score_router
 from .features.foundation_input.routes import router as foundation_router
 from .features.income_reality.router import router as income_reality_router
 from .features.resilience_jar.routes import create_router
@@ -44,6 +45,7 @@ app.include_router(scheme_navigator_router, prefix=API_PREFIX)
 app.include_router(scenario_simulator_router, prefix=API_PREFIX)
 app.include_router(savings_goals_router, prefix=API_PREFIX)
 app.include_router(create_router(), prefix=API_PREFIX)
+app.include_router(financial_score_router, prefix=API_PREFIX)
 
 
 @app.middleware("http")

@@ -13,16 +13,17 @@ export function EstimateDisclaimers({ disclaimers }: EstimateDisclaimersProps) {
   }
 
   return (
-    <section
-      aria-labelledby="scenario-disclaimers-heading"
-      className="rounded-xl border border-slate-200 bg-slate-50 p-4"
-    >
-      <h2 id="scenario-disclaimers-heading" className="text-sm font-semibold text-slate-900">
+    <section aria-labelledby="scenario-disclaimers-heading" className="card">
+      <span className="mono-label">ESTIMATE</span>
+      <h2
+        id="scenario-disclaimers-heading"
+        className="subheading mt-2"
+      >
         About these numbers
       </h2>
-      <ul className="mt-2 space-y-1">
+      <ul className="mt-4 space-y-3 prose">
         {disclaimers.map((disclaimer) => (
-          <li key={disclaimer} className="text-xs leading-relaxed text-slate-600">
+          <li key={disclaimer} className="body-text-sm">
             {disclaimer}
           </li>
         ))}

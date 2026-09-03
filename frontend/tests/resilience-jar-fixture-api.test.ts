@@ -118,6 +118,61 @@ test("withdrawals reduce progress and update the projection", async () => {
   );
 });
 
+test("setting the opening balance corrects the tracked total without touching history", async () => {
+  const api = new FixtureResilienceJarApi();
+  const before = await api.getSummary();
+  const corrected = await api.setOpeningBalance(50_000);
+
+  // The starting balance is additive with recorded history: it does not
+  // remove or rewrite any existing contribution or withdrawal.
+  assert.equal(corrected.contributions.length, before.contributions.length);
+  assert.equal(
+    corrected.progress.contribution_total_cents,
+    50_000 + before.progress.contribution_total_cents,
+  );
+});
+
+test("the opening balance can be corrected more than once", async () => {
+  const api = new FixtureResilienceJarApi();
+  await api.setOpeningBalance(20_000);
+  const second = await api.setOpeningBalance(5_000);
+
+  // A later correction replaces the previous one rather than stacking.
+  assert.equal(second.progress.contribution_total_cents, 5_000 + 12_500);
+});
+
+test("goal_reached returns to false when the goal is raised above the balance", async () => {
+  const api = new FixtureResilienceJarApi();
+  const reached = await api.patchPlan({
+    goal: { mode: "amount", amount_cents: 10_000 },
+  });
+  assert.equal(reached.progress.goal_reached, true);
+
+  const raised = await api.patchPlan({
+    goal: { mode: "amount", amount_cents: 50_000 },
+  });
+  assert.equal(raised.progress.goal_reached, false);
+  assert.equal(raised.progress.remaining_cents, 50_000 - 12_500);
+});
+
+test("goal_reached returns to false when a withdrawal drops the balance below the goal", async () => {
+  const api = new FixtureResilienceJarApi();
+  const reached = await api.patchPlan({
+    goal: { mode: "amount", amount_cents: 10_000 },
+  });
+  assert.equal(reached.progress.goal_reached, true);
+
+  await api.createWithdrawal({
+    amount_cents: 5_000,
+    contribution_date: "2026-09-02",
+    note: "Emergency repair",
+  });
+  const afterWithdrawal = await api.getSummary();
+
+  assert.equal(afterWithdrawal.progress.goal_reached, false);
+  assert.ok((afterWithdrawal.progress.remaining_cents ?? 0) > 0);
+});
+
 test("withdrawals cannot exceed the tracked balance", async () => {
   const api = new FixtureResilienceJarApi();
 

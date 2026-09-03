@@ -24,16 +24,13 @@ interface StatProps {
 
 function Stat({ label, value, detail, tone = 'plain' }: StatProps) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-3">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p
-        className={`mt-1 text-lg font-semibold tabular-nums ${
-          tone === 'bad' ? 'text-rose-700' : 'text-slate-900'
-        }`}
-      >
+    <div className="card card-compact">
+      <p className="mono-label">{label}</p>
+      <p className="ink-key mt-2 text-lg font-semibold tabular-nums">
         {value}
+        {tone === 'bad' ? <span className="mono-label ml-2">CHECK THIS</span> : null}
       </p>
-      <p className="mt-1 text-xs text-slate-600">{detail}</p>
+      <p className="body-text-sm mt-2">{detail}</p>
     </div>
   );
 }
@@ -43,7 +40,7 @@ export function ScenarioSummary({ baseline, scenario }: ScenarioSummaryProps) {
   const weeklyIncome = scenario.weekly_net_work_income_during_shock_cents;
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-4">
       <Stat
         label="Left each week"
         value={formatCents(weeklyFlow)}

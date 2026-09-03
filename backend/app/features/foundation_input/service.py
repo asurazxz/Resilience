@@ -32,6 +32,7 @@ from backend.app.features.foundation_input.schemas import (
     RecurringWorkCostInput,
     RecurringWorkCostResponse,
     TransactionInput,
+    TransactionPatch,
     TransactionResponse,
     WeeklyEntryResponse,
     WeeklyEntryUpsert,
@@ -56,7 +57,14 @@ def ensure_profile(session: Session, user_id: UUID) -> Profile:
 
 
 def get_bootstrap(session: Session, user_id: UUID) -> FoundationBootstrap:
+    profile_existed = session.get(Profile, user_id) is not None
     profile = ensure_profile(session, user_id)
+    if not profile_existed:
+        # ensure_profile only flushes; without a commit here, a brand-new
+        # user's profile row is rolled back when the request session closes,
+        # leaving later writes (e.g. essential expenses) to violate the
+        # profiles foreign key.
+        session.commit()
     recurring = session.scalars(
         select(RecurringWorkCost)
         .where(RecurringWorkCost.user_id == user_id)
@@ -126,8 +134,58 @@ def create_transaction(
         amount_cents=payload.amount_cents,
         description=_optional_text(payload.description),
         occurred_on=payload.occurred_on,
+        occurred_until=payload.occurred_until,
     )
     session.add(transaction)
+    session.commit()
+    session.refresh(transaction)
+    return _transaction_response(transaction)
+
+
+def update_transaction(
+    session: Session, user_id: UUID, transaction_id: UUID, payload: TransactionPatch
+) -> TransactionResponse:
+    """Partial update: only fields present in the request body are applied.
+
+    A full body (every field set) behaves exactly like a replace, since every
+    value then overrides the existing one.
+    """
+    transaction = session.get(Transaction, transaction_id)
+    if transaction is None or transaction.user_id != user_id:
+        raise DomainError(404, "NOT_FOUND", "Transaction not found.")
+    fields = payload.model_fields_set
+
+    entry_type = payload.entry_type if "entry_type" in fields else transaction.entry_type
+    amount_cents = payload.amount_cents if "amount_cents" in fields else transaction.amount_cents
+    description = (
+        _optional_text(payload.description) if "description" in fields else transaction.description
+    )
+    occurred_on = payload.occurred_on if "occurred_on" in fields else transaction.occurred_on
+    occurred_until = (
+        payload.occurred_until if "occurred_until" in fields else transaction.occurred_until
+    )
+
+    if occurred_until is not None:
+        if occurred_until < occurred_on:
+            raise DomainError(
+                422,
+                "validation_error",
+                "One or more fields are invalid.",
+                field_errors={"occurredUntil": "occurredUntil cannot be before occurredOn"},
+            )
+        if (occurred_until - occurred_on).days > 366:
+            raise DomainError(
+                422,
+                "validation_error",
+                "One or more fields are invalid.",
+                field_errors={"occurredUntil": "A date range cannot be longer than 366 days."},
+            )
+
+    transaction.entry_type = entry_type
+    transaction.amount_cents = amount_cents
+    transaction.description = description
+    transaction.occurred_on = occurred_on
+    transaction.occurred_until = occurred_until
     session.commit()
     session.refresh(transaction)
     return _transaction_response(transaction)
@@ -146,6 +204,7 @@ def put_recurring_cost(
 ) -> RecurringWorkCostResponse:
     if item_id != payload.id:
         raise DomainError(400, "ID_MISMATCH", "Path and payload IDs must match.")
+    ensure_profile(session, user_id)
     existing = session.get(RecurringWorkCost, item_id)
     if existing and existing.user_id != user_id:
         raise DomainError(404, "NOT_FOUND", "Recurring work cost not found.")
@@ -164,6 +223,7 @@ def put_essential_expense(
 ) -> EssentialExpenseResponse:
     if item_id != payload.id:
         raise DomainError(400, "ID_MISMATCH", "Path and payload IDs must match.")
+    ensure_profile(session, user_id)
     existing = session.get(EssentialExpense, item_id)
     if existing and existing.user_id != user_id:
         raise DomainError(404, "NOT_FOUND", "Essential expense not found.")

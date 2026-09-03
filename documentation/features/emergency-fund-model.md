@@ -72,6 +72,31 @@ show a percentage of goal or percentage milestones. The API still returns
 `progress_percent` and `milestones` for compatibility, but no screen renders
 them.
 
+### 4.1 Default goal history and the 2026-09-03 backfill
+
+The coverage-goal default is `DEFAULT_COVERAGE_WEEKS = 26` in
+`backend/app/features/resilience_jar/models.py` — roughly six months of
+essential expenses, which is the standard emergency-fund rule of thumb this
+feature is built around. That constant only applies when a plan row is
+created; it does not retroactively change rows that already exist. An
+earlier version of the app shipped with a 4-week default, so any
+`emergency_fund_plans` row created before this change still held
+`goal_weeks = 4`, showing a one-month goal instead of six months.
+
+Migration `supabase/migrations/20260903210000_emergency_fund_default_six_months.sql`
+backfills this: it sets `goal_weeks = 26` for every row where
+`goal_mode = 'coverage' and goal_weeks = 4`.
+
+**Trade-off, recorded deliberately:** four was also a value a user could have
+chosen on purpose (the input accepts 1–52 weeks). Because the shipped
+default and a deliberate choice of four are stored identically, the
+migration cannot tell them apart, so it overwrites both. Anyone who
+genuinely wanted a four-week goal will need to re-set it after this
+migration runs. This was judged the better trade-off because it fixes the
+much more common case — someone left at the old default — while a
+deliberately-chosen four-week goal is comparatively rare and easy to
+re-enter.
+
 ## 5. Weekly saving target and projection
 
 ```
@@ -85,7 +110,7 @@ Projection status is `complete` when `remaining = 0`, `paused` when the plan
 is paused, `no_weekly_target` when `weekly_target = 0`, `unavailable` when
 `T` is `None`.
 
-## 6. Recommended weekly saving (unchanged)
+## 6. Recommended weekly saving
 
 Input: completed weekly surpluses `S_w`, newest first.
 
@@ -104,6 +129,38 @@ conservative method:  20% of min(max(S_latest, 0), median of positive S over las
 `S_w` is defined once, in the backend, and the Income Reality screen uses the
 same three deductions so both features report the same surplus for a week.
 
+### Spreading a dated-range transaction across weeks
+
+A transaction may carry `occurred_until` in addition to `occurred_on`,
+covering a range of calendar days (for example, a month-long insurance
+premium or a multi-day gig). Its `amount_cents` is spread **evenly across
+every calendar day in the inclusive range**, not assigned entirely to the
+start date:
+
+```
+effective_end = occurred_until   if occurred_until is set and >= occurred_on
+              = occurred_on      otherwise (a single day)
+days          = (effective_end - occurred_on).days + 1
+base          = amount_cents // days
+remainder     = amount_cents % days
+day i (0-indexed) gets base + 1 cent  if i < remainder
+                    base              otherwise
+```
+
+Each day's share is then folded into `income_w` or `variable_costs_w` for the
+Monday-Sunday week that day falls in. A single transaction can therefore
+contribute to several different `S_w` values.
+
+This rule is implemented once, in `backend/app/features/transaction_spread.py`
+(used by `SqlFinancialContextRepository.list_completed_weekly_surpluses`), and
+mirrored exactly by `transactionDailyAmounts` in
+`frontend/src/features/income-reality/foundationAdapter.ts`, so the backend
+and the Income Reality screen report identical weekly figures for the same
+transaction. Both implementations are checked against the shared fixture
+`contracts/fixtures/transaction-week-split.json`. A date range is capped at
+366 days (`TransactionInput.occurred_until`, enforced by both a Pydantic
+validator and a database check constraint).
+
 ## 7. Savings goals
 
 Each goal:
@@ -120,11 +177,17 @@ suggested_weekly = ceil(remaining / weeks_until(target_date))   when target_date
 Goals have status `active`, `completed`, or `archived`. Reaching a goal does
 not change its status automatically; the user marks it complete.
 
-The Savings screen pins a read-only Emergency Fund overview at the top
-(`B`, `T`, `reached`, `coverage_wks`) so the baseline is visible while the
-user builds the habit below it.
+The Savings screen shows savings goals only; it no longer pins an Emergency
+Fund overview. The emergency fund lives in its own tab (the Resilience Jar)
+and on the Home page.
 
-## 8. Worked example
+## 8. Financial Score
+
+See `documentation/features/financial-score.md` for the full specification
+of the deterministic 0-100 score assembled from this model, savings goals,
+and weekly cash flow.
+
+## 9. Worked example
 
 ```
 Essentials: rent S$800/month, food S$120/week

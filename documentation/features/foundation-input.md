@@ -6,17 +6,16 @@
 
 ## User-visible scope
 
-- Mobile-first PWA shell with overview, weekly history, CSV import, and assumptions navigation.
+- Mobile-first PWA shell with overview, weekly history, and assumptions navigation.
 - Anonymous demo onboarding for emergency savings, recurring work costs, and essential household expenses.
 - Editable weekly earnings and variable work costs, including explicit no-income weeks.
 - Weekly entry no longer asks users to maintain a second emergency-savings balance; it links directly to Emergency Fund's “Record emergency use” action while preserving the existing Foundation snapshot for calculations.
 - “Add a new week” opens a blank entry rather than the latest saved week; if the current Monday is already recorded, it starts on the following Monday.
-- Strict Resilience CSV download, server-side validation preview, and user-confirmed conversion into weekly entries.
 - Cached bootstrap data and ordered optimistic writes in IndexedDB. Reconnect triggers replay using mutation UUIDs as idempotency keys.
 - Visible online/offline and queued/failed/conflicted states. Revision conflicts offer “Use server” and “Keep mine.”
 - Destructive demo reset requires an explicit confirmation header and an online connection.
 
-OCR, user authentication, deployment, bank/platform integrations, and direct browser access to Supabase are deferred. The overview's remainder is a simple orientation estimate; Feature 2 owns production financial calculations and explanations.
+Deployment, bank/platform integrations, and direct browser access to Supabase are deferred. The overview's remainder is a simple orientation estimate; Feature 2 owns production financial calculations and explanations.
 
 ## Shared contracts other features depend on
 
@@ -39,8 +38,7 @@ Foundation endpoints:
 | PUT/DELETE | `/foundation/essential-expenses/{id}` | Essential-expense CRUD |
 | GET | `/foundation/weeks` | Cursor-ready weekly history (`before`, `limit`) |
 | GET/PUT/DELETE | `/foundation/weeks/{weekStart}` | Weekly-entry CRUD and revisions |
-| GET | `/foundation/imports/csv/template` | Exact CSV template |
-| POST | `/foundation/imports/csv/preview` | UTF-8 CSV validation, max 1 MiB/1,000 rows |
+| POST/PATCH/DELETE | `/foundation/transactions/{id}` | Dated income/cost transaction CRUD, `occurredUntil` ranges up to 366 days |
 | DELETE | `/foundation/data` | Confirmed anonymous-demo reset |
 
 ## PostgreSQL foundation
@@ -92,7 +90,6 @@ Safe, committed local defaults:
 | `DB_POOL_SIZE` | backend | `5` | No |
 | `DB_MAX_OVERFLOW` | backend | `5` | No |
 | `LLM_API_KEY` | future Feature 4 | Empty/deferred | Yes when used |
-| `TESSERACT_CMD` | deferred OCR | `tesseract` placeholder | No |
 
 For the shared hosted database, distribute these outside Git/chat:
 

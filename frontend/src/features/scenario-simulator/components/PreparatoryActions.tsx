@@ -22,23 +22,28 @@ export function PreparatoryActions({ actions }: PreparatoryActionsProps) {
   }
 
   return (
-    <section aria-labelledby="preparatory-actions-heading" className="space-y-3">
-      <h2 id="preparatory-actions-heading" className="text-base font-semibold text-slate-900">
-        What you can check
-      </h2>
+    <section aria-labelledby="preparatory-actions-heading" className="card space-y-6">
+      <div className="prose">
+        <h2 id="preparatory-actions-heading" className="subheading">
+          What you can check
+        </h2>
+        <p className="body-text-sm">
+          A few things worth looking into before this setback happens.
+        </p>
+      </div>
 
-      <ul className="space-y-2">
+      <ul className="divide-y" style={{ borderColor: 'var(--color-slate)' }}>
         {actions.map((action) => (
-          <li
-            key={action.id}
-            className={`rounded-xl border p-4 ${
-              action.severity === 'attention'
-                ? 'border-rose-200 bg-rose-50'
-                : 'border-slate-200 bg-white'
-            }`}
-          >
-            <p className="text-sm font-semibold text-slate-900">{action.title}</p>
-            <p className="mt-1 text-sm text-slate-700">{action.detail}</p>
+          <li key={action.id} style={{ borderColor: 'var(--color-slate)' }}>
+            <div className="px-1 py-4">
+              <p className="ink-heading flex items-center gap-2 font-semibold">
+                {action.title}
+                {action.severity === 'attention' ? (
+                  <span className="mono-label">ATTENTION</span>
+                ) : null}
+              </p>
+              <p className="body-text-sm mt-2 prose">{action.detail}</p>
+            </div>
           </li>
         ))}
       </ul>

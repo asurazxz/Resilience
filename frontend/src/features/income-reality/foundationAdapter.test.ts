@@ -1,7 +1,44 @@
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
-import type { WeeklyEntry } from "../../types/foundation";
-import { adaptFoundationWeeks, adaptTransactions } from "./foundationAdapter";
+import type { Transaction, WeeklyEntry } from "../../types/foundation";
+import { adaptFoundationWeeks, adaptTransactions, transactionDailyAmounts } from "./foundationAdapter";
+
+// Shared with the backend at contracts/fixtures/transaction-week-split.json.
+// It describes, per test case, the weekly buckets a dated-range transaction
+// must split into: { amountCents, occurredOn, occurredUntil, weeks }.
+// Resolved from the process working directory (vitest runs with cwd = frontend/)
+// rather than import.meta.url, which isn't a file: URL under the jsdom test environment.
+const SPLIT_FIXTURE_PATH = resolve(process.cwd(), "../contracts/fixtures/transaction-week-split.json");
+
+interface WeekSplitCase {
+  name: string;
+  amountCents: number;
+  occurredOn: string;
+  occurredUntil: string | null;
+  /** Keyed by the Monday of the ISO week. */
+  weeks: Record<string, number>;
+}
+
+interface WeekSplitFixture {
+  description: string;
+  cases: WeekSplitCase[];
+}
+
+/** Groups per-day amounts onto their Monday-start week, mirroring adaptTransactions. */
+function aggregateOntoMondayWeeks(days: Array<{ date: string; amountCents: number }>): Map<string, number> {
+  const totals = new Map<string, number>();
+  for (const day of days) {
+    const occurred = new Date(`${day.date}T00:00:00Z`);
+    const monday = new Date(occurred);
+    monday.setUTCDate(occurred.getUTCDate() - ((occurred.getUTCDay() + 6) % 7));
+    const weekStart = monday.toISOString().slice(0, 10);
+    totals.set(weekStart, (totals.get(weekStart) ?? 0) + day.amountCents);
+  }
+  return totals;
+}
 
 function weeklyEntry(overrides: Partial<WeeklyEntry> = {}): WeeklyEntry {
   return {
@@ -120,4 +157,52 @@ describe("Feature 1 to Income Reality adapter", () => {
     expect(result.weeks.map((week) => week.week_start)).toEqual(["2026-08-17", "2026-08-31"]);
     expect(result.missingExpenseSnapshotCount).toBe(1);
   });
+});
+
+// contracts/fixtures/transaction-week-split.json is written by a backend
+// agent in parallel with this change.
+const hasSplitFixture = existsSync(SPLIT_FIXTURE_PATH);
+describe("transactionDailyAmounts against the shared week-split fixture", () => {
+  if (!hasSplitFixture) {
+    it("requires contracts/fixtures/transaction-week-split.json", () => {
+      throw new Error(
+        `Fixture not found at ${SPLIT_FIXTURE_PATH}. This test asserts transactionDailyAmounts ` +
+          "(aggregated onto Monday weeks) against the backend-authored week-split fixture. " +
+          "Once contracts/fixtures/transaction-week-split.json exists, re-run this suite.",
+      );
+    });
+    return;
+  }
+
+  const fixture: WeekSplitFixture = JSON.parse(readFileSync(SPLIT_FIXTURE_PATH, "utf-8"));
+  const cases = fixture.cases;
+
+  if (cases.length === 0) {
+    it("has at least one case in the fixture", () => {
+      throw new Error(`Expected at least one case in ${SPLIT_FIXTURE_PATH}, found none.`);
+    });
+  }
+
+  for (const testCase of cases) {
+    it(`${testCase.name}: splits ${testCase.amountCents} cents from ${testCase.occurredOn} to ${testCase.occurredUntil ?? testCase.occurredOn} onto the expected Monday weeks`, () => {
+      const transaction: Transaction = {
+        id: `fixture-${testCase.name}`,
+        entryType: "income",
+        amountCents: testCase.amountCents,
+        occurredOn: testCase.occurredOn,
+        occurredUntil: testCase.occurredUntil,
+      };
+      const days = transactionDailyAmounts(transaction);
+
+      // The daily split must always reconstitute the original amount exactly.
+      expect(days.reduce((total, day) => total + day.amountCents, 0)).toBe(testCase.amountCents);
+
+      const actualWeeks = aggregateOntoMondayWeeks(days);
+      const expectedWeeks = new Map(Object.entries(testCase.weeks));
+      expect(new Set(actualWeeks.keys())).toEqual(new Set(expectedWeeks.keys()));
+      for (const [weekStart, amountCents] of expectedWeeks) {
+        expect(actualWeeks.get(weekStart)).toBe(amountCents);
+      }
+    });
+  }
 });

@@ -20,6 +20,7 @@ from backend.app.features.foundation_input.schemas import (
     RecurringWorkCostInput,
     RecurringWorkCostResponse,
     TransactionInput,
+    TransactionPatch,
     TransactionResponse,
     WeeklyEntryResponse,
     WeeklyEntryUpsert,
@@ -38,6 +39,7 @@ from backend.app.features.foundation_input.service import (
     put_week,
     reset_demo_data,
     update_profile,
+    update_transaction,
 )
 
 router = APIRouter(prefix="/foundation", tags=["foundation-input"])
@@ -155,6 +157,22 @@ def transaction_create(
     payload: TransactionInput, session: SessionDep, user_id: UserDep
 ) -> TransactionResponse:
     return create_transaction(session, user_id, payload)
+
+
+@router.patch(
+    "/transactions/{transaction_id}",
+    response_model=TransactionResponse,
+    summary="Partially update a transaction",
+    description=(
+        "Only the fields present in the request body are changed; omitted fields keep "
+        "their current value. Sending occurredUntil: null clears a date range. A full "
+        "body (every field set) behaves like a replace."
+    ),
+)
+def transaction_update(
+    transaction_id: UUID, payload: TransactionPatch, session: SessionDep, user_id: UserDep
+) -> TransactionResponse:
+    return update_transaction(session, user_id, transaction_id, payload)
 
 
 @router.delete("/transactions/{transaction_id}", status_code=204)

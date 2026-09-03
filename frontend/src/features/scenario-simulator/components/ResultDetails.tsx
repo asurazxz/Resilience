@@ -15,11 +15,8 @@ export interface ResultDetailsProps {
 
 export function ResultDetails({ weeks }: ResultDetailsProps) {
   return (
-    <section
-      aria-labelledby="how-worked-out"
-      className="space-y-4 rounded-xl border border-slate-200 bg-white p-4"
-    >
-      <h3 id="how-worked-out" className="text-sm font-semibold text-slate-900">
+    <section aria-labelledby="how-worked-out" className="card space-y-6">
+      <h3 id="how-worked-out" className="subheading">
         How this was worked out
       </h3>
       <BufferChart weeks={weeks} />

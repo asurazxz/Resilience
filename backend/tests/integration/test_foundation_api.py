@@ -6,6 +6,8 @@ from fastapi.testclient import TestClient
 
 from backend.app.main import app
 
+from .db_support import throwaway_user
+
 pytestmark = pytest.mark.skipif(
     os.getenv("RUN_DATABASE_TESTS") != "1",
     reason="set RUN_DATABASE_TESTS=1 with local Supabase running",
@@ -129,3 +131,75 @@ def test_reset_requires_confirmation_and_returns_empty_profile() -> None:
     assert reset.status_code == 200, reset.text
     assert reset.json()["profile"]["onboardingCompleted"] is False
     assert reset.json()["weeklyEntries"] == []
+
+
+def test_brand_new_user_can_put_an_essential_expense_as_their_first_write() -> None:
+    """Regression test: a brand-new user (no bootstrap call, no profile row
+    yet) must be able to PUT an essential expense as their very first write.
+
+    Previously this 500'd with a ``essential_expenses_user_id_fkey``
+    ForeignKeyViolation, because nothing had ever committed a profiles row
+    for the user.
+    """
+    with throwaway_user() as (client, _user_id):
+        item_id = str(uuid4())
+        response = client.put(
+            f"/api/v1/foundation/essential-expenses/{item_id}",
+            json={
+                "id": item_id,
+                "category": "food",
+                "label": "Groceries",
+                "amountCents": 10_000,
+                "cadence": "weekly",
+                "isActive": True,
+            },
+        )
+        assert response.status_code == 200, response.text
+        assert response.json()["amountCents"] == 10_000
+
+
+def test_brand_new_user_can_put_a_recurring_work_cost_as_their_first_write() -> None:
+    """Same regression as above, for the recurring-work-cost PUT endpoint."""
+    with throwaway_user() as (client, _user_id):
+        item_id = str(uuid4())
+        response = client.put(
+            f"/api/v1/foundation/recurring-work-costs/{item_id}",
+            json={
+                "id": item_id,
+                "category": "vehicle_rental",
+                "label": "Bike rental",
+                "amountCents": 20_000,
+                "cadence": "weekly",
+                "isActive": True,
+            },
+        )
+        assert response.status_code == 200, response.text
+        assert response.json()["amountCents"] == 20_000
+
+
+def test_bootstrap_alone_persists_the_profile_row() -> None:
+    """A bootstrap call for a brand-new user must commit the profile it
+    creates, not just flush it within the request's own transaction — a
+    later request (a fresh session) must see the same profile, and be able
+    to write against it without a foreign-key violation.
+    """
+    with throwaway_user() as (client, user_id):
+        bootstrap = client.get("/api/v1/foundation/bootstrap")
+        assert bootstrap.status_code == 200, bootstrap.text
+        assert bootstrap.json()["profile"]["id"] == str(user_id)
+
+        # A second, independent request (fresh session) must be able to
+        # write against the profile the first request created.
+        item_id = str(uuid4())
+        response = client.put(
+            f"/api/v1/foundation/essential-expenses/{item_id}",
+            json={
+                "id": item_id,
+                "category": "food",
+                "label": "Groceries",
+                "amountCents": 5_000,
+                "cadence": "weekly",
+                "isActive": True,
+            },
+        )
+        assert response.status_code == 200, response.text

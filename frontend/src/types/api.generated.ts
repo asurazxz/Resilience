@@ -158,7 +158,11 @@ export interface paths {
         delete: operations["transaction_delete_api_v1_foundation_transactions__transaction_id__delete"];
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Partially update a transaction
+         * @description Only the fields present in the request body are changed; omitted fields keep their current value. Sending occurredUntil: null clears a date range. A full body (every field set) behaves like a replace.
+         */
+        patch: operations["transaction_update_api_v1_foundation_transactions__transaction_id__patch"];
         trace?: never;
     };
     "/api/v1/foundation/data": {
@@ -476,6 +480,23 @@ export interface paths {
         patch: operations["update_contribution_api_v1_resilience_jar_contributions__contribution_id__patch"];
         trace?: never;
     };
+    "/api/v1/financial-score": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Financial Score */
+        get: operations["get_financial_score_api_v1_financial_score_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -770,6 +791,48 @@ export interface components {
              * Format: date-time
              */
             generated_at: string;
+        };
+        /** FinancialScoreComponent */
+        FinancialScoreComponent: {
+            /**
+             * Id
+             * @enum {string}
+             */
+            id: "emergency_fund" | "savings_habit" | "cash_flow";
+            /** Label */
+            label: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "scored" | "not_enough_information";
+            /** Points */
+            points: number;
+            /** Maxpoints */
+            maxPoints: number;
+            /** Detail */
+            detail: string;
+        };
+        /** FinancialScoreResponse */
+        FinancialScoreResponse: {
+            /** Score */
+            score: number | null;
+            /**
+             * Band
+             * @enum {string}
+             */
+            band: "building" | "steady" | "strong" | "resilient" | "unknown";
+            /**
+             * Generatedat
+             * Format: date-time
+             */
+            generatedAt: string;
+            /** Scoredmaxpoints */
+            scoredMaxPoints: number;
+            /** Components */
+            components: components["schemas"]["FinancialScoreComponent"][];
+            /** Nextstep */
+            nextStep: string | null;
         };
         /** FoundationBootstrap */
         FoundationBootstrap: {
@@ -1265,6 +1328,29 @@ export interface components {
              * Format: date
              */
             occurredOn: string;
+            /** Occurreduntil */
+            occurredUntil?: string | null;
+        };
+        /**
+         * TransactionPatch
+         * @description Partial update for a transaction: every field is optional.
+         *
+         *     Only fields present in the request body (``model_fields_set``) are
+         *     applied; the rest keep the transaction's existing value. Sending
+         *     ``occurredUntil: null`` explicitly clears a date range. A full body with
+         *     every field set behaves like a replace, same as before.
+         */
+        TransactionPatch: {
+            /** Entrytype */
+            entryType?: ("income" | "cost") | null;
+            /** Amountcents */
+            amountCents?: number | null;
+            /** Description */
+            description?: string | null;
+            /** Occurredon */
+            occurredOn?: string | null;
+            /** Occurreduntil */
+            occurredUntil?: string | null;
         };
         /** TransactionResponse */
         TransactionResponse: {
@@ -1282,6 +1368,8 @@ export interface components {
              * Format: date
              */
             occurredOn: string;
+            /** Occurreduntil */
+            occurredUntil?: string | null;
             /**
              * Id
              * Format: uuid
@@ -1881,6 +1969,41 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    transaction_update_api_v1_foundation_transactions__transaction_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionResponse"];
+                };
             };
             /** @description Validation Error */
             422: {
@@ -2503,6 +2626,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_financial_score_api_v1_financial_score_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinancialScoreResponse"];
                 };
             };
         };

@@ -1,11 +1,6 @@
 /**
- * Fine adjustments to the situation: how much earnings fall, for how long,
- * how long they take to recover, and any one-off cost.
- *
- * These sit below the situation cards because most users only need to pick a
- * situation; the sliders are for adjusting one that is nearly right. They stay
- * visible so a preset's meaning is legible at a glance rather than hidden
- * behind a control the reader has to find.
+ * The details of the setback: how much less you would earn, for how long,
+ * how long it takes earnings to recover, and any one-off cost.
  */
 
 import { formatCents } from '../money';
@@ -41,12 +36,14 @@ function SliderField({
   onChange,
 }: SliderFieldProps) {
   return (
-    <div className="space-y-1">
-      <div className="flex items-baseline justify-between gap-2">
-        <label htmlFor={id} className="text-sm font-medium text-slate-700">
+    <div className="space-y-2">
+      <div className="flex items-baseline justify-between gap-3">
+        <label htmlFor={id} className="label">
           {label}
         </label>
-        <span className="text-sm font-semibold tabular-nums text-slate-900">{valueLabel}</span>
+        <span className="ink-key font-semibold tabular-nums">
+          {valueLabel}
+        </span>
       </div>
       <input
         id={id}
@@ -56,22 +53,23 @@ function SliderField({
         step={step}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="w-full accent-teal-700"
+        className="w-full"
+        style={{ accentColor: 'var(--color-pure)' }}
       />
-      {hint ? <p className="text-xs text-slate-500">{hint}</p> : null}
+      {hint ? <p className="body-text-sm">{hint}</p> : null}
     </div>
   );
 }
 
 export function ScenarioControls({ scenario, onChange }: ScenarioControlsProps) {
   return (
-    <div className="space-y-5 rounded-xl border border-slate-200 bg-white p-4">
-      <h3 className="text-sm font-medium text-slate-700">Adjust the details</h3>
+    <div className="card space-y-6">
+      <h3 className="subheading">Describe the setback</h3>
 
-      <div className="space-y-5">
+      <div className="space-y-6">
         <SliderField
           id="income-reduction"
-          label="Earnings drop by"
+          label="How much less you would earn"
           value={scenario.income_reduction_percent}
           min={0}
           max={100}
@@ -79,15 +77,15 @@ export function ScenarioControls({ scenario, onChange }: ScenarioControlsProps) 
           valueLabel={`${scenario.income_reduction_percent}%`}
           hint={
             scenario.income_reduction_percent === 100
-              ? 'No earnings at all, for example time off after an injury.'
-              : 'How much less you expect to earn each week.'
+              ? 'No earnings at all — for example, time off after an injury.'
+              : 'A drop in your usual weekly earnings, not the exact amount.'
           }
           onChange={(value) => onChange({ income_reduction_percent: value })}
         />
 
         <SliderField
           id="weeks-affected"
-          label="For"
+          label="How many weeks this lasts"
           value={scenario.weeks_affected}
           min={0}
           max={26}
@@ -97,7 +95,7 @@ export function ScenarioControls({ scenario, onChange }: ScenarioControlsProps) 
 
         <SliderField
           id="recovery-weeks"
-          label="Then earnings recover over"
+          label="How long it takes your earnings to recover"
           value={scenario.recovery_weeks}
           min={0}
           max={12}
@@ -108,18 +106,18 @@ export function ScenarioControls({ scenario, onChange }: ScenarioControlsProps) 
                 ? '1 week'
                 : `${scenario.recovery_weeks} weeks`
           }
-          hint="Earnings climb back to your usual level over this period."
+          hint="After the setback ends, earnings climb back to your usual level over this many weeks."
           onChange={(value) => onChange({ recovery_weeks: value })}
         />
 
         <MoneyField
           id="unexpected-cost"
-          label="One-off unexpected cost"
+          label="A one-off bill or repair, if there is one"
           valueCents={scenario.unexpected_cost_cents}
           hint={
             scenario.unexpected_cost_cents > 0
-              ? `A repair or bill, counted in the first week: ${formatCents(scenario.unexpected_cost_cents)}.`
-              : 'A repair or bill, counted in the first week.'
+              ? `Counted as a cost in the first week: ${formatCents(scenario.unexpected_cost_cents)}.`
+              : 'Leave this at S$0 if nothing unexpected comes up.'
           }
           onChange={(cents) => onChange({ unexpected_cost_cents: cents })}
         />

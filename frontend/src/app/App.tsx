@@ -1,11 +1,17 @@
 import { lazy, Suspense, type FormEvent, useEffect, useMemo, useState } from "react";
-import { Link, Navigate, NavLink, Route, Routes, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, NavLink, Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { MoneyRows, type EditableMoneyRow } from "../components/MoneyRows";
 import { useFoundation } from "../features/foundation-input/FoundationContext";
 import { AuthPage } from "../features/auth/AuthPage";
 import { useAuth } from "../features/auth/AuthContext";
-import { adaptTransactions } from "../features/income-reality/foundationAdapter";
+import { adaptTransactions, weeklyNormalisedTotal } from "../features/income-reality/foundationAdapter";
+import { CurrentWeekCard } from "../features/home/CurrentWeekCard";
+import { FinancialScoreCard } from "../features/home/FinancialScoreCard";
+import { KeyFigures } from "../features/home/KeyFigures";
+import { WeeklyTrendChart } from "../features/home/WeeklyTrendChart";
+import { LandingPage } from "../features/landing/LandingPage";
+import { SyncStatus } from "./SyncStatus";
 import { HttpResilienceJarApi } from "../features/resilience-jar/api";
 import type { JarSummary } from "../features/resilience-jar/types";
 import { buildFoundationBaseline } from "../features/scenario-simulator/foundationBaseline";
@@ -33,7 +39,7 @@ const SavingsPage = lazy(() =>
 );
 
 function FeatureLoader() {
-  return <div className="card text-sm text-slate-600" role="status">Loading this section…</div>;
+  return <div className="card body-text" role="status">Loading this section…</div>;
 }
 
 const WORK_CATEGORIES = [
@@ -118,28 +124,6 @@ function writeNavOpen(open: boolean): void {
   }
 }
 
-function SyncStatus({ navOpen }: { navOpen: boolean }) {
-  const { online, pending, syncNow, resolveConflict } = useFoundation();
-  const [open, setOpen] = useState(false);
-  const conflicts = pending.filter((item) => item.status === "conflict");
-  const shift = navOpen ? " sync-shifted" : "";
-  return (
-    <>
-      {!online && <div className="bg-amber-100 px-4 py-2 text-center text-sm font-medium text-amber-950">Offline — changes are saved on this device and will sync when you reconnect.</div>}
-      <button className={`sync-fab${shift} fixed bottom-4 left-4 z-30 rounded-full bg-slate-950 px-4 py-3 text-sm font-semibold text-white shadow-xl`} onClick={() => setOpen(!open)} type="button">
-        {online ? "Online" : "Offline"} · {pending.length} pending
-      </button>
-      {open && (
-        <aside className={`sync-panel${shift} fixed bottom-20 left-4 z-30 w-[min(24rem,calc(100vw-2rem))] rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl`} aria-label="Sync status">
-          <div className="flex items-start justify-between gap-3"><div><p className="eyebrow">Device sync</p><h2 className="mt-1 text-xl font-bold">{pending.length ? "Changes waiting" : "Everything is synced"}</h2></div><button onClick={() => setOpen(false)} type="button">Close</button></div>
-          {pending.map((item) => <div className="mt-3 rounded-xl bg-slate-50 p-3 text-sm" key={item.id}><strong>{item.status}</strong><p className="mt-1 break-all text-slate-600">{item.method} {item.path}</p>{item.error && <p className="mt-1 text-rose-700">{item.error.message}</p>}{item.status === "conflict" && <div className="mt-2 flex gap-2"><button className="button-secondary !min-h-9 !px-3" onClick={() => void resolveConflict(item.id, false)}>Use server</button><button className="button-primary !min-h-9 !px-3" onClick={() => void resolveConflict(item.id, true)}>Keep mine</button></div>}</div>)}
-          <button className="button-primary mt-4 w-full" disabled={!online || conflicts.length > 0 || pending.length === 0} onClick={() => void syncNow()} type="button">Sync now</button>
-        </aside>
-      )}
-    </>
-  );
-}
-
 const NAV_LINKS: Array<[string, string]> = [
   ["/", "Home"],
   ["/transactions", "Transactions"],
@@ -148,8 +132,7 @@ const NAV_LINKS: Array<[string, string]> = [
   ["/savings", "Savings"],
   ["/scenario-simulator", "Setback planner"],
   ["/scheme-navigator", "Schemes"],
-  ["/profile", "Profile"],
-  ["/settings", "Financial details"]
+  ["/profile", "Profile"]
 ];
 
 function Shell({ children }: { children: React.ReactNode }) {
@@ -172,11 +155,16 @@ function Shell({ children }: { children: React.ReactNode }) {
         <button
           aria-controls="primary-navigation"
           aria-expanded={navOpen}
-          className="nav-toggle"
+          aria-label={navOpen ? "Close menu" : "Menu"}
+          className={`nav-toggle${navOpen ? " nav-toggle-open" : ""}`}
           onClick={() => setOpen(!navOpen)}
           type="button"
         >
-          {navOpen ? "Close menu" : "Menu"}
+          <svg aria-hidden="true" focusable="false" height="24" viewBox="0 0 24 24" width="24">
+            <line className="nav-toggle-line nav-toggle-line-top" x1="4" x2="20" y1="7" y2="7" />
+            <line className="nav-toggle-line nav-toggle-line-middle" x1="4" x2="20" y1="12" y2="12" />
+            <line className="nav-toggle-line nav-toggle-line-bottom" x1="4" x2="20" y1="17" y2="17" />
+          </svg>
         </button>
         <Link className="site-brand" onClick={handleNavigate} to="/">
           <img alt="" src="/resilience-icon.svg" />
@@ -199,7 +187,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         </nav>
         <button className="button-secondary mt-auto" onClick={() => void signOut()} type="button">Log out</button>
       </aside>
-      <main className={`app-main${navOpen ? " app-main-shifted" : ""} mx-auto max-w-6xl px-4 pb-8`}>{children}</main>
+      <main className={`app-main${navOpen ? " app-main-shifted" : ""} page pb-8`}>{children}</main>
       <SyncStatus navOpen={navOpen} />
     </div>
   );
@@ -264,71 +252,196 @@ function IncomeReality() {
   return (
     <Shell>
       <p className="eyebrow">Income overview</p>
-      <h1 className="mt-2 text-3xl font-black">See where each week's money went</h1>
-      <p className="mt-2 max-w-3xl text-slate-600">
+      <h1 className="mt-2 display-hero" style={{ fontSize: "clamp(28px, 4vw, 40px)" }}>See where each week's money went</h1>
+      <p className="mt-3 body-text prose">
         Each Monday–Sunday overview is calculated from the income and costs you recorded, so it works even when work is irregular.
       </p>
       {adapted.missingExpenseSnapshotCount > 0 ? (
-        <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" role="status">
+        <p className="mt-6 card body-text prose" role="status">
           {adapted.missingExpenseSnapshotCount} confirmed week
           {adapted.missingExpenseSnapshotCount === 1 ? " has" : "s have"} no saved expense
           snapshot. Those weeks show only their recorded variable costs.
         </p>
       ) : null}
       {adapted.weeks.length > 0 && adapted.weeks.every((week) => week.recorded_cpf_cents != null) ? (
-        <p className="mt-5 rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950" role="status">
+        <p className="mt-6 card body-text prose" role="status">
           Every recorded week already includes CPF/MediSave. Those actual amounts take priority, so
           the estimator will apply only after you add a week without a CPF cost.
         </p>
       ) : null}
       {!online ? (
-        <div className="card mt-6 text-slate-700">
+        <div className="card mt-6 body-text prose">
           Reconnect to calculate Income Reality. Your saved weekly entries remain available on
           this device.
         </div>
       ) : (
         <Suspense fallback={<FeatureLoader />}><IncomeRealityPage weeks={adapted.weeks} /></Suspense>
       )}
-      {fundSummary && <section className="card mt-6"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="eyebrow">Emergency fund activity</p><h2 className="mt-1 text-xl font-bold">Current balance: {formatMoney(fundSummary.progress.contribution_total_cents)}</h2><p className="mt-1 text-sm text-slate-600">Fund changes are logged here for context but can only be edited in Emergency fund.</p></div><Link className="button-secondary" to="/resilience-jar">Manage emergency fund</Link></div><ul className="mt-4 divide-y divide-slate-100">{fundSummary.contributions.length === 0 ? <li className="py-3 text-sm text-slate-600">No emergency-fund changes recorded yet.</li> : fundSummary.contributions.slice(0, 8).map((entry) => <li className="flex items-center justify-between gap-3 py-3 text-sm" key={entry.id}><span>{entry.contribution_date} · {entry.note || (entry.entry_type === "deposit" ? "Funds added" : "Emergency use")}</span><strong className={entry.entry_type === "deposit" ? "text-emerald-700" : "text-rose-700"}>{entry.entry_type === "deposit" ? "+" : "−"}{formatMoney(entry.amount_cents)}</strong></li>)}</ul></section>}
+      {fundSummary && (
+        <section className="card mt-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="eyebrow">Emergency fund activity</p>
+              <h2 className="mt-2 display-lg" style={{ fontSize: "22px" }}>Current balance: {formatMoney(fundSummary.progress.contribution_total_cents)}</h2>
+              <p className="mt-3 body-text prose">Fund changes are logged here for context but can only be edited in Emergency fund.</p>
+            </div>
+            <Link className="button-secondary" to="/resilience-jar">Manage emergency fund</Link>
+          </div>
+          <ul className="mt-6 divide-y" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
+            {fundSummary.contributions.length === 0 ? (
+              <li className="py-3 body-text">No emergency-fund changes recorded yet.</li>
+            ) : (
+              fundSummary.contributions.slice(0, 8).map((entry) => (
+                <li className="flex items-center justify-between gap-3 py-3 text-sm" key={entry.id}>
+                  <span className="body-text">{entry.contribution_date} · {entry.note || (entry.entry_type === "deposit" ? "Funds added" : "Emergency use")}</span>
+                  <strong className="mono-label ink-key">
+                    {entry.entry_type === "deposit" ? "+" : "−"}{formatMoney(entry.amount_cents)}
+                  </strong>
+                </li>
+              ))
+            )}
+          </ul>
+        </section>
+      )}
     </Shell>
   );
 }
 
-function Overview() {
-  const { data } = useFoundation();
-  const recent = (data.transactions ?? []).filter((item) => new Date(item.occurredOn) >= new Date(Date.now() - 6 * 86400000));
-  const income = recent.filter((item) => item.entryType === "income").reduce((total, item) => total + item.amountCents, 0);
-  const variable = recent.filter((item) => item.entryType === "cost").reduce((total, item) => total + item.amountCents, 0);
-  const weeklyFixed = [...data.recurringWorkCosts, ...data.essentialExpenses].reduce((total, item) => total + (item.cadence === "monthly" ? Math.round(item.amountCents * 12 / 52) : item.amountCents), 0);
-  const takeHome = income - variable - weeklyFixed;
-  const emergencyFund = data.profile.emergencyFundBalanceCents;
-  return <Shell><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="eyebrow">Your home</p><h1 className="mt-2 text-4xl font-black tracking-tight">Your money at a glance</h1><p className="mt-2 max-w-2xl text-slate-600">Record income and costs whenever they happen.</p></div><Link className="button-primary" to="/transactions/new">Add transaction</Link></div><section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4"><Metric label="Income in the last 7 days" value={formatMoney(income)} detail="From your transactions"/><Metric label="Regular weekly costs" value={formatMoney(weeklyFixed)} detail="Includes weekly share of monthly costs"/><Metric label="Money left in the last 7 days" value={formatMoney(takeHome)} detail="After costs" tone={takeHome < 0 ? "rose" : "indigo"}/><Metric label="Emergency fund" value={formatMoney(emergencyFund)} detail="Your baseline buffer" to="/resilience-jar"/></section><section className="card mt-6"><div className="flex flex-wrap items-center justify-between gap-4"><div><p className="eyebrow">Emergency fund</p><h2 className="mt-1 text-2xl font-bold">{formatMoney(emergencyFund)}</h2><p className="mt-1 text-sm text-slate-500">Deposits and emergency use are already counted in this balance.</p></div><Link className="button-secondary" to="/resilience-jar">Open emergency fund</Link></div></section></Shell>;
+/** Average weekly surplus (income - work costs - essentials) over the most recent recorded weeks. */
+function averageWeeklyLeftover(weeks: ReturnType<typeof adaptTransactions>["weeks"], count: number): number | null {
+  const recent = [...weeks].sort((a, b) => a.week_start.localeCompare(b.week_start)).slice(-count);
+  if (recent.length === 0) return null;
+  const total = recent.reduce((sum, week) => {
+    const income = week.platform_earnings.reduce((s, item) => s + item.gross_cents, 0);
+    return sum + income - week.work_costs_cents - week.essential_expenses_cents;
+  }, 0);
+  return Math.round(total / recent.length);
 }
 
-function Metric({ label, value, detail, tone = "indigo", to }: { label: string; value: string; detail: string; tone?: "indigo" | "rose"; to?: string }) {
-  const body = <><p className="text-sm font-semibold text-slate-500">{label}</p><p className="mt-2 text-3xl font-black">{value}</p><p className="mt-2 text-sm text-slate-500">{detail}</p></>;
-  const className = `card border-t-4 ${tone === "rose" ? "border-t-rose-500" : "border-t-indigo-600"}`;
-  // A metric that maps onto a screen becomes the way into it.
-  return to ? <Link className={`${className} block no-underline`} to={to}>{body}</Link> : <div className={className}>{body}</div>;
+function Overview() {
+  const { data } = useFoundation();
+  const adapted = useMemo(
+    () => adaptTransactions(data.transactions, data.recurringWorkCosts, data.essentialExpenses),
+    [data.transactions, data.recurringWorkCosts, data.essentialExpenses],
+  );
+  const recentWeeks = adapted.weeks.slice(-4);
+  const leftover = averageWeeklyLeftover(adapted.weeks, 4);
+  const weeklyEssentials = weeklyNormalisedTotal(data.essentialExpenses.filter((item) => item.isActive));
+  const emergencyFund = data.profile.emergencyFundBalanceCents;
+  const weeksCovered = weeklyEssentials > 0 ? Math.round((emergencyFund / weeklyEssentials) * 10) / 10 : null;
+
+  return (
+    <Shell>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="eyebrow">Your home</p>
+          <h1 className="mt-2 display-hero" style={{ fontSize: "clamp(32px, 5vw, 48px)" }}>Your money at a glance</h1>
+          <p className="mt-3 body-text prose">Record income and costs whenever they happen.</p>
+        </div>
+        <Link className="button-primary" to="/transactions/new">Add transaction</Link>
+      </div>
+      <div className="mt-10">
+        <FinancialScoreCard />
+      </div>
+      <div className="mt-6">
+        <CurrentWeekCard weeks={adapted.weeks} />
+      </div>
+      <div className="mt-6">
+        <KeyFigures
+          averageWeeklyLeftoverCents={leftover}
+          emergencyFundBalanceCents={emergencyFund}
+          weeksCovered={weeksCovered}
+          weeksRecorded={recentWeeks.length}
+        />
+      </div>
+      <div className="mt-6">
+        <WeeklyTrendChart weeks={adapted.weeks} />
+      </div>
+    </Shell>
+  );
 }
 
 function Entries() {
   const { data, deleteTransaction } = useFoundation();
   const transactions = data.transactions ?? [];
-  return <Shell><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="eyebrow">Transactions</p><h1 className="mt-2 text-3xl font-black">Income and costs</h1><p className="mt-2 text-slate-600">Add each inflow or outflow when it happens. No weekly schedule is required.</p></div><Link className="button-primary" to="/transactions/new">Add transaction</Link></div><div className="card mt-6 divide-y divide-slate-200 p-0">{transactions.length === 0 && <div className="p-6 text-slate-600">No transactions yet.</div>}{transactions.map((item) => <article className="flex flex-wrap items-center justify-between gap-4 p-4" key={item.id}><div><p className="font-bold">{item.description || (item.entryType === "income" ? "Income" : "Cost")}</p><p className="mt-1 text-sm text-slate-500">{item.occurredOn} · {item.entryType}</p></div><div className={item.entryType === "income" ? "font-black text-emerald-700" : "font-black text-rose-700"}>{item.entryType === "income" ? "+" : "−"}{formatMoney(item.amountCents)}</div><button className="button-secondary text-rose-700" onClick={() => { if (confirm("Delete this transaction?")) void deleteTransaction(item.id); }} type="button">Delete</button></article>)}</div></Shell>;
+  return (
+    <Shell>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="eyebrow">Transactions</p>
+          <h1 className="mt-2 display-lg" style={{ fontSize: "28px" }}>Income and costs</h1>
+          <p className="mt-3 body-text prose">Add each inflow or outflow when it happens. No weekly schedule is required.</p>
+        </div>
+        <Link className="button-primary" to="/transactions/new">Add transaction</Link>
+      </div>
+      <div className="card mt-6 divide-y p-0" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
+        {transactions.length === 0 && <div className="p-6 body-text">No transactions yet.</div>}
+        {transactions.map((item) => (
+          <article className="flex flex-wrap items-center justify-between gap-4 p-4" key={item.id}>
+            <div>
+              <p className="body-text ink-heading">{item.description || (item.entryType === "income" ? "Income" : "Cost")}</p>
+              <p className="mt-2 mono-label">
+                {item.occurredOn}{item.occurredUntil && item.occurredUntil !== item.occurredOn ? ` to ${item.occurredUntil}` : ""} · {item.entryType}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="mono-label ink-key" style={{ fontSize: "16px", letterSpacing: "normal", textTransform: "none" }}>
+                {item.entryType === "income" ? "+" : "−"}{formatMoney(item.amountCents)}
+              </div>
+              <Link className="button-secondary" to={`/transactions/${item.id}/edit`}>Edit</Link>
+              <button className="button-secondary" onClick={() => { if (confirm("Delete this transaction?")) void deleteTransaction(item.id); }} type="button">Delete</button>
+            </div>
+          </article>
+        ))}
+      </div>
+    </Shell>
+  );
 }
 
 function TransactionEditor() {
-  const { saveTransaction } = useFoundation();
+  const { data, saveTransaction, updateTransaction } = useFoundation();
   const navigate = useNavigate();
-  const [entryType, setEntryType] = useState<"income" | "cost">("income");
-  const [amount, setAmount] = useState("");
-  const [description, setDescription] = useState("");
-  const [occurredOn, setOccurredOn] = useState(new Date().toISOString().slice(0, 10));
+  const { transactionId } = useParams();
+  const existing = transactionId ? data.transactions.find((item) => item.id === transactionId) : undefined;
+  const [entryType, setEntryType] = useState<"income" | "cost">(existing?.entryType ?? "income");
+  const [amount, setAmount] = useState(existing ? centsToInput(existing.amountCents) : "");
+  const [description, setDescription] = useState(existing?.description ?? "");
+  const [occurredOn, setOccurredOn] = useState(existing?.occurredOn ?? new Date().toISOString().slice(0, 10));
+  const [occurredUntil, setOccurredUntil] = useState(existing?.occurredUntil ?? "");
   const [affectedEmergencyFund, setAffectedEmergencyFund] = useState(false);
   const [error, setError] = useState("");
-  const submit = async (event: FormEvent) => { event.preventDefault(); setError(""); try { const amountCents = parseMoneyToCents(amount); if (amountCents <= 0) throw new Error("Enter an amount greater than zero."); await saveTransaction({ entryType, amountCents, description: description.trim() || null, occurredOn }); navigate(affectedEmergencyFund ? "/resilience-jar?action=contribution" : "/transactions"); } catch (cause) { setError(cause instanceof Error ? cause.message : "Could not save transaction."); } };
-  return <Shell><form className="mx-auto max-w-xl" onSubmit={submit}><p className="eyebrow">New transaction</p><h1 className="mt-2 text-3xl font-black">Add income or cost</h1><div className="card mt-6 space-y-5"><div className="flex gap-2"><button className={entryType === "income" ? "button-primary" : "button-secondary"} onClick={() => setEntryType("income")} type="button">Income</button><button className={entryType === "cost" ? "button-primary" : "button-secondary"} onClick={() => setEntryType("cost")} type="button">Cost</button></div><label><span className="label">Amount</span><input autoFocus inputMode="decimal" placeholder="0.00" required value={amount} onChange={(event) => setAmount(event.target.value)} /></label><label><span className="label">Description <span className="text-slate-400">(optional)</span></span><input maxLength={160} placeholder={entryType === "income" ? "e.g. Delivery payout" : "e.g. Fuel"} value={description} onChange={(event) => setDescription(event.target.value)} /></label><label><span className="label">Date</span><input max={new Date().toISOString().slice(0, 10)} required type="date" value={occurredOn} onChange={(event) => setOccurredOn(event.target.value)} /></label><label className="flex items-start gap-3 rounded-xl bg-slate-50 p-3"><input className="mt-1 !h-5 !min-h-0 !w-5" checked={affectedEmergencyFund} type="checkbox" onChange={(event) => setAffectedEmergencyFund(event.target.checked)} /><span><strong>This affected my emergency fund</strong><small className="mt-1 block text-slate-600">After saving, update the fund balance separately so your transaction and emergency-fund activity stay clear.</small></span></label>{error && <p className="text-sm text-rose-700">{error}</p>}<button className="button-primary w-full" type="submit">Save {entryType}</button></div></form></Shell>;
+  const submit = async (event: FormEvent) => { event.preventDefault(); setError(""); try { const amountCents = parseMoneyToCents(amount); if (amountCents <= 0) throw new Error("Enter an amount greater than zero."); if (occurredUntil && occurredUntil < occurredOn) throw new Error("End date cannot be before the start date."); const payload = { entryType, amountCents, description: description.trim() || null, occurredOn, occurredUntil: occurredUntil || null }; if (existing) await updateTransaction(existing.id, payload); else await saveTransaction(payload); navigate(affectedEmergencyFund ? "/resilience-jar?action=emergency-use" : "/transactions"); } catch (cause) { setError(cause instanceof Error ? cause.message : "Could not save transaction."); } };
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const rangeCapIso = (() => { const cap = new Date(`${occurredOn}T00:00:00Z`); cap.setUTCDate(cap.getUTCDate() + 366); return cap.toISOString().slice(0, 10); })();
+  const maxEndDate = rangeCapIso < todayIso ? rangeCapIso : todayIso;
+  return (
+    <Shell>
+      <form className="mx-auto max-w-xl" onSubmit={submit}>
+        <button className="button-secondary" onClick={() => navigate("/transactions")} type="button">← Back to transactions</button>
+        <p className="eyebrow mt-6">{existing ? "Edit transaction" : "New transaction"}</p>
+        <h1 className="mt-2 display-lg" style={{ fontSize: "28px" }}>{existing ? "Update income or cost" : "Add income or cost"}</h1>
+        <div className="card mt-6 space-y-6">
+          <div className="flex gap-2">
+            <button className={entryType === "income" ? "button-primary" : "button-secondary"} onClick={() => setEntryType("income")} type="button">Income</button>
+            <button className={entryType === "cost" ? "button-primary" : "button-secondary"} onClick={() => setEntryType("cost")} type="button">Cost</button>
+          </div>
+          <label><span className="label">Amount</span><input autoFocus inputMode="decimal" maxLength={10} placeholder="0.00" required value={amount} onChange={(event) => setAmount(event.target.value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1"))} /></label>
+          <label><span className="label">Description (optional)</span><input maxLength={160} placeholder={entryType === "income" ? "e.g. Delivery payout" : "e.g. Fuel"} value={description} onChange={(event) => setDescription(event.target.value)} /></label>
+          <label><span className="label">Start date</span><input max={new Date().toISOString().slice(0, 10)} required type="date" value={occurredOn} onChange={(event) => setOccurredOn(event.target.value)} /></label>
+          <label><span className="label">End date (optional, for a date range)</span><input min={occurredOn} max={maxEndDate} type="date" value={occurredUntil} onChange={(event) => setOccurredUntil(event.target.value)} /></label>
+          <label className="flex items-start gap-3 rounded-lg p-3" style={{ background: "var(--surface-obsidian-button)" }}>
+            <input className="mt-1 !h-5 !min-h-0 !w-5" checked={affectedEmergencyFund} type="checkbox" onChange={(event) => setAffectedEmergencyFund(event.target.checked)} />
+            <span>
+              <strong className="body-text ink-heading">This affected my emergency fund</strong>
+              <small className="mt-2 block body-text">After saving, record the matching fund activity in Emergency fund.</small>
+            </span>
+          </label>
+          {error && <p className="body-text ink-key" role="alert">{error}</p>}
+          <button className="button-primary w-full" type="submit">{existing ? "Save changes" : `Save ${entryType}`}</button>
+        </div>
+      </form>
+    </Shell>
+  );
 }
 
 function Onboarding() {
@@ -341,16 +454,90 @@ function Onboarding() {
   const [error, setError] = useState("");
   useEffect(() => { localStorage.setItem("resilience-onboarding-draft", JSON.stringify({ version: 1, emergency, recurring, essentials } satisfies OnboardingDraft)); }, [emergency, recurring, essentials]);
   const submit = async (event: FormEvent) => { event.preventDefault(); setError(""); try { const recurringParsed = parseRows(recurring, true, true).map((item) => ({ ...item, category: item.category as RecurringWorkCost["category"], cadence: item.cadence ?? "weekly", isActive: true })); const essentialParsed = parseRows(essentials, true, true).map((item) => ({ ...item, category: item.category as EssentialExpense["category"], cadence: item.cadence ?? "weekly", isActive: true })); await saveOnboarding({ emergencySavingsCents: parseMoneyToCents(emergency), recurringWorkCosts: recurringParsed, essentialExpenses: essentialParsed }); navigate("/"); } catch (cause) { setError(cause instanceof Error ? cause.message : "Could not complete setup."); } };
-  return <main className="resilience-onboarding mx-auto max-w-4xl px-4 py-10"><div className="text-center"><img alt="" className="mx-auto h-14 w-14" src="/resilience-icon.svg"/><p className="eyebrow mt-5">Two-minute setup</p><h1 className="mt-2 text-4xl font-black">Start with what you know</h1><p className="mx-auto mt-3 max-w-2xl text-slate-600">Add your current emergency savings and regular costs. You can change these later.</p></div><form className="card mt-8 space-y-7" onSubmit={submit}><label><span className="label">Emergency savings available now</span><input inputMode="decimal" maxLength={10} pattern="\d+(\.\d{0,2})?" required title="Enter an amount with up to two decimal places" value={emergency} onChange={(e) => setEmergency(e.target.value)}/></label><MoneyRows cadence categories={WORK_CATEGORIES} onChange={setRecurring} rows={recurring} title="Regular work costs"/><MoneyRows cadence categories={ESSENTIAL_CATEGORIES} onChange={setEssentials} rows={essentials} title="Everyday essentials"/>{error && <p className="rounded-xl bg-rose-50 p-3 text-rose-800" role="alert">{error}</p>}<button className="button-primary w-full" type="submit">Save and continue</button></form></main>;
+  return (
+    <main className="resilience-onboarding mx-auto max-w-4xl px-4 py-10" style={{ background: "var(--surface-onyx)", minHeight: "100vh" }}>
+      <div className="text-center">
+        <img alt="" className="mx-auto h-14 w-14" src="/resilience-icon.svg" />
+        <p className="eyebrow mt-5">Two-minute setup</p>
+        <h1 className="mt-2 display-hero" style={{ fontSize: "clamp(32px, 5vw, 48px)" }}>Start with what you know</h1>
+        <p className="mx-auto mt-3 body-text prose">Add your current emergency savings and regular costs. You can change these later.</p>
+      </div>
+      <form className="card mt-10 space-y-8" onSubmit={submit}>
+        <label><span className="label">Emergency savings available now</span><input inputMode="decimal" maxLength={10} pattern="\d+(\.\d{0,2})?" required title="Enter an amount with up to two decimal places" value={emergency} onChange={(e) => setEmergency(e.target.value)} /></label>
+        <MoneyRows cadence categories={WORK_CATEGORIES} onChange={setRecurring} rows={recurring} title="Regular work costs" />
+        <MoneyRows cadence categories={ESSENTIAL_CATEGORIES} onChange={setEssentials} rows={essentials} title="Everyday essentials" />
+        {error && <p className="note ink-key" role="alert">{error}</p>}
+        <button className="button-primary w-full" type="submit">Save and continue</button>
+      </form>
+    </main>
+  );
 }
 
-function Settings() {
+/** The former standalone Settings screen, now a section inside Profile. */
+function FinancialDetailsSection() {
   const { data, saveAssumptions, resetData } = useFoundation();
+  const [editing, setEditing] = useState(false);
   const [recurring, setRecurring] = useState(toEditable(data.recurringWorkCosts));
   const [essentials, setEssentials] = useState(toEditable(data.essentialExpenses));
   const [message, setMessage] = useState("");
   const save = async (event: FormEvent) => { event.preventDefault(); setMessage(""); try { const r = parseRows(recurring, true, true).map((item) => ({ ...item, category: item.category as RecurringWorkCost["category"], cadence: item.cadence ?? "weekly", isActive: true })); const e = parseRows(essentials, true, true).map((item) => ({ ...item, category: item.category as EssentialExpense["category"], cadence: item.cadence ?? "weekly", isActive: true })); await saveAssumptions(r, e); setMessage("Saved on this device. It will sync automatically."); } catch (cause) { setMessage(cause instanceof Error ? cause.message : "Could not save."); } };
-  return <Shell><form className="mx-auto max-w-4xl" onSubmit={save}><p className="eyebrow">Financial details</p><h1 className="mt-2 text-3xl font-black">Manage your regular costs</h1><p className="mt-2 text-slate-600">Update ongoing work costs and everyday essentials. Manage your emergency-fund balance from Emergency fund.</p><div className="card mt-6 space-y-7"><MoneyRows cadence categories={WORK_CATEGORIES} onChange={setRecurring} rows={recurring} title="Regular work costs"/><MoneyRows cadence categories={ESSENTIAL_CATEGORIES} onChange={setEssentials} rows={essentials} title="Everyday essentials"/>{message && <p className="rounded-xl bg-indigo-50 p-3 text-sm text-indigo-900" role="status">{message}</p>}<button className="button-primary" type="submit">Save changes</button></div></form><section className="mx-auto mt-6 max-w-4xl rounded-3xl border border-rose-200 bg-rose-50 p-5"><h2 className="font-bold text-rose-950">Delete all my data</h2><p className="mt-1 text-sm text-rose-800">Permanently deletes this account’s profile, transactions and financial records. This cannot be undone, and you must be online.</p><button className="button-secondary mt-4 text-rose-700" onClick={() => { if (confirm("Delete all of your data? This permanently removes your profile, transactions and financial records, and cannot be undone.")) void resetData().catch((error: Error) => setMessage(error.message)); }} type="button">Delete all my data</button></section></Shell>;
+  const total = (items: Array<{ isActive: boolean; cadence: "weekly" | "monthly"; amountCents: number }>) => items.filter((item) => item.isActive).reduce((sum, item) => sum + (item.cadence === "monthly" ? Math.round(item.amountCents * 12 / 52) : item.amountCents), 0);
+  const display = (items: Array<{ id: string; label: string; amountCents: number; cadence: string }>) => (
+    <ul className="mt-3 divide-y" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
+      {items.length ? items.map((item) => (
+        <li className="flex justify-between gap-3 py-2 text-sm" key={item.id}>
+          <span className="body-text">{item.label} <span className="mono-label" style={{ display: "inline" }}>({item.cadence})</span></span>
+          <strong className="body-text ink-key">{formatMoney(item.amountCents)}</strong>
+        </li>
+      )) : <li className="py-2 body-text">No items added.</li>}
+    </ul>
+  );
+  return (
+    <section className="mt-10">
+      <form onSubmit={save}>
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="eyebrow">Financial details</p>
+            <h2 className="mt-2 display-lg" style={{ fontSize: "24px" }}>Your regular costs</h2>
+            <p className="mt-3 body-text prose">Review ongoing work costs and everyday essentials. Emergency-fund activity is managed separately.</p>
+          </div>
+          <button className="button-secondary" onClick={() => setEditing((value) => !value)} type="button">{editing ? "Cancel editing" : "Edit financial details"}</button>
+        </div>
+        <div className="card mt-6 space-y-8">
+          {editing ? (
+            <>
+              <MoneyRows cadence categories={WORK_CATEGORIES} onChange={setRecurring} rows={recurring} title="Regular work costs" />
+              <MoneyRows cadence categories={ESSENTIAL_CATEGORIES} onChange={setEssentials} rows={essentials} title="Everyday essentials" />
+              <button className="button-primary" type="submit">Save changes</button>
+            </>
+          ) : (
+            <>
+              <section>
+                <div className="flex justify-between gap-3">
+                  <h3 className="subheading">Regular work costs</h3>
+                  <strong className="body-text ink-key">{formatMoney(total(data.recurringWorkCosts))}/week</strong>
+                </div>
+                {display(data.recurringWorkCosts)}
+              </section>
+              <section>
+                <div className="flex justify-between gap-3">
+                  <h3 className="subheading">Everyday essentials</h3>
+                  <strong className="body-text ink-key">{formatMoney(total(data.essentialExpenses))}/week</strong>
+                </div>
+                {display(data.essentialExpenses)}
+              </section>
+            </>
+          )}
+          {message && <p className="note" role="status">{message}</p>}
+        </div>
+      </form>
+      <section className="mt-6 rounded-2xl p-5" style={{ background: "var(--surface-graphite)", border: "1px solid rgba(255,255,255,0.1)" }}>
+        <h3 className="subheading">Delete all my data</h3>
+        <p className="mt-3 body-text prose">Permanently deletes this account's profile, transactions and financial records. This cannot be undone, and you must be online.</p>
+        <button className="button-secondary mt-4" onClick={() => { if (confirm("Delete all of your data? This permanently removes your profile, transactions and financial records, and cannot be undone.")) void resetData().catch((error: Error) => setMessage(error.message)); }} type="button">Delete all my data</button>
+      </section>
+    </section>
+  );
 }
 
 function ProfileManager() {
@@ -360,31 +547,64 @@ function ProfileManager() {
   const [birthDate, setBirthDate] = useState(data.profile.dateOfBirth ?? "");
   const [message, setMessage] = useState("");
   const save = async (event: FormEvent) => { event.preventDefault(); try { await apiRequest("/foundation/profile", { method: "PATCH", body: JSON.stringify({ displayName: name || null, phoneNumber: phone || null, dateOfBirth: birthDate || null }) }); await refresh(); setMessage("Profile saved."); } catch { setMessage("Could not save your profile."); } };
-  return <Shell><form className="mx-auto max-w-xl" onSubmit={save}><p className="eyebrow">Profile</p><h1 className="mt-2 text-3xl font-black">Manage your profile</h1><p className="mt-2 text-slate-600">All fields are optional and private to your account.</p><div className="card mt-6 space-y-5"><label><span className="label">Name</span><input maxLength={80} value={name} onChange={(event) => setName(event.target.value)} /></label><label><span className="label">Phone number</span><input inputMode="tel" maxLength={30} value={phone} onChange={(event) => setPhone(event.target.value)} /></label><label><span className="label">Date of birth</span><input max={new Date().toISOString().slice(0, 10)} type="date" value={birthDate} onChange={(event) => setBirthDate(event.target.value)} /></label>{message && <p className="text-sm text-slate-700">{message}</p>}<button className="button-primary w-full" type="submit">Save profile</button></div></form></Shell>;
+  return (
+    <Shell>
+      <div className="mx-auto max-w-4xl">
+        <form onSubmit={save}>
+          <p className="eyebrow">Profile</p>
+          <h1 className="mt-2 display-lg" style={{ fontSize: "28px" }}>Manage your profile</h1>
+          <p className="mt-3 body-text prose">All fields are optional and private to your account.</p>
+          <div className="card mt-6 space-y-6">
+            <label><span className="label">Name</span><input maxLength={80} value={name} onChange={(event) => setName(event.target.value)} /></label>
+            <label><span className="label">Phone number</span><input inputMode="tel" maxLength={30} value={phone} onChange={(event) => setPhone(event.target.value)} /></label>
+            <label><span className="label">Date of birth</span><input max={new Date().toISOString().slice(0, 10)} type="date" value={birthDate} onChange={(event) => setBirthDate(event.target.value)} /></label>
+            {message && <p className="body-text">{message}</p>}
+            <button className="button-primary w-full" type="submit">Save profile</button>
+          </div>
+        </form>
+        <FinancialDetailsSection />
+      </div>
+    </Shell>
+  );
 }
 
 export function App() {
-  const { configured, loading: authLoading, user } = useAuth();
-  const { data, loading } = useFoundation();
-  if (authLoading) return <div className="grid min-h-screen place-items-center">Checking your session…</div>;
-  if (!configured || !user) return <AuthPage />;
-  if (loading) return <div className="grid min-h-screen place-items-center"><div className="text-center"><img alt="" className="mx-auto h-14 w-14 animate-pulse" src="/resilience-icon.svg"/><p className="mt-3 font-semibold">Loading your foundation…</p></div></div>;
+  const { loading: authLoading, user } = useAuth();
+  const { data, loading, bootstrapLoaded } = useFoundation();
+  if (authLoading) return <div className="grid min-h-screen place-items-center body-text" style={{ background: "var(--surface-onyx)" }}>Checking your session…</div>;
+  if (!user) {
+    return (
+      <Routes>
+        <Route path="/signin" element={<AuthPage />} />
+        <Route path="*" element={<LandingPage />} />
+      </Routes>
+    );
+  }
+  if (loading) return (
+    <div className="grid min-h-screen place-items-center" style={{ background: "var(--surface-onyx)" }}>
+      <div className="text-center">
+        <img alt="" className="mx-auto h-14 w-14 animate-pulse" src="/resilience-icon.svg" />
+        <p className="mt-3 body-text">Loading your foundation…</p>
+      </div>
+    </div>
+  );
   return (
     <ChatProvider>
       <Routes>
         <Route path="/onboarding" element={data.profile.onboardingCompleted ? <Navigate replace to="/" /> : <Onboarding />} />
-        <Route path="*" element={!data.profile.onboardingCompleted ? <Navigate replace to="/onboarding" /> : (
+        <Route path="*" element={bootstrapLoaded && !data.profile.onboardingCompleted ? <LandingPage /> : (
           <Routes>
             <Route path="/" element={<Overview />} />
             <Route path="/transactions" element={<Entries />} />
             <Route path="/transactions/new" element={<TransactionEditor />} />
+            <Route path="/transactions/:transactionId/edit" element={<TransactionEditor />} />
             <Route path="/income-reality" element={<IncomeReality />} />
             <Route path="/resilience-jar" element={<EmergencyFund view="jar" />} />
             <Route path="/resilience-jar/plan" element={<EmergencyFund view="plan" />} />
             <Route path="/savings" element={<Shell><Suspense fallback={<FeatureLoader />}><SavingsPage /></Suspense></Shell>} />
             <Route path="/scenario-simulator" element={<SetbackPlanner />} />
             <Route path="/scheme-navigator" element={<Shell><Suspense fallback={<FeatureLoader />}><SchemeNavigator /></Suspense></Shell>} />
-            <Route path="/settings" element={<Settings />} />
+            <Route path="/settings" element={<Navigate replace to="/profile" />} />
             <Route path="/profile" element={<ProfileManager />} />
             <Route path="*" element={<Navigate replace to="/" />} />
           </Routes>

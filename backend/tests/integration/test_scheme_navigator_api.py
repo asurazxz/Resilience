@@ -159,6 +159,42 @@ def test_explain_rejects_an_unknown_rule(stub_llm: None) -> None:
     assert response.status_code == 404
 
 
+def test_explain_accepts_the_exact_frontend_body_shape(stub_llm: None) -> None:
+    """The frontend posts ``{"rule_id": ..., "answers": {...}}`` (snake_case,
+    matching the scheme navigator's snake_case contract end to end). This must
+    not 422."""
+
+    answers = {
+        "citizenship_status": "singapore_citizen",
+        "age": 35,
+        "monthly_income": 1500,
+        "owns_more_than_one_property": False,
+        "residence_annual_value": 10000,
+        "spouse_annual_income": 0,
+        "household_income_per_capita": 400,
+        "experiencing_financial_hardship": True,
+    }
+    response = client.post(
+        "/api/v1/scheme-navigator/explain",
+        json={"rule_id": "workfare-income-supplement", "answers": answers},
+    )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert isinstance(body["summary"], str)
+    assert body["summary"].strip() != ""
+
+
+def test_explain_unknown_rule_returns_404_with_code(stub_llm: None) -> None:
+    response = client.post(
+        "/api/v1/scheme-navigator/explain",
+        json={"rule_id": "not-a-real-scheme", "answers": {}},
+    )
+
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "SCHEME_RULE_NOT_FOUND"
+
+
 def test_chat_answers_with_the_model_when_configured(stub_llm: None) -> None:
     response = client.post(
         "/api/v1/scheme-navigator/chat",

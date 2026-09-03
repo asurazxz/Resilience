@@ -1,103 +1,12 @@
-.jar-page {
-  --jar-ink: var(--ink, #26251e);
-  --jar-muted: var(--ash, #7a7974);
-  --jar-green: var(--forest, #34785c);
-  --jar-light: #e9f1ec;
-  --jar-border: var(--stone, #cdcdc9);
-  box-sizing: border-box;
-  color: var(--jar-ink);
-  margin: 0 auto;
-  max-width: 72rem;
-  padding: 1rem;
-}
-
-.jar-page *,
-.jar-page *::before,
-.jar-page *::after {
-  box-sizing: inherit;
-}
-
-.jar-page [hidden] {
-  display: none !important;
-}
-
-.jar-heading,
-.jar-overview,
-.jar-card,
-.jar-contribution-form,
-.jar-contribution-list li,
-.jar-inline-form,
-.jar-form-actions,
-.jar-list-actions {
-  display: flex;
-}
-
-.jar-heading {
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.jar-heading-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  justify-content: flex-end;
-}
-
-.jar-heading h1,
-.jar-card h2 {
-  margin: 0 0 0.35rem;
-}
-
-.jar-heading p,
-.jar-card p {
-  margin-top: 0.25rem;
-}
-
-.jar-eyebrow {
-  color: var(--jar-green);
-  font-size: 0.78rem;
-  font-weight: 750;
-  letter-spacing: 0.08em;
-  margin: 0;
-  text-transform: uppercase;
-}
-
-.jar-banner,
-.jar-error,
-.jar-success {
-  border-radius: 0.75rem;
-  margin: 0 0 1rem;
-  padding: 0.8rem 1rem;
-}
-
-.jar-success {
-  align-items: center;
-  background: var(--jar-light);
-  border: 1px solid #65a98a;
-  color: #14573f;
-  display: flex;
-  font-weight: 750;
-  gap: 0.55rem;
-}
-
-.jar-success span {
-  align-items: center;
-  background: var(--jar-green);
-  border-radius: 50%;
-  color: #fff;
-  display: inline-flex;
-  flex: 0 0 1.5rem;
-  height: 1.5rem;
-  justify-content: center;
-}
+/* Shared "jar-card" look: page chrome, cards, buttons, banners, disclosure
+   rows. Savings imports the same file to read as one product. Everything
+   below is specific to the Emergency Fund screen. */
+@import "./sharedCard.css";
 
 .jar-goal-alert {
   align-items: flex-start;
-  background: #fff8df;
-  border: 1px solid #dfbd59;
+  background: rgba(82, 102, 235, 0.08);
+  border: 1px solid rgba(82, 102, 235, 0.35);
   border-radius: 0.9rem;
   display: flex;
   gap: 0.8rem;
@@ -106,62 +15,39 @@
 }
 
 .jar-goal-alert p {
+  color: var(--jar-muted);
   margin: 0.3rem 0;
 }
 
 .jar-goal-alert-icon {
   align-items: center;
-  background: #d89e24;
+  background: var(--jar-accent);
   border-radius: 50%;
-  color: #2f260d;
+  color: var(--color-pure, #ffffff);
   display: inline-flex;
   flex: 0 0 1.75rem;
-  font-weight: 900;
+  font-weight: 700;
   height: 1.75rem;
   justify-content: center;
 }
 
-.jar-alert-action {
-  background: transparent;
-  border: 0;
-  color: #72500d;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 800;
-  padding: 0.25rem 0;
-  text-decoration: underline;
-  text-underline-offset: 0.18rem;
+.jar-goal-alert strong {
+  color: var(--jar-ink);
 }
 
 .jar-goal-alert-guidance {
-  color: #66501d;
+  color: var(--jar-muted);
   font-size: 0.9rem;
-}
-
-.jar-banner {
-  background: #fff5cf;
-  border: 1px solid #ead58a;
-}
-
-.jar-error {
-  background: #fff0ed;
-  border: 1px solid #e4afa5;
-  color: #7b2318;
-}
-
-.jar-overview,
-.jar-card {
-  background: #fff;
-  border: 1px solid var(--jar-border);
-  border-radius: 4px;
-  box-shadow: 0 14px 32px rgba(38, 37, 30, 0.08);
 }
 
 .jar-overview {
   align-items: center;
+  background: var(--jar-surface);
+  border-radius: 16px;
+  display: flex;
   gap: 1.5rem;
   margin-bottom: 1rem;
-  padding: 1.25rem;
+  padding: 2rem;
 }
 
 .jar-progress-copy {
@@ -175,22 +61,6 @@
   flex-wrap: wrap;
   gap: 0.6rem;
   justify-content: space-between;
-}
-
-/* The fund states one thing plainly: reached, or still building. */
-.jar-goal-badge {
-  background: #edf2ef;
-  border-radius: 10rem;
-  color: var(--jar-muted);
-  font-size: 0.78rem;
-  font-weight: 750;
-  padding: 0.3rem 0.7rem;
-  white-space: nowrap;
-}
-
-.jar-goal-badge-reached {
-  background: var(--jar-green);
-  color: #fff;
 }
 
 .jar-progress-metrics {
@@ -208,13 +78,17 @@
 
 .jar-progress-metrics span {
   color: var(--jar-muted);
-  font-size: 0.8rem;
-  font-weight: 750;
+  font-family: var(--font-roboto-mono, ui-monospace, monospace);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .jar-progress-metrics strong {
+  color: var(--jar-ink);
   font-size: clamp(1.25rem, 3.2vw, 1.85rem);
+  font-weight: 400;
   line-height: 1.15;
 }
 
@@ -224,8 +98,7 @@
 }
 
 .jar-goal-amount {
-  background: var(--jar-light);
-  border: 2px solid #65a98a;
+  background: rgba(82, 102, 235, 0.08);
   border-radius: 0.8rem;
 }
 
@@ -235,7 +108,7 @@
 
 .jar-plan-strip {
   align-items: center;
-  background: var(--jar-light);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 0.75rem;
   display: grid;
   gap: 0.75rem;
@@ -259,17 +132,14 @@
 }
 
 .jar-plan-strip strong {
+  color: var(--jar-ink);
   font-size: 1rem;
-}
-
-.jar-muted {
-  color: var(--jar-muted);
-  font-size: 0.9rem;
+  font-weight: 400;
 }
 
 .jar-goal-preview {
-  background: var(--jar-light);
-  border: 1px solid #65a98a;
+  background: rgba(82, 102, 235, 0.08);
+  border: 1px solid rgba(82, 102, 235, 0.35);
   border-radius: 0.7rem;
   display: grid;
   gap: 0.2rem;
@@ -280,11 +150,13 @@
 .jar-goal-preview span {
   color: var(--jar-muted);
   font-size: 0.82rem;
-  font-weight: 750;
+  font-weight: 500;
 }
 
 .jar-goal-preview strong {
+  color: var(--jar-ink);
   font-size: 1.5rem;
+  font-weight: 400;
 }
 
 .jar-grid {
@@ -294,37 +166,9 @@
   margin-bottom: 1rem;
 }
 
-.jar-card {
-  flex-direction: column;
-  padding: 1.25rem;
-}
-
-.jar-card form,
 .jar-contribution-form label {
   display: grid;
   gap: 0.4rem;
-}
-
-.jar-card form {
-  gap: 0.8rem;
-}
-
-.jar-page input,
-.jar-page select {
-  background: #fff;
-  border: 1px solid #8ba49a;
-  border-radius: 4px;
-  color: var(--jar-ink);
-  font: inherit;
-  min-height: 2.75rem;
-  padding: 0.55rem 0.7rem;
-  width: 100%;
-}
-
-.jar-page fieldset {
-  border: 0;
-  margin: 0;
-  padding: 0;
 }
 
 .jar-radio {
@@ -350,8 +194,8 @@
 }
 
 .jar-target-frequency .jar-radio {
-  border: 1px solid var(--jar-border);
-  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
   cursor: pointer;
   margin: 0.4rem 0 0;
   min-height: 2.75rem;
@@ -359,75 +203,37 @@
 }
 
 .jar-target-frequency .jar-radio:has(input:checked) {
-  background: var(--jar-light);
-  border-color: var(--jar-green);
-  box-shadow: inset 0 0 0 1px var(--jar-green);
-}
-
-.jar-button {
-  background: var(--jar-green);
-  border: 1px solid var(--jar-green);
-  border-radius: 4px;
-  color: #fff;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
-  min-height: 2.75rem;
-  padding: 0.55rem 0.9rem;
-}
-
-.jar-button-secondary {
-  background: #fff;
-  color: var(--jar-green);
-}
-
-.jar-back-link,
-.jar-text-link {
-  background: transparent;
-  border: 0;
-  color: var(--jar-green);
-  cursor: pointer;
-  font: inherit;
-  font-weight: 750;
-  padding: 0.45rem;
-  text-decoration: underline;
-  text-underline-offset: 0.18rem;
-}
-
-.jar-back-link {
-  align-items: center;
-  display: inline-flex;
-  gap: 0.35rem;
-  min-height: 2.75rem;
-  text-decoration: none;
-}
-
-.jar-button:disabled,
-.jar-page button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
+  background: rgba(82, 102, 235, 0.1);
+  box-shadow: inset 0 0 0 1px var(--jar-accent);
 }
 
 .jar-suggestion {
-  background: var(--jar-light);
-  border-radius: 4px;
+  background: rgba(82, 102, 235, 0.08);
+  border-radius: 8px;
   display: grid;
   gap: 0.5rem;
   margin: 0.5rem 0 1rem;
   padding: 0.9rem;
 }
 
-.jar-suggestion strong {
-  font-size: 1.75rem;
+.jar-suggestion span {
+  color: var(--jar-muted);
 }
 
-.jar-inline-form,
-.jar-form-actions,
-.jar-list-actions {
+.jar-suggestion strong {
+  color: var(--jar-ink);
+  font-size: 1.75rem;
+  font-weight: 400;
+}
+
+.jar-inline-form {
+  display: flex;
   gap: 0.5rem;
 }
 
 .jar-contributions {
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
 }
 
@@ -443,15 +249,27 @@
 }
 
 .jar-button-withdraw {
-  background: #fff8df;
-  border-color: #b77b10;
-  color: #684607;
+  background: transparent;
+  border-color: var(--jar-danger);
+  color: var(--jar-danger);
 }
 
-.jar-disclaimer {
-  background: var(--jar-light);
-  border-left: 0.25rem solid var(--jar-green);
-  padding: 0.7rem;
+.jar-button-withdraw:hover:not(:disabled) {
+  background: rgba(232, 87, 87, 0.1);
+}
+
+.jar-opening-balance {
+  border-top: 1px dashed var(--jar-border);
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.jar-opening-balance-form {
+  align-items: end;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr auto;
+  margin-top: 0.75rem;
 }
 
 .jar-contribution-form {
@@ -463,13 +281,13 @@
 
 .jar-withdrawal-form {
   align-items: end;
-  background: #fff8df;
-  border: 1px solid #dfbd59;
-  border-radius: 4px;
+  background: rgba(232, 87, 87, 0.08);
+  border: 1px solid rgba(232, 87, 87, 0.3);
+  border-radius: 8px;
   display: grid !important;
   gap: 0.75rem !important;
-  grid-template-columns: 1.4fr 1fr 1fr 1.4fr auto;
   padding: 1rem;
+  grid-template-columns: 1.4fr 1fr 1fr 1.4fr auto;
 }
 
 .jar-withdrawal-intro {
@@ -477,8 +295,12 @@
   gap: 0.2rem;
 }
 
+.jar-withdrawal-intro strong {
+  color: var(--jar-ink);
+}
+
 .jar-withdrawal-intro span {
-  color: #66501d;
+  color: var(--jar-muted);
   font-size: 0.85rem;
 }
 
@@ -500,6 +322,7 @@
 
 .jar-contribution-list summary {
   align-items: center;
+  color: var(--jar-ink);
   cursor: pointer;
   display: grid;
   gap: 0.75rem;
@@ -512,14 +335,14 @@
 }
 
 .jar-entry-open {
-  color: var(--jar-green);
+  color: var(--jar-ink);
   font-size: 0.82rem;
-  font-weight: 750;
+  font-weight: 500;
 }
 
 .jar-entry-details {
-  background: #f7faf8;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
   display: grid;
   gap: 0.6rem;
   margin-top: 0.7rem;
@@ -527,15 +350,16 @@
 }
 
 .jar-entry-details p {
+  color: var(--jar-muted);
   margin: 0;
 }
 
 .jar-entry-type {
-  background: var(--jar-light);
+  background: rgba(82, 102, 235, 0.12);
   border-radius: 99rem;
-  color: var(--jar-green);
+  color: var(--jar-ink);
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 500;
   justify-self: start;
   letter-spacing: 0.04em;
   padding: 0.2rem 0.5rem;
@@ -543,28 +367,12 @@
 }
 
 .jar-entry-withdrawal summary > strong {
-  color: #8a3d23;
+  color: var(--jar-danger);
 }
 
 .jar-entry-withdrawal .jar-entry-type {
-  background: #fff0e8;
-  color: #8a3d23;
-}
-
-.jar-list-actions button {
-  background: transparent;
-  border: 0;
-  color: var(--jar-green);
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
-  padding: 0.45rem;
-}
-
-.jar-state,
-.jar-empty {
-  padding-block: 3rem;
-  text-align: center;
+  background: rgba(232, 87, 87, 0.12);
+  color: var(--jar-danger);
 }
 
 .jar-insights {
@@ -575,7 +383,9 @@
 }
 
 .jar-projection-date {
+  color: var(--jar-ink);
   font-size: clamp(1.55rem, 4vw, 2.15rem);
+  font-weight: 400;
   line-height: 1.15;
   margin-top: 0.4rem;
 }
@@ -589,24 +399,29 @@
 }
 
 .jar-chart figcaption {
-  font-size: 1.25rem;
-  font-weight: 800;
+  color: var(--jar-ink);
+  font-size: 1.15rem;
+  font-weight: 400;
 }
 
 .jar-chart-canvas {
   height: 18rem;
   margin-top: 0.75rem;
   min-width: 0;
+  overflow-x: auto;
   width: 100%;
 }
 
 .jar-chart-tooltip {
-  background: #fff;
+  background: var(--color-onyx, #171721);
   border: 1px solid var(--jar-border);
-  border-radius: 4px;
-  box-shadow: 0 0.35rem 1.2rem rgba(25, 61, 48, 0.14);
+  border-radius: 8px;
   min-width: 13rem;
   padding: 0.75rem;
+}
+
+.jar-chart-tooltip strong {
+  color: var(--jar-ink);
 }
 
 .jar-chart-tooltip dl {
@@ -626,16 +441,20 @@
 }
 
 .jar-chart-tooltip dd {
-  font-weight: 750;
+  color: var(--jar-ink);
+  font-weight: 500;
   margin: 0;
 }
 
 .jar-tooltip-contribution {
-  color: var(--jar-green);
+  /* The "+" sign in the rendered amount (see ProgressLineChart) already
+     distinguishes this from a withdrawal, so ink stays readable here
+     instead of the sub-24px accent text that fails contrast. */
+  color: var(--jar-ink);
 }
 
 .jar-tooltip-withdrawal {
-  color: #8a3d23;
+  color: var(--jar-danger);
 }
 
 .jar-chart-tooltip .jar-tooltip-balance {
@@ -645,29 +464,17 @@
 }
 
 @media (max-width: 44rem) {
-  .jar-page {
-    padding: 0.85rem;
-  }
-
-  .jar-heading,
   .jar-overview {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .jar-heading-actions {
-    justify-content: stretch;
-  }
-
-  .jar-heading-actions .jar-button {
-    flex: 1;
   }
 
   .jar-grid,
   .jar-contribution-form,
   .jar-withdrawal-form,
   .jar-insights,
-  .jar-progress-metrics {
+  .jar-progress-metrics,
+  .jar-opening-balance-form {
     grid-template-columns: 1fr;
   }
 
@@ -695,10 +502,6 @@
     grid-row: 1 / span 2;
   }
 
-  .jar-list-actions {
-    justify-content: flex-end;
-  }
-
   .jar-plan-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -712,4 +515,3 @@
     height: 15rem;
   }
 }
-

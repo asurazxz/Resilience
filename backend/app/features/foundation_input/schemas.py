@@ -57,11 +57,19 @@ class TransactionInput(ApiModel):
     amount_cents: PositiveMoneyCents
     description: Annotated[str | None, Field(default=None, max_length=160)] = None
     occurred_on: date
+    occurred_until: date | None = None
 
     @model_validator(mode="after")
     def validate_date_and_description(self) -> "TransactionInput":
         if self.occurred_on > date.today():
             raise ValueError("occurredOn cannot be in the future")
+        if self.occurred_until is not None:
+            if self.occurred_until < self.occurred_on:
+                raise ValueError("occurredUntil cannot be before occurredOn")
+            if self.occurred_until > date.today():
+                raise ValueError("occurredUntil cannot be in the future")
+            if (self.occurred_until - self.occurred_on).days > 366:
+                raise ValueError("A date range cannot be longer than 366 days.")
         if self.description is not None and not self.description.strip():
             self.description = None
         return self
@@ -71,6 +79,39 @@ class TransactionResponse(TransactionInput):
     id: UUID
     created_at: datetime
     updated_at: datetime
+
+
+class TransactionPatch(ApiModel):
+    """Partial update for a transaction: every field is optional.
+
+    Only fields present in the request body (``model_fields_set``) are
+    applied; the rest keep the transaction's existing value. Sending
+    ``occurredUntil: null`` explicitly clears a date range. A full body with
+    every field set behaves like a replace, same as before.
+    """
+
+    entry_type: Literal["income", "cost"] | None = None
+    amount_cents: PositiveMoneyCents | None = None
+    description: Annotated[str | None, Field(default=None, max_length=160)] = None
+    occurred_on: date | None = None
+    occurred_until: date | None = None
+
+    @model_validator(mode="after")
+    def validate_provided_fields(self) -> "TransactionPatch":
+        if self.description is not None and not self.description.strip():
+            self.description = None
+        if "occurred_on" in self.model_fields_set:
+            if self.occurred_on is None:
+                raise ValueError("occurredOn cannot be cleared")
+            if self.occurred_on > date.today():
+                raise ValueError("occurredOn cannot be in the future")
+        if (
+            "occurred_until" in self.model_fields_set
+            and self.occurred_until is not None
+            and self.occurred_until > date.today()
+        ):
+            raise ValueError("occurredUntil cannot be in the future")
+        return self
 
 
 class RecurringWorkCostInput(ApiModel):

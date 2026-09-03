@@ -1,0 +1,109 @@
+{
+  "description": "Weekly buckets a dated-range transaction must produce. Both backend/app/features/transaction_spread.py and frontend/src/features/income-reality/foundationAdapter.ts must satisfy every case. Weeks are keyed by the Monday of the ISO week (Monday-Sunday).",
+  "cases": [
+    {
+      "name": "single_day",
+      "amountCents": 1000,
+      "occurredOn": "2026-08-17",
+      "occurredUntil": null,
+      "weeks": { "2026-08-17": 1000 }
+    },
+    {
+      "name": "range_inside_one_week",
+      "amountCents": 300,
+      "occurredOn": "2026-08-17",
+      "occurredUntil": "2026-08-19",
+      "weeks": { "2026-08-17": 300 }
+    },
+    {
+      "name": "two_whole_weeks_split_evenly",
+      "amountCents": 70000,
+      "occurredOn": "2026-08-17",
+      "occurredUntil": "2026-08-30",
+      "weeks": { "2026-08-17": 35000, "2026-08-24": 35000 }
+    },
+    {
+      "name": "remainder_cents_land_on_earliest_days",
+      "amountCents": 1001,
+      "occurredOn": "2026-08-22",
+      "occurredUntil": "2026-08-25",
+      "weeks": { "2026-08-17": 501, "2026-08-24": 500 }
+    },
+    {
+      "name": "mid_week_thursday_start_to_mid_week_end",
+      "amountCents": 1000,
+      "occurredOn": "2026-08-20",
+      "occurredUntil": "2026-09-01",
+      "weeks": { "2026-08-17": 308, "2026-08-24": 539, "2026-08-31": 153 }
+    },
+    {
+      "name": "occurred_until_before_occurred_on_is_single_day",
+      "amountCents": 500,
+      "occurredOn": "2026-08-17",
+      "occurredUntil": "2026-08-10",
+      "weeks": { "2026-08-17": 500 }
+    },
+    {
+      "name": "three_hundred_sixty_six_day_range",
+      "amountCents": 36600,
+      "occurredOn": "2025-08-17",
+      "occurredUntil": "2026-08-17",
+      "weeks": {
+        "2025-08-11": 100,
+        "2025-08-18": 700,
+        "2025-08-25": 700,
+        "2025-09-01": 700,
+        "2025-09-08": 700,
+        "2025-09-15": 700,
+        "2025-09-22": 700,
+        "2025-09-29": 700,
+        "2025-10-06": 700,
+        "2025-10-13": 700,
+        "2025-10-20": 700,
+        "2025-10-27": 700,
+        "2025-11-03": 700,
+        "2025-11-10": 700,
+        "2025-11-17": 700,
+        "2025-11-24": 700,
+        "2025-12-01": 700,
+        "2025-12-08": 700,
+        "2025-12-15": 700,
+        "2025-12-22": 700,
+        "2025-12-29": 700,
+        "2026-01-05": 700,
+        "2026-01-12": 700,
+        "2026-01-19": 700,
+        "2026-01-26": 700,
+        "2026-02-02": 700,
+        "2026-02-09": 700,
+        "2026-02-16": 700,
+        "2026-02-23": 700,
+        "2026-03-02": 700,
+        "2026-03-09": 700,
+        "2026-03-16": 700,
+        "2026-03-23": 700,
+        "2026-03-30": 700,
+        "2026-04-06": 700,
+        "2026-04-13": 700,
+        "2026-04-20": 700,
+        "2026-04-27": 700,
+        "2026-05-04": 700,
+        "2026-05-11": 700,
+        "2026-05-18": 700,
+        "2026-05-25": 700,
+        "2026-06-01": 700,
+        "2026-06-08": 700,
+        "2026-06-15": 700,
+        "2026-06-22": 700,
+        "2026-06-29": 700,
+        "2026-07-06": 700,
+        "2026-07-13": 700,
+        "2026-07-20": 700,
+        "2026-07-27": 700,
+        "2026-08-03": 700,
+        "2026-08-10": 700,
+        "2026-08-17": 100
+      }
+    }
+  ]
+}

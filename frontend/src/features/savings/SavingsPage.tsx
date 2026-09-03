@@ -1,39 +1,49 @@
 /**
  * Savings screen.
  *
- * The emergency fund is pinned, read-only, at the top: it is the baseline, and
- * seeing it while adding a goal keeps the two ledgers from blurring together.
- * Everything below it is habit building — named goals the user tops up.
+ * Named goals the user tops up on top of their emergency fund. This screen
+ * follows the same "jar-card" visual language as the Emergency Fund tab
+ * (see resilience-jar/sharedCard.css) so the two read as one product: a form
+ * behind a clear primary action, and goals as compact rows that expand into
+ * full detail only when the user asks for it.
  */
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 
 import { HttpSavingsApi, type SavingsApi } from "./api";
+import type { ResilienceJarApi } from "../resilience-jar/api";
 import type { SavingsGoal } from "./types";
-import { HttpResilienceJarApi, type ResilienceJarApi } from "../resilience-jar/api";
-import { coverageGoalLabel, singaporeToday } from "../resilience-jar/model";
-import type { JarSummary } from "../resilience-jar/types";
+import { singaporeToday } from "../resilience-jar/model";
 import { ApiError } from "../../lib/api";
-import { formatMoney, parseMoneyToCents } from "../../lib/money";
+import { centsToInput, formatMoney, parseMoneyToCents } from "../../lib/money";
+import { SavingsGoalChart } from "./SavingsGoalChart";
+import "../resilience-jar/sharedCard.css";
+import "./savings.css";
 
 export interface SavingsPageProps {
   api?: SavingsApi;
   jarApi?: ResilienceJarApi;
 }
 
-export function SavingsPage({ api, jarApi }: SavingsPageProps) {
+export function SavingsPage({ api }: SavingsPageProps) {
   const client = useMemo(() => api ?? new HttpSavingsApi(), [api]);
-  const jarClient = useMemo(() => jarApi ?? new HttpResilienceJarApi(), [jarApi]);
 
   const [goals, setGoals] = useState<SavingsGoal[] | null>(null);
-  const [fund, setFund] = useState<JarSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  const [addFormOpen, setAddFormOpen] = useState(false);
   const [name, setName] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
   const [targetDate, setTargetDate] = useState("");
+  const nameFieldRef = useRef<HTMLInputElement>(null);
 
   const loadGoals = useCallback(async () => {
     setGoals(await client.listGoals());
@@ -52,16 +62,14 @@ export function SavingsPage({ api, jarApi }: SavingsPageProps) {
         }
       }
     })();
-    void jarClient
-      .getSummary()
-      .then((summary) => {
-        if (active) setFund(summary);
-      })
-      .catch(() => undefined);
     return () => {
       active = false;
     };
-  }, [client, jarClient]);
+  }, [client]);
+
+  useEffect(() => {
+    if (addFormOpen) nameFieldRef.current?.focus();
+  }, [addFormOpen]);
 
   /** Every mutation ends by reloading the list, so totals always come from the API. */
   async function run(action: () => Promise<void>) {
@@ -75,6 +83,18 @@ export function SavingsPage({ api, jarApi }: SavingsPageProps) {
     } finally {
       setBusy(false);
     }
+  }
+
+  function openAddForm() {
+    setError(null);
+    setAddFormOpen(true);
+  }
+
+  function closeAddForm() {
+    setAddFormOpen(false);
+    setName("");
+    setTargetAmount("");
+    setTargetDate("");
   }
 
   async function createGoal(event: FormEvent) {
@@ -100,112 +120,138 @@ export function SavingsPage({ api, jarApi }: SavingsPageProps) {
         targetCents,
         targetDate: targetDate || null,
       });
-      setName("");
-      setTargetAmount("");
-      setTargetDate("");
+      closeAddForm();
     });
   }
 
   return (
-    <main>
-      <p className="eyebrow">Savings</p>
-      <h1 className="mt-2 text-3xl font-black">Build the habit</h1>
-      <p className="mt-2 max-w-3xl text-slate-600">
-        Your emergency fund is the baseline that keeps a bad week from becoming a
-        bad year. These goals sit on top of it and build a saving habit.
-      </p>
-
-      <FundOverview summary={fund} />
+    <main className="jar-page page">
+      <header className="jar-heading">
+        <div>
+          <p className="jar-eyebrow eyebrow">Savings</p>
+          <h1 className="display-lg">Build the habit</h1>
+          <p>
+            Your emergency fund is the baseline that keeps a bad week from becoming a
+            bad year. These goals sit on top of it and build a saving habit.
+          </p>
+        </div>
+      </header>
 
       {error && (
-        <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900" role="alert">
+        <p className="jar-error" role="alert">
           {error}
         </p>
       )}
 
-      <section className="mt-6" aria-labelledby="savings-goals-title">
-        <h2 className="text-2xl font-bold" id="savings-goals-title">
-          Your savings goals
-        </h2>
+      <section aria-labelledby="savings-goals-title">
+        <div className="jar-contribution-heading">
+          <div>
+            <h2 id="savings-goals-title">Your savings goals</h2>
+            <p className="jar-disclaimer">
+              A goal is something specific you are saving for — a course, a phone, a
+              trip. Your emergency fund stays separate and is managed on its own tab.
+            </p>
+          </div>
+          {!addFormOpen && (
+            <button className="jar-button button-primary" type="button" onClick={openAddForm}>
+              Add a savings goal
+            </button>
+          )}
+        </div>
 
-        <form className="card mt-4 space-y-4" onSubmit={(event) => void createGoal(event)}>
-          <h3 className="text-lg font-bold">Add a goal</h3>
-          <label className="block">
-            <span className="label">What are you saving for?</span>
-            <input
-              maxLength={80}
-              placeholder="e.g. New phone"
-              required
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-            />
-          </label>
-          <label className="block">
-            <span className="label">Target amount (SGD)</span>
-            <input
-              inputMode="decimal"
-              maxLength={10}
-              pattern="\d+(\.\d{0,2})?"
-              placeholder="0.00"
-              required
-              title="Enter an amount with up to two decimal places"
-              value={targetAmount}
-              onChange={(event) => setTargetAmount(event.target.value)}
-            />
-          </label>
-          <label className="block">
-            <span className="label">
-              Target date <span className="text-slate-400">(optional)</span>
-            </span>
-            <input
-              min={singaporeToday()}
-              type="date"
-              value={targetDate}
-              onChange={(event) => setTargetDate(event.target.value)}
-            />
-          </label>
-          <button className="button-primary w-full" disabled={busy} type="submit">
-            Add goal
-          </button>
-        </form>
+        {addFormOpen && (
+          <form className="jar-card card savings-add-form" onSubmit={(event) => void createGoal(event)}>
+            <h3>New savings goal</h3>
+            <label>
+              What are you saving for?
+              <input
+                ref={nameFieldRef}
+                maxLength={80}
+                placeholder="e.g. New phone"
+                required
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+              />
+            </label>
+            <label>
+              Target amount (SGD)
+              <input
+                inputMode="decimal"
+                maxLength={10}
+                pattern="\d+(\.\d{0,2})?"
+                placeholder="0.00"
+                required
+                title="Enter an amount with up to two decimal places"
+                value={targetAmount}
+                onChange={(event) => setTargetAmount(event.target.value)}
+              />
+            </label>
+            <label>
+              Target date <span className="jar-muted">(optional)</span>
+              <input
+                min={singaporeToday()}
+                type="date"
+                value={targetDate}
+                onChange={(event) => setTargetDate(event.target.value)}
+              />
+            </label>
+            <div className="jar-form-actions">
+              <button className="jar-button button-primary" disabled={busy} type="submit">
+                Add goal
+              </button>
+              <button
+                className="jar-button jar-button-secondary button-secondary"
+                disabled={busy}
+                type="button"
+                onClick={closeAddForm}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
 
         {goals === null ? (
-          <p className="card mt-4 text-slate-600" role="status">
+          <p className="jar-card card jar-state" role="status">
             Loading your goals…
           </p>
         ) : goals.length === 0 ? (
-          <p className="card mt-4 text-slate-600">
+          <p className="jar-card card jar-empty">
             No savings goals yet. Add one above — even a small target counts.
           </p>
         ) : (
-          <ul className="mt-4 space-y-4">
+          <ul className="jar-card card jar-disclosure-list savings-goal-list">
             {goals.map((goal) => (
-              <li key={goal.id}>
-                <GoalCard
-                  busy={busy}
-                  goal={goal}
-                  onAddContribution={(payload) =>
-                    run(async () => {
-                      await client.addContribution(goal.id, payload);
-                    })
-                  }
-                  onDeleteContribution={(contributionId) =>
-                    run(async () => {
-                      await client.deleteContribution(goal.id, contributionId);
-                    })
-                  }
-                  onDelete={() =>
-                    run(async () => {
-                      await client.deleteGoal(goal.id);
-                    })
-                  }
-                  onStatus={(status) =>
-                    run(async () => {
-                      await client.updateGoal(goal.id, { status });
-                    })
-                  }
-                />
-              </li>
+              <GoalRow
+                key={goal.id}
+                busy={busy}
+                goal={goal}
+                onAddContribution={(payload) =>
+                  run(async () => {
+                    await client.addContribution(goal.id, payload);
+                  })
+                }
+                onDeleteContribution={(contributionId) =>
+                  run(async () => {
+                    await client.deleteContribution(goal.id, contributionId);
+                  })
+                }
+                onDelete={() =>
+                  run(async () => {
+                    await client.deleteGoal(goal.id);
+                  })
+                }
+                onStatus={(status) =>
+                  run(async () => {
+                    await client.updateGoal(goal.id, { status });
+                  })
+                }
+                onUpdateDetails={(patch) =>
+                  run(async () => {
+                    await client.updateGoal(goal.id, patch);
+                  })
+                }
+              />
             ))}
           </ul>
         )}
@@ -214,67 +260,7 @@ export function SavingsPage({ api, jarApi }: SavingsPageProps) {
   );
 }
 
-/** Read-only. The fund is managed on its own screen; this is context, not a control. */
-function FundOverview({ summary }: { summary: JarSummary | null }) {
-  return (
-    <section className="card mt-6 border-t-4 border-t-indigo-600" aria-labelledby="savings-fund-title">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="eyebrow">Your baseline</p>
-          <h2 className="mt-1 text-2xl font-bold" id="savings-fund-title">
-            Emergency fund
-          </h2>
-        </div>
-        <Link className="button-secondary" to="/resilience-jar">
-          Manage emergency fund
-        </Link>
-      </div>
-      {summary === null ? (
-        <p className="mt-3 text-sm text-slate-600" role="status">
-          Loading your emergency fund…
-        </p>
-      ) : (
-        <>
-          <dl className="mt-4 grid grid-cols-2 gap-4">
-            <div>
-              <dt className="text-sm font-semibold text-slate-500">Balance</dt>
-              <dd className="mt-1 text-2xl font-black">
-                {formatMoney(summary.progress.contribution_total_cents)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm font-semibold text-slate-500">Target</dt>
-              <dd className="mt-1 text-2xl font-black">
-                {summary.progress.goal_target_cents === null
-                  ? "—"
-                  : formatMoney(summary.progress.goal_target_cents)}
-              </dd>
-              <dd className="mt-1 text-xs text-slate-500">
-                {summary.plan.goal.mode === "coverage"
-                  ? coverageGoalLabel(summary.plan.goal.weeks)
-                  : "Your chosen amount"}
-              </dd>
-            </div>
-          </dl>
-          <p className="mt-3 text-sm text-slate-600">
-            {summary.progress.goal_reached ? (
-              <span className="mr-2 inline-block rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-bold text-white">
-                Goal reached
-              </span>
-            ) : null}
-            {summary.progress.coverage_weeks === null
-              ? "Add your everyday essentials to see how many weeks this covers."
-              : `Covers about ${summary.progress.coverage_weeks} ${
-                  summary.progress.coverage_weeks === 1 ? "week" : "weeks"
-                } of essential expenses.`}
-          </p>
-        </>
-      )}
-    </section>
-  );
-}
-
-interface GoalCardProps {
+interface GoalRowProps {
   goal: SavingsGoal;
   busy: boolean;
   onAddContribution: (payload: {
@@ -285,33 +271,89 @@ interface GoalCardProps {
   onDeleteContribution: (contributionId: string) => Promise<void>;
   onDelete: () => Promise<void>;
   onStatus: (status: SavingsGoal["status"]) => Promise<void>;
+  onUpdateDetails: (patch: {
+    name?: string;
+    targetCents?: number;
+    targetDate?: string | null;
+  }) => Promise<void>;
 }
 
-function GoalCard({
+const STATUS_LABEL: Record<SavingsGoal["status"], string> = {
+  active: "Active",
+  completed: "Completed",
+  archived: "Archived",
+};
+
+function GoalRow({
   goal,
   busy,
   onAddContribution,
   onDeleteContribution,
   onDelete,
   onStatus,
-}: GoalCardProps) {
+  onUpdateDetails,
+}: GoalRowProps) {
+  const [expanded, setExpanded] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editName, setEditName] = useState(goal.name);
+  const [editTarget, setEditTarget] = useState(centsToInput(goal.targetCents));
+  const [editDate, setEditDate] = useState(goal.targetDate ?? "");
+  const [editError, setEditError] = useState<string | null>(null);
+
   const [amount, setAmount] = useState("");
   const [contributedOn, setContributedOn] = useState(singaporeToday());
   const [note, setNote] = useState("");
-  const [formError, setFormError] = useState<string | null>(null);
+  const [contributionError, setContributionError] = useState<string | null>(null);
 
-  async function submit(event: FormEvent) {
+  const triggerId = `savings-goal-trigger-${goal.id}`;
+  const panelId = `savings-goal-panel-${goal.id}`;
+
+  function openEdit() {
+    setEditName(goal.name);
+    setEditTarget(centsToInput(goal.targetCents));
+    setEditDate(goal.targetDate ?? "");
+    setEditError(null);
+    setEditOpen(true);
+  }
+
+  async function submitEdit(event: FormEvent) {
     event.preventDefault();
-    setFormError(null);
+    setEditError(null);
+    let targetCents: number;
+    try {
+      targetCents = parseMoneyToCents(editTarget);
+    } catch (cause) {
+      setEditError(cause instanceof Error ? cause.message : "Enter a valid amount.");
+      return;
+    }
+    if (!editName.trim()) {
+      setEditError("Give this goal a name.");
+      return;
+    }
+    if (targetCents <= 0) {
+      setEditError("Enter a target greater than zero.");
+      return;
+    }
+    await onUpdateDetails({
+      name: editName.trim(),
+      targetCents,
+      targetDate: editDate || null,
+    });
+    setEditOpen(false);
+  }
+
+  async function submitContribution(event: FormEvent) {
+    event.preventDefault();
+    setContributionError(null);
     let amountCents: number;
     try {
       amountCents = parseMoneyToCents(amount);
     } catch (cause) {
-      setFormError(cause instanceof Error ? cause.message : "Enter a valid amount.");
+      setContributionError(cause instanceof Error ? cause.message : "Enter a valid amount.");
       return;
     }
     if (amountCents <= 0) {
-      setFormError("Enter an amount greater than zero.");
+      setContributionError("Enter an amount greater than zero.");
       return;
     }
     await onAddContribution({
@@ -325,172 +367,245 @@ function GoalCard({
   }
 
   return (
-    <article className="card">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h3 className="text-xl font-bold">{goal.name}</h3>
-          <p className="mt-1 text-sm text-slate-600">
-            {formatMoney(goal.savedCents)} saved of {formatMoney(goal.targetCents)}
-            {goal.targetDate ? ` · by ${goal.targetDate}` : ""}
-          </p>
-        </div>
-        {goal.reached ? (
-          <span className="rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white">
-            Reached
+    <li className="jar-disclosure-item">
+      <button
+        id={triggerId}
+        type="button"
+        className="jar-disclosure-trigger savings-goal-trigger"
+        aria-expanded={expanded}
+        aria-controls={panelId}
+        onClick={() => setExpanded((open) => !open)}
+      >
+        <span className="savings-goal-name">
+          <strong>{goal.name}</strong>
+          {goal.status !== "active" && (
+            <span className="jar-muted"> · {STATUS_LABEL[goal.status]}</span>
+          )}
+        </span>
+        <span className="savings-goal-progress">
+          {formatMoney(goal.savedCents)} saved of {formatMoney(goal.targetCents)}
+        </span>
+        <span className="savings-goal-trailing">
+          {goal.reached ? (
+            <span className="jar-goal-badge jar-goal-badge-reached">
+              <span aria-hidden="true">✓</span> Reached
+            </span>
+          ) : (
+            <span className="jar-goal-badge">{formatMoney(goal.remainingCents)} to go</span>
+          )}
+          <span className="jar-disclosure-open" aria-hidden="true">
+            {expanded ? "Hide" : "Details"}
           </span>
-        ) : (
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
-            {formatMoney(goal.remainingCents)} to go
-          </span>
-        )}
-      </div>
+        </span>
+      </button>
 
-      {goal.status !== "active" && (
-        <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-          {goal.status === "completed" ? "Completed" : "Archived"}
-        </p>
-      )}
+      <div
+        id={panelId}
+        role="region"
+        aria-labelledby={triggerId}
+        className="jar-disclosure-panel"
+        hidden={!expanded}
+      >
+          {goal.targetDate && <p className="jar-muted">Target date: {goal.targetDate}</p>}
 
-      {goal.suggestedWeeklyCents !== null && (
-        <p className="mt-3 rounded-xl bg-slate-50 p-3 text-sm text-slate-700">
-          Put aside about <strong>{formatMoney(goal.suggestedWeeklyCents)}</strong> a
-          week to reach this by {goal.targetDate}.
-        </p>
-      )}
+          {goal.suggestedWeeklyCents !== null && (
+            <p className="jar-disclaimer">
+              Put aside about <strong>{formatMoney(goal.suggestedWeeklyCents)}</strong> a
+              week to reach this by {goal.targetDate}.
+            </p>
+          )}
 
-      <form className="mt-4 grid gap-3 sm:grid-cols-3" onSubmit={(event) => void submit(event)}>
-        <label className="block">
-          <span className="label">Amount (SGD)</span>
-          <input
-            inputMode="decimal"
-            maxLength={10}
-            pattern="\d+(\.\d{0,2})?"
-            placeholder="0.00"
-            required
-            title="Enter an amount with up to two decimal places"
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
+          <SavingsGoalChart
+            goalName={goal.name}
+            contributions={goal.contributions}
+            targetCents={goal.targetCents}
+            targetDate={goal.targetDate}
           />
-        </label>
-        <label className="block">
-          <span className="label">Date</span>
-          <input
-            max={singaporeToday()}
-            min="2000-01-01"
-            required
-            type="date"
-            value={contributedOn}
-            onChange={(event) => setContributedOn(event.target.value)}
-          />
-        </label>
-        <label className="block">
-          <span className="label">
-            Note <span className="text-slate-400">(optional)</span>
-          </span>
-          <input
-            maxLength={200}
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-          />
-        </label>
-        <button className="button-primary sm:col-span-3" disabled={busy} type="submit">
-          Add to this goal
-        </button>
-      </form>
-      {formError && (
-        <p className="mt-2 text-sm text-rose-700" role="alert">
-          {formError}
-        </p>
-      )}
 
-      {goal.contributions.length > 0 && (
-        <details className="mt-4">
-          <summary className="cursor-pointer text-sm font-semibold">
-            {goal.contributions.length} contribution
-            {goal.contributions.length === 1 ? "" : "s"}
-          </summary>
-          <ul className="mt-2 divide-y divide-slate-100">
-            {goal.contributions.map((contribution) => (
-              <li
-                className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"
-                key={contribution.id}
+          {editOpen ? (
+            <form className="savings-edit-form" onSubmit={(event) => void submitEdit(event)}>
+              <label>
+                Name
+                <input
+                  maxLength={80}
+                  required
+                  value={editName}
+                  onChange={(event) => setEditName(event.target.value)}
+                />
+              </label>
+              <label>
+                Target amount (SGD)
+                <input
+                  inputMode="decimal"
+                  maxLength={10}
+                  pattern="\d+(\.\d{0,2})?"
+                  required
+                  title="Enter an amount with up to two decimal places"
+                  value={editTarget}
+                  onChange={(event) => setEditTarget(event.target.value)}
+                />
+              </label>
+              <label>
+                Target date <span className="jar-muted">(optional)</span>
+                <input
+                  min={singaporeToday()}
+                  type="date"
+                  value={editDate}
+                  onChange={(event) => setEditDate(event.target.value)}
+                />
+              </label>
+              {editError && (
+                <p className="jar-error" role="alert">
+                  {editError}
+                </p>
+              )}
+              <div className="jar-form-actions">
+                <button className="jar-button button-primary" disabled={busy} type="submit">
+                  Save changes
+                </button>
+                <button
+                  className="jar-button jar-button-secondary button-secondary"
+                  disabled={busy}
+                  type="button"
+                  onClick={() => setEditOpen(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <button className="jar-text-link savings-edit-link" disabled={busy} type="button" onClick={openEdit}>
+              Rename or change target
+            </button>
+          )}
+
+          <form className="jar-contribution-form" onSubmit={(event) => void submitContribution(event)}>
+            <label>
+              Amount (SGD)
+              <input
+                inputMode="decimal"
+                maxLength={10}
+                pattern="\d+(\.\d{0,2})?"
+                placeholder="0.00"
+                required
+                title="Enter an amount with up to two decimal places"
+                value={amount}
+                onChange={(event) => setAmount(event.target.value)}
+              />
+            </label>
+            <label>
+              Date
+              <input
+                max={singaporeToday()}
+                min="2000-01-01"
+                required
+                type="date"
+                value={contributedOn}
+                onChange={(event) => setContributedOn(event.target.value)}
+              />
+            </label>
+            <label>
+              Note <span className="jar-muted">(optional)</span>
+              <input
+                maxLength={200}
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+              />
+            </label>
+            <button className="jar-button button-primary" disabled={busy} type="submit">
+              Add to this goal
+            </button>
+          </form>
+          {contributionError && (
+            <p className="jar-error" role="alert">
+              {contributionError}
+            </p>
+          )}
+
+          {goal.contributions.length > 0 && (
+            <div>
+              <h4>
+                {goal.contributions.length} contribution
+                {goal.contributions.length === 1 ? "" : "s"}
+              </h4>
+              <ul className="savings-contribution-history">
+                {goal.contributions.map((contribution) => (
+                  <li key={contribution.id}>
+                    <span>
+                      {contribution.contributedOn}
+                      {contribution.note ? ` · ${contribution.note}` : ""}
+                    </span>
+                    <span className="savings-contribution-amount">
+                      <strong>+{formatMoney(contribution.amountCents)}</strong>
+                      <button
+                        className="jar-text-link"
+                        disabled={busy}
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              `Delete the ${formatMoney(contribution.amountCents)} contribution?`,
+                            )
+                          ) {
+                            void onDeleteContribution(contribution.id);
+                          }
+                        }}
+                        type="button"
+                      >
+                        Delete
+                      </button>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="jar-list-actions">
+            {goal.status !== "completed" && (
+              <button
+                className="jar-button jar-button-secondary button-secondary"
+                disabled={busy}
+                onClick={() => void onStatus("completed")}
+                type="button"
               >
-                <span>
-                  {contribution.contributedOn}
-                  {contribution.note ? ` · ${contribution.note}` : ""}
-                </span>
-                <span className="flex items-center gap-3">
-                  <strong className="text-emerald-700">
-                    +{formatMoney(contribution.amountCents)}
-                  </strong>
-                  <button
-                    className="text-rose-700 underline"
-                    disabled={busy}
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          `Delete the ${formatMoney(contribution.amountCents)} contribution?`,
-                        )
-                      ) {
-                        void onDeleteContribution(contribution.id);
-                      }
-                    }}
-                    type="button"
-                  >
-                    Delete
-                  </button>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        {goal.status !== "completed" && (
-          <button
-            className="button-secondary"
-            disabled={busy}
-            onClick={() => void onStatus("completed")}
-            type="button"
-          >
-            Mark complete
-          </button>
-        )}
-        {goal.status !== "archived" && (
-          <button
-            className="button-secondary"
-            disabled={busy}
-            onClick={() => void onStatus("archived")}
-            type="button"
-          >
-            Archive
-          </button>
-        )}
-        {goal.status !== "active" && (
-          <button
-            className="button-secondary"
-            disabled={busy}
-            onClick={() => void onStatus("active")}
-            type="button"
-          >
-            Reopen
-          </button>
-        )}
-        <button
-          className="button-secondary text-rose-700"
-          disabled={busy}
-          onClick={() => {
-            if (window.confirm(`Delete “${goal.name}” and its contribution history?`)) {
-              void onDelete();
-            }
-          }}
-          type="button"
-        >
-          Delete goal
-        </button>
+                Mark complete
+              </button>
+            )}
+            {goal.status !== "archived" && (
+              <button
+                className="jar-button jar-button-secondary button-secondary"
+                disabled={busy}
+                onClick={() => void onStatus("archived")}
+                type="button"
+              >
+                Archive
+              </button>
+            )}
+            {goal.status !== "active" && (
+              <button
+                className="jar-button jar-button-secondary button-secondary"
+                disabled={busy}
+                onClick={() => void onStatus("active")}
+                type="button"
+              >
+                Reopen
+              </button>
+            )}
+            <button
+              className="jar-button jar-button-secondary button-secondary savings-delete-goal"
+              disabled={busy}
+              onClick={() => {
+                if (window.confirm(`Delete "${goal.name}" and its contribution history?`)) {
+                  void onDelete();
+                }
+              }}
+              type="button"
+            >
+              Delete goal
+            </button>
+          </div>
       </div>
-    </article>
+    </li>
   );
 }
 

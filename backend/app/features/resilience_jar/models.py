@@ -42,6 +42,7 @@ type Goal = AmountGoal | CoverageGoal
 class WeeklySurplus:
     week_start: date
     available_surplus_cents: int
+    income_cents: int = 0
 
 
 @dataclass(frozen=True)

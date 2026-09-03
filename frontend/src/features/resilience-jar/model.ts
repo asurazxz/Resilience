@@ -1,7 +1,7 @@
 import type { Contribution, RecommendationMethod } from "./types.ts";
 
-export function formatMoney(cents: number | null): string {
-  if (cents === null) return "Not available";
+export function formatMoney(cents: number | null | undefined): string {
+  if (cents === null || cents === undefined || !Number.isFinite(cents)) return "Not available";
   return new Intl.NumberFormat("en-SG", {
     style: "currency",
     currency: "SGD",

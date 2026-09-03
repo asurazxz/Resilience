@@ -57,7 +57,6 @@ export function ResilienceJarPage({
   const [goalAmount, setGoalAmount] = useState("1000.00");
   const [goalWeeks, setGoalWeeks] = useState(String(DEFAULT_COVERAGE_GOAL_WEEKS));
   const [contributionAmount, setContributionAmount] = useState("");
-  const [fundBalance, setFundBalance] = useState("");
   const [contributionDate, setContributionDate] = useState(singaporeToday());
   const [contributionNote, setContributionNote] = useState("");
   const [withdrawalOpen, setWithdrawalOpen] = useState(startWithEmergencyUse);
@@ -68,6 +67,8 @@ export function ResilienceJarPage({
   const [editingContributionId, setEditingContributionId] = useState<
     string | null
   >(null);
+  const [openingBalanceOpen, setOpeningBalanceOpen] = useState(false);
+  const [openingBalanceAmount, setOpeningBalanceAmount] = useState("0.00");
   const activityRef = useRef<HTMLElement>(null);
   const didFocusEmergencyUse = useRef(false);
 
@@ -139,7 +140,6 @@ export function ResilienceJarPage({
   }, [startWithEmergencyUse, summary]);
 
   function syncPlanForms(next: JarSummary) {
-    setFundBalance(centsToDollars(next.progress.contribution_total_cents));
     setTargetAmount(centsToDollars(next.plan.target_amount_cents));
     setTargetFrequency(next.plan.target_frequency);
     setGoalMode(next.plan.goal.mode);
@@ -264,16 +264,6 @@ export function ResilienceJarPage({
     });
   }
 
-  async function saveFundBalance(event: FormEvent) {
-    event.preventDefault();
-    const amountCents = dollarsToCents(fundBalance);
-    if (amountCents === null || amountCents < 0) {
-      setError("Enter a fund balance of zero or more.");
-      return;
-    }
-    await runMutation(() => client.setOpeningBalance(amountCents), "Fund balance updated.");
-  }
-
   async function saveWithdrawal(event: FormEvent) {
     event.preventDefault();
     const amountCents = dollarsToCents(withdrawalAmount);
@@ -320,6 +310,20 @@ export function ResilienceJarPage({
       if (editingContributionId === contribution.id) clearContributionForm();
       return client.getSummary();
     });
+  }
+
+  async function saveOpeningBalance(event: FormEvent) {
+    event.preventDefault();
+    const cents = dollarsToCents(openingBalanceAmount);
+    if (cents === null || cents < 0) {
+      setError("Enter a starting balance of zero or more, with no more than two decimal places.");
+      return;
+    }
+    await runMutation(
+      async () => client.setOpeningBalance(cents),
+      `Starting balance set to ${formatMoney(cents)}.`,
+    );
+    setOpeningBalanceOpen(false);
   }
 
   function clearContributionForm() {
@@ -409,13 +413,13 @@ export function ResilienceJarPage({
         );
 
   return (
-    <main className="jar-page">
+    <main className="jar-page page">
       <header className="jar-heading">
         <div>
-          <p className="jar-eyebrow">
+          <p className="jar-eyebrow eyebrow">
             {view === "jar" ? "Financial safety net" : "Emergency Fund"}
           </p>
-          <h1>{view === "jar" ? "Emergency Fund" : "Emergency fund settings"}</h1>
+          <h1 className="display-lg">{view === "jar" ? "Emergency Fund" : "Emergency fund settings"}</h1>
           <p>
             {view === "jar"
               ? "Build a safety buffer for income disruptions and unexpected costs."
@@ -425,14 +429,14 @@ export function ResilienceJarPage({
         {view === "jar" ? (
           <div className="jar-heading-actions">
             <button
-              className="jar-button"
+              className="jar-button button-primary"
               onClick={() => onNavigate?.("/resilience-jar/plan")}
               type="button"
             >
               Edit emergency plan
             </button>
             <button
-              className="jar-button jar-button-secondary"
+              className="jar-button jar-button-secondary button-secondary"
               disabled={mutationsDisabled}
               onClick={() => void togglePause()}
               type="button"
@@ -588,13 +592,13 @@ export function ResilienceJarPage({
       </section>
 
       <section className="jar-insights" hidden={view !== "jar"} aria-label="Goal outlook">
-        <article className="jar-card jar-projection">
+        <article className="jar-card card jar-projection">
           <p className="jar-eyebrow">Projected completion</p>
           <ProjectionCopy summary={summary} />
         </article>
       </section>
 
-      <section className="jar-card jar-chart-card" hidden={view !== "jar"}>
+      <section className="jar-card card jar-chart-card" hidden={view !== "jar"}>
         <ProgressLineChart
           contributions={summary.contributions}
           goalTargetCents={progress.goal_target_cents}
@@ -602,103 +606,127 @@ export function ResilienceJarPage({
       </section>
 
       <div className="jar-grid" hidden={view !== "plan"}>
-        <section className="jar-card" aria-labelledby="jar-suggestion-title">
+        <section className="jar-card card" aria-labelledby="jar-suggestion-title">
           <h2 id="jar-suggestion-title">Savings suggestion</h2>
-          <label htmlFor="jar-method">Calculation method</label>
-          <select
-            id="jar-method"
-            value={summary.plan.recommendation_method}
-            disabled={mutationsDisabled}
-            onChange={(event) =>
-              void updateMethod(event.target.value as RecommendationMethod)
-            }
-          >
-            <option value="conservative_4_week">Conservative four-week</option>
-            <option value="latest_week">Latest completed week</option>
-          </select>
-          <p className="jar-muted">
-            {recommendationExplanation(summary.plan.recommendation_method)}
-          </p>
-          <fieldset className="jar-target-frequency">
-            <legend>Target frequency</legend>
-            <div>
-              <label className="jar-radio">
-                <input
-                  checked={targetFrequency === "weekly"}
-                  name="target-frequency"
-                  type="radio"
-                  onChange={() => previewTargetFrequency("weekly")}
-                />
-                Weekly
-              </label>
-              <label className="jar-radio">
-                <input
-                  checked={targetFrequency === "monthly"}
-                  name="target-frequency"
-                  type="radio"
-                  onChange={() => previewTargetFrequency("monthly")}
-                />
-                Monthly
-              </label>
+          {progress.goal_reached ? (
+            <div className="jar-goal-preview" role="status">
+              <span>Goal reached</span>
+              <strong>{formatMoney(progress.contribution_total_cents)} saved</strong>
+              <p className="jar-muted">
+                {progress.coverage_weeks === null
+                  ? "Your emergency fund has reached its goal. There is nothing left to save toward right now."
+                  : `Your emergency fund has reached its goal, covering about ${progress.coverage_weeks} ${
+                      progress.coverage_weeks === 1 ? "week" : "weeks"
+                    } of essential expenses. There is nothing left to save toward right now.`}
+              </p>
+              <p className="jar-muted">
+                Want to keep building? Raise your goal in “Emergency fund goal” below to set a new target.
+              </p>
             </div>
-          </fieldset>
-          {targetFrequency === "monthly" && (
-            <p className="jar-muted">
-              The monthly suggestion is the equivalent of the weekly formula.
-            </p>
-          )}
-          {isPaused ? (
-            <p role="status">
-              Recommendation prompts are paused. Resume when you want a new weekly prompt.
-            </p>
-          ) : summary.recommendation.status === "insufficient_data" ? (
-            <p role="status">
-              Add a completed income week to receive a suggestion. You can still set a target manually.
-            </p>
           ) : (
-            <div className="jar-suggestion">
-              <span>Suggested {targetFrequency} target</span>
-              <strong>{formatMoney(recommendationAmount)}</strong>
-              <button
-                className="jar-button"
-                type="button"
+            <>
+              <label htmlFor="jar-method">Calculation method</label>
+              <select
+                id="jar-method"
+                value={summary.plan.recommendation_method}
                 disabled={mutationsDisabled}
-                onClick={() => void acceptRecommendation()}
+                onChange={(event) =>
+                  void updateMethod(event.target.value as RecommendationMethod)
+                }
               >
-                Use this target
-              </button>
-            </div>
-          )}
+                <option value="conservative_4_week">Conservative four-week</option>
+                <option value="latest_week">Latest completed week</option>
+              </select>
+              <p className="jar-muted">
+                {recommendationExplanation(summary.plan.recommendation_method)}
+              </p>
+              <fieldset className="jar-target-frequency">
+                <legend>Target frequency</legend>
+                <div>
+                  <label className="jar-radio">
+                    <input
+                      checked={targetFrequency === "weekly"}
+                      name="target-frequency"
+                      type="radio"
+                      onChange={() => previewTargetFrequency("weekly")}
+                    />
+                    Weekly
+                  </label>
+                  <label className="jar-radio">
+                    <input
+                      checked={targetFrequency === "monthly"}
+                      name="target-frequency"
+                      type="radio"
+                      onChange={() => previewTargetFrequency("monthly")}
+                    />
+                    Monthly
+                  </label>
+                </div>
+              </fieldset>
+              {targetFrequency === "monthly" && (
+                <p className="jar-muted">
+                  The monthly suggestion is the equivalent of the weekly formula.
+                </p>
+              )}
+              {isPaused ? (
+                <p role="status">
+                  Recommendation prompts are paused. Resume when you want a new weekly prompt.
+                </p>
+              ) : summary.recommendation.status === "insufficient_data" ? (
+                <p role="status">
+                  Add a completed income week to receive a suggestion. You can still set a target manually.
+                </p>
+              ) : (
+                <div className="jar-suggestion">
+                  <span>Suggested {targetFrequency} target</span>
+                  <strong>{formatMoney(recommendationAmount)}</strong>
+                  <button
+                    className="jar-button button-primary"
+                    type="button"
+                    disabled={mutationsDisabled}
+                    onClick={() => void acceptRecommendation()}
+                  >
+                    Use this target
+                  </button>
+                </div>
+              )}
 
-          <form onSubmit={(event) => void saveTarget(event)}>
-            <label htmlFor="jar-target-amount">
-              Your {targetFrequency} target (SGD)
-            </label>
-            <div className="jar-inline-form">
-              <input
-                id="jar-target-amount"
-                inputMode="decimal"
-                maxLength={10}
-                pattern="\d+(\.\d{1,2})?"
-                required
-                title="Enter an amount with up to two decimal places"
-                value={targetAmount}
-                onChange={(event) => setTargetAmount(event.target.value)}
-              />
-              <button className="jar-button" disabled={mutationsDisabled} type="submit">
-                Save target
-              </button>
-            </div>
-          </form>
+              <form onSubmit={(event) => void saveTarget(event)}>
+                <label htmlFor="jar-target-amount">
+                  Your {targetFrequency} target (SGD)
+                </label>
+                <div className="jar-inline-form">
+                  <input
+                    id="jar-target-amount"
+                    inputMode="decimal"
+                    maxLength={10}
+                    pattern="\d+(\.\d{1,2})?"
+                    required
+                    title="Enter an amount with up to two decimal places"
+                    value={targetAmount}
+                    onChange={(event) => setTargetAmount(event.target.value)}
+                  />
+                  <button className="jar-button button-primary" disabled={mutationsDisabled} type="submit">
+                    Save target
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
         </section>
 
-        <section className="jar-card" aria-labelledby="jar-goal-title">
+        <section className="jar-card card" aria-labelledby="jar-goal-title">
           <h2 id="jar-goal-title">Emergency fund goal</h2>
           <p className="jar-muted">
             This fund is a baseline buffer, not a savings plan. Most people aim for
             about six months of essential expenses ({DEFAULT_COVERAGE_GOAL_WEEKS} weeks).
             Named goals such as a course or a new phone live in Savings.
           </p>
+          {progress.goal_reached && (
+            <p role="status">
+              You have reached your current goal. Raise it below to keep building your safety net.
+            </p>
+          )}
           <form onSubmit={(event) => void saveGoal(event)}>
             <fieldset>
               <legend>Set the goal by</legend>
@@ -760,7 +788,7 @@ export function ResilienceJarPage({
                 />
               </label>
             )}
-            <button className="jar-button" disabled={mutationsDisabled} type="submit">
+            <button className="jar-button button-primary" disabled={mutationsDisabled} type="submit">
               Save goal
             </button>
           </form>
@@ -776,19 +804,10 @@ export function ResilienceJarPage({
 
       <section
         ref={activityRef}
-        className="jar-card jar-contributions"
+        className="jar-card card jar-contributions"
         aria-labelledby="jar-contributions-title"
         hidden={view !== "jar"}
       >
-        <form className="jar-card mb-6" onSubmit={(event) => void saveFundBalance(event)}>
-          <h2>Fund balance</h2>
-          <p className="jar-muted">Set the amount currently available for emergencies. Resilience keeps your recorded deposits and emergency use as activity history.</p>
-          <label>
-            Current balance (SGD)
-            <input inputMode="decimal" maxLength={10} pattern="\d+(\.\d{1,2})?" required title="Enter an amount with up to two decimal places" value={fundBalance} onChange={(event) => setFundBalance(event.target.value)} />
-          </label>
-          <button className="jar-button" disabled={mutationsDisabled} type="submit">Update balance</button>
-        </form>
         <div className="jar-contribution-heading">
           <div>
             <h2 id="jar-contributions-title">Emergency fund activity</h2>
@@ -797,7 +816,7 @@ export function ResilienceJarPage({
             </p>
           </div>
           <button
-            className="jar-button jar-button-withdraw"
+            className="jar-button jar-button-withdraw button-secondary"
             disabled={mutationsDisabled || progress.contribution_total_cents <= 0}
             onClick={() => setWithdrawalOpen((open) => !open)}
             type="button"
@@ -848,7 +867,7 @@ export function ResilienceJarPage({
                 onChange={(event) => setWithdrawalNote(event.target.value)}
               />
             </label>
-            <button className="jar-button jar-button-withdraw" disabled={mutationsDisabled} type="submit">
+            <button className="jar-button jar-button-withdraw button-secondary" disabled={mutationsDisabled} type="submit">
               Record emergency use
             </button>
           </form>
@@ -893,12 +912,12 @@ export function ResilienceJarPage({
             />
           </label>
           <div className="jar-form-actions">
-            <button className="jar-button" disabled={mutationsDisabled} type="submit">
+            <button className="jar-button button-primary" disabled={mutationsDisabled} type="submit">
               {editingContributionId ? "Save changes" : "Add contribution"}
             </button>
             {editingContributionId && (
               <button
-                className="jar-button jar-button-secondary"
+                className="jar-button jar-button-secondary button-secondary"
                 type="button"
                 onClick={clearContributionForm}
               >
@@ -959,6 +978,48 @@ export function ResilienceJarPage({
             )}
           </>
         )}
+
+        <div className="jar-opening-balance">
+          <button
+            className="jar-text-link"
+            type="button"
+            aria-expanded={openingBalanceOpen}
+            aria-controls="jar-opening-balance-panel"
+            onClick={() => setOpeningBalanceOpen((open) => !open)}
+          >
+            {openingBalanceOpen ? "Cancel correcting starting balance" : "Correct starting balance"}
+          </button>
+          {openingBalanceOpen && (
+            <div id="jar-opening-balance-panel">
+              <p className="jar-muted">
+                This sets the amount that was already in the fund before you started
+                tracking it here. Your recorded contributions and emergency-use entries
+                stay exactly as they are.
+              </p>
+              <form
+                className="jar-opening-balance-form"
+                onSubmit={(event) => void saveOpeningBalance(event)}
+              >
+                <label>
+                  Starting balance (SGD)
+                  <input
+                    autoFocus
+                    inputMode="decimal"
+                    maxLength={10}
+                    pattern="\d+(\.\d{1,2})?"
+                    required
+                    title="Enter an amount with up to two decimal places"
+                    value={openingBalanceAmount}
+                    onChange={(event) => setOpeningBalanceAmount(event.target.value)}
+                  />
+                </label>
+                <button className="jar-button button-primary" disabled={mutationsDisabled} type="submit">
+                  Save starting balance
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
       </section>
 
     </main>

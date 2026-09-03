@@ -63,37 +63,47 @@ export function SchemeNavigator() {
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-4">
-      <header className="mb-6">
+    <main className="page mx-auto max-w-2xl py-8">
+      <header className="mb-10">
         <p className="eyebrow">Government support</p>
-        <h1 className="mt-1 text-3xl font-black text-slate-900">Find schemes worth checking</h1>
-        <p className="mt-1 text-sm text-slate-600">
+        <h1 className="display-lg mt-3">Find schemes worth checking</h1>
+        <p className="body-text prose mt-6">
           Answer a few questions. We will show which official schemes may be worth a closer look.
           The relevant agency makes the final decision.
         </p>
       </header>
 
       {loadState === "loading" && (
-        <p className="text-sm text-slate-500">Loading questionnaire...</p>
+        <p className="body-text">Loading questionnaire...</p>
       )}
 
       {loadState === "error" && (
-        <p className="text-sm text-red-600">
-          The scheme questions could not be loaded. Please try again after checking your connection.
-        </p>
+        <div className="card space-y-6">
+          <span className="badge">Error</span>
+          <p className="body-text prose">
+            The scheme questions could not be loaded. Please try again after checking your connection.
+          </p>
+        </div>
       )}
 
       {loadState === "ready" && (
-        <div className="space-y-8">
-          <QuestionnaireForm
-            fields={fields}
-            answers={answers}
-            onChange={handleAnswerChange}
-            onSubmit={handleSubmit}
-            submitting={submitting}
-          />
+        <div className="space-y-10">
+          <div className="card">
+            <QuestionnaireForm
+              fields={fields}
+              answers={answers}
+              onChange={handleAnswerChange}
+              onSubmit={handleSubmit}
+              submitting={submitting}
+            />
+          </div>
 
-          {errorMessage && <p className="text-sm text-red-600">{errorMessage}</p>}
+          {errorMessage && (
+            <div className="card space-y-6">
+              <span className="badge">Error</span>
+              <p className="body-text prose">{errorMessage}</p>
+            </div>
+          )}
 
           {results && <ResultsList results={results} />}
         </div>

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { explainResult } from "./api";
 import type { ExplanationResponse, SchemeResult } from "./types";
 import { useChatContext } from "./ChatContext";
+import { ApiError } from "../../lib/api";
 
 interface ExplanationPanelProps {
   result: SchemeResult;
@@ -19,8 +20,8 @@ export function ExplanationPanel({ result }: ExplanationPanelProps) {
     setErrorMessage(null);
     try {
       setExplanation(await explainResult(result, answers));
-    } catch {
-      setErrorMessage("Could not load an explanation right now.");
+    } catch (cause) {
+      setErrorMessage(explainErrorMessage(cause));
     } finally {
       setLoading(false);
     }
@@ -28,39 +29,63 @@ export function ExplanationPanel({ result }: ExplanationPanelProps) {
 
   if (!explanation) {
     return (
-      <div className="mt-3">
-        <button
-          type="button"
-          onClick={handleExplain}
-          disabled={loading}
-          className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 disabled:opacity-50"
-        >
+      <div>
+        <button type="button" onClick={handleExplain} disabled={loading} className="button-secondary">
           {loading ? "Explaining..." : "Explain this in plain language"}
         </button>
-        {errorMessage && <p className="mt-1 text-xs text-red-600">{errorMessage}</p>}
+        {errorMessage && (
+          <p className="mono-label prose mt-3" role="alert">
+            {errorMessage}
+          </p>
+        )}
       </div>
     );
   }
 
+  // Labelled honestly either way, with a badge as the primary (non-color)
+  // cue: the backend falls back to a written template when no model is
+  // configured, and that is not AI-written.
   return (
-    <div className="mt-3 rounded border border-slate-200 bg-white/70 p-3">
-      <p className="text-sm text-slate-800">{explanation.summary}</p>
+    <div
+      className="space-y-6 rounded-lg p-6"
+      style={{ background: "var(--surface-obsidian-button)" }}
+    >
+      {/* The provenance badge is the honest AI / rule-based cue and stays a
+          full-contrast Ivory badge, not a faded label. */}
+      <span className="badge">
+        {explanation.is_ai_generated ? "AI generated" : "Rule-based"}
+      </span>
+
+      <p className="body-text prose">{explanation.summary}</p>
 
       {explanation.next_steps.length > 0 && (
-        <ul className="mt-2 list-inside list-disc text-sm text-slate-700">
+        <ul className="body-text prose list-inside list-disc space-y-3">
           {explanation.next_steps.map((step) => (
             <li key={step}>{step}</li>
           ))}
         </ul>
       )}
 
-      {/* Labelled honestly either way: the backend falls back to a written
-          template when no model is configured, and that is not AI-written. */}
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="mono-label prose">
         {explanation.is_ai_generated
           ? "AI-written explanation of a rules-based result. It does not decide eligibility, and it can be wrong — check the official source."
           : "Standard explanation of a rules-based result. It does not decide eligibility — check the official source."}
       </p>
     </div>
   );
+}
+
+function explainErrorMessage(cause: unknown): string {
+  if (cause instanceof ApiError) {
+    const fieldMessage = cause.fieldErrors?.[0]?.message;
+    if (fieldMessage) return fieldMessage;
+    if (cause.status === 404) {
+      return "This scheme's explanation is not available right now.";
+    }
+    if (cause.status >= 500) {
+      return "The explanation service is having trouble. Please try again shortly.";
+    }
+    return cause.message || "Could not load an explanation right now.";
+  }
+  return "Could not load an explanation right now. Check your connection and try again.";
 }

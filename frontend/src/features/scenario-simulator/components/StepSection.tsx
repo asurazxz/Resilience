@@ -17,20 +17,20 @@ export interface StepSectionProps {
 
 export function StepSection({ step, title, description, badge, children }: StepSectionProps) {
   return (
-    <section className="space-y-3">
+    <section className="space-y-6">
       <div className="flex items-start gap-3">
         <span
           aria-hidden="true"
-          className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-700 text-xs font-semibold text-white"
+          className="mono-label step-badge mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
         >
           {step}
         </span>
-        <div className="space-y-1">
-          <h2 className="text-base font-semibold text-slate-900">
+        <div className="prose">
+          <h2 className="subheading">
             <span className="sr-only">Step {step}: </span>
             {title}
           </h2>
-          {description ? <p className="text-sm text-slate-600">{description}</p> : null}
+          {description ? <p className="body-text">{description}</p> : null}
           {badge}
         </div>
       </div>

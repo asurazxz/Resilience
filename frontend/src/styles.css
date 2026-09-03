@@ -1,99 +1,382 @@
 @import "tailwindcss";
 
+/*
+ * Resilience dark design system.
+ * Cobalt-accent monochrome palette. Token values below are the single source
+ * of truth for colour: every token here is referenced somewhere, and nothing
+ * outside this file may name a colour that is not defined here — an undefined
+ * `var(--color-…)` with no fallback voids the whole declaration and the text
+ * silently inherits whatever sat above it.
+ *   --font-display : DM Serif Display (headlines)
+ *   --font-sans     : Inter (UI + body)
+ *   --font-mono     : Roboto Mono (labels + data)
+ */
+@theme {
+  /* Colors */
+  --color-cobalt: #5266eb;
+  --color-onyx: #171721;
+  --color-graphite-card: #1e1e2a;
+  --color-obsidian-button: #272735;
+  /* Slate is a BORDER colour only — at 3.3:1 on Onyx it fails text contrast. */
+  --color-slate: #70707d;
+  --color-ash: #c3c3cc;
+  --color-ivory: #ededf3;
+  --color-pure: #ffffff;
+  --color-void: #000000;
+
+  /* Typography — Font Families (licensed fonts substituted per implementation brief) */
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Typography — Scale. Only the sizes the semantic classes below consume;
+     unreferenced entries were removed so the file stays a true source list. */
+  --text-mono-label: 11px;
+  --leading-mono-label: 2;
+  --text-body: 16px;
+  --leading-body: 1.6;
+  --text-subheading: 18px;
+  --leading-subheading: 1.6;
+
+  /*
+   * Spacing: the default Tailwind 4px scale (`--spacing` = 0.25rem), used
+   * deliberately. Named `--spacing-4`/`-8`/`-12`… overrides used to live here
+   * and silently hijacked the matching utilities — `p-4` resolved to 4px
+   * instead of 16px, `mt-8` to 8px, `h-32` to 32px — which is what made every
+   * page read as cramped. Rhythm now: 12px (`-3`) between related lines,
+   * 24px (`-6`) between blocks inside a card, 40px (`-10`) between sections.
+   */
+
+  /* Border Radius */
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-full: 1440px;
+}
+
 :root {
-  /* DESIGN.md's paper-like palette, adapted for a touch-first product UI. */
-  --paper: #f7f7f4;
-  --bone: #f2f1ed;
-  --linen: #e6e5e0;
-  --stone: #cdcdc9;
-  --ash: #7a7974;
-  --ink: #26251e;
-  --ember: #f54e00;
-  --forest: #34785c;
-  --amber: #c08532;
-  --danger: #cf2d56;
+  /* Named radii (DESIGN.md "Border Radius" table) */
+  --radius-cards: 16px;
+  --radius-inputs: 8px;
+  --radius-buttons: 8px;
+  --radius-navitems: 8px;
+  --radius-pillbuttons: 9999px;
+  --radius-featurecards: 30px;
+  --radius-categorytiles: 30px;
 
-  /* Existing Tailwind utilities inherit the new warm system. */
-  --color-slate-50: var(--bone);
-  --color-slate-100: var(--linen);
-  --color-slate-200: var(--stone);
-  --color-slate-300: #b8b7b1;
-  --color-slate-400: #94938e;
-  --color-slate-500: var(--ash);
-  --color-slate-600: #62615d;
-  --color-slate-700: #474640;
-  --color-slate-800: #34332e;
-  --color-slate-900: var(--ink);
-  --color-slate-950: var(--ink);
-  --color-white: var(--paper);
-  --color-indigo-50: #edece6;
-  --color-indigo-700: var(--ink);
-  --color-indigo-800: #11110e;
-  --color-emerald-50: #e9f1ec;
-  --color-emerald-200: #b8d0c1;
-  --color-emerald-700: var(--forest);
-  --color-emerald-800: #285d47;
-  --color-rose-50: #fbedf0;
-  --color-rose-700: #a92345;
-  --color-amber-50: #fff6df;
-  --color-amber-100: #f8e8bd;
-  --color-amber-600: var(--amber);
-  --color-amber-800: #72500d;
-  --color-amber-900: #5b3f09;
-  --color-sky-50: #edf3f5;
-  --color-sky-200: #bfd0d4;
+  /* Surfaces */
+  --surface-onyx: #171721;
+  --surface-graphite: #1e1e2a;
+  --surface-obsidian-button: #272735;
+  --surface-mist: #e2e3ed;
 
-  font-family: Lato, "Trebuchet MS", ui-sans-serif, system-ui, sans-serif;
-  color: var(--ink);
-  background: var(--paper);
+  /* Layout */
+  --page-max-width: 1200px;
+  --card-padding: 32px;
+
+  /* Motion — quick state transitions only; no springs, no parallax. */
+  --motion-quick: 0.2s ease;
+
+  color-scheme: dark;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  color: var(--color-ivory);
+  background: var(--surface-onyx);
   font-synthesis: none;
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--paper); }
-button, input, select { font: inherit; }
-button { cursor: pointer; }
-button:disabled { cursor: not-allowed; opacity: .55; }
-::selection { background: #8bc4f8; color: var(--ink); }
 
-h1, h2, h3 { font-weight: 400; letter-spacing: -0.02em; }
-
-input, select {
-  min-height: 44px;
-  width: 100%;
-  border: 1px solid var(--stone);
-  border-radius: 4px;
-  background: var(--paper);
-  padding: .65rem .8rem;
-  color: var(--ink);
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--surface-onyx);
+  color: var(--color-ivory);
 }
 
-input:focus, select:focus, button:focus-visible, a:focus-visible {
-  outline: 3px solid #8bc4f8;
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .55; }
+::selection { background: var(--color-cobalt); color: var(--color-pure); }
+
+h1, h2, h3 { font-weight: 400; }
+
+a { color: inherit; }
+
+/* Bare form controls inherit the dark `.field` treatment so features that
+   don't reach for `.field` explicitly still render correctly. */
+input, select, textarea {
+  background: var(--surface-obsidian-button);
+  color: var(--color-ivory);
+  border: 1px solid var(--color-slate);
+  border-radius: var(--radius-inputs);
+  padding: 8px 12px 8px 22px;
+  min-height: 44px;
+  width: 100%;
+  transition: border-color var(--motion-quick), background-color var(--motion-quick);
+}
+
+input::placeholder, select::placeholder, textarea::placeholder { color: var(--color-ash); }
+
+input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--color-cobalt);
   outline-offset: 2px;
 }
 
-@layer components {
-  .card { @apply border p-5; border-color: var(--stone); border-radius: 4px; background: var(--bone); box-shadow: 0 14px 32px rgba(38, 37, 30, .08), 0 0 0 1px rgba(38, 37, 30, .03); }
-  .button-primary { @apply inline-flex min-h-11 items-center justify-center px-4 py-2 transition; border-radius: 4px; background: var(--ink); color: var(--paper); font-weight: 500; }
-  .button-primary:hover { background: #11110e; }
-  .button-secondary { @apply inline-flex min-h-11 items-center justify-center border px-4 py-2 transition; border-color: var(--stone); border-radius: 4px; background: var(--linen); color: var(--ink); font-weight: 500; }
-  .button-secondary:hover { background: #dcdbd5; }
-  .eyebrow { @apply text-xs uppercase; color: var(--ash); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-weight: 500; letter-spacing: .08em; }
-  .label { @apply mb-1.5 block text-sm; color: var(--ink); font-weight: 500; }
+/* ---------------------------------------------------------------------- */
+/* Semantic classes — the shared contract every feature team builds from.   */
+/*                                                                          */
+/* Text colour has exactly three roles. Nothing else may colour type:       */
+/*   Ivory  — headings and section titles          (.ink-heading)           */
+/*   Ash    — body copy, descriptions, labels      (.ink-body)              */
+/*   White  — key figures, one per block, sparing  (.ink-key)               */
+/* Slate is borders only (3.3:1 fails as text) and Cobalt never colours     */
+/* type under 24px.                                                         */
+/* ---------------------------------------------------------------------- */
+
+.page {
+  max-width: var(--page-max-width);
+  margin-inline: auto;
+  padding-inline: 24px;
 }
 
-/* Keep the broad existing interface coherent as it adopts the shared tokens. */
-.resilience-app [class*="rounded-"],
-.resilience-onboarding [class*="rounded-"] { border-radius: 4px; }
-.resilience-app h1,
-.resilience-app h2,
-.resilience-onboarding h1,
-.resilience-onboarding h2 { font-weight: 400 !important; letter-spacing: -0.025em; }
-.resilience-app [class*="font-black"],
-.resilience-onboarding [class*="font-black"] { font-weight: 500 !important; }
+.display-hero {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 8vw, 96px);
+  font-weight: 400;
+  line-height: 0.9;
+  color: var(--color-ivory);
+  /* DM Serif Display ships only weight 400; tightened tracking approximates
+     the specified whisper-weight 300. */
+  letter-spacing: -0.02em;
+}
+
+.display-lg {
+  font-family: var(--font-display);
+  font-size: clamp(30px, 4vw, 38px);
+  font-weight: 400;
+  line-height: 0.95;
+  color: var(--color-ivory);
+  letter-spacing: -0.02em;
+}
+
+.subheading {
+  font-family: var(--font-sans);
+  font-size: var(--text-subheading);
+  font-weight: 300;
+  /* Generous leading, matched to .body-text, so a subheading sitting directly
+     above its paragraph reads as part of the same block. */
+  line-height: var(--leading-subheading);
+  color: var(--color-ivory);
+}
+
+.body-text {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  font-weight: 400;
+  line-height: var(--leading-body);
+  color: var(--color-ash);
+}
+
+/* Secondary body size — hints, captions, disclaimers. Same Ash, same leading;
+   these classes are unlayered, so they beat a Tailwind `text-xs`/`text-sm`
+   and are the supported way to ask for smaller copy. */
+.body-text-sm {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--color-ash);
+}
+
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-mono-label);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.182em;
+  color: var(--color-ash);
+}
+
+/* Existing markup uses `.eyebrow`; keep it as an alias of `.mono-label`. */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-mono-label);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.182em;
+  color: var(--color-ash);
+}
+
+/* The three text roles, as classes. Declared after the type classes above so
+   they win against `.body-text`/`.mono-label` regardless of attribute order,
+   and so features stop reaching for inline `style={{ color }}`. */
+.ink-heading { color: var(--color-ivory); }
+.ink-body { color: var(--color-ash); }
+.ink-key { color: var(--color-pure); }
+
+/*
+ * Readable measure and vertical rhythm for text-heavy blocks: about 65
+ * characters a line, 12px between stacked children, and 24px above any
+ * heading so it groups with the copy it introduces rather than floating.
+ */
+.prose { max-width: 65ch; }
+.prose > * + * { margin-top: 12px; }
+.prose > * + :where(h1, h2, h3, h4, h5, h6) { margin-top: 24px; }
+
+.card {
+  background: var(--surface-graphite);
+  border-radius: var(--radius-cards);
+  padding: var(--card-padding);
+  box-shadow: none;
+  border: none;
+}
+
+/* A card nested inside another card — a stat tile, a small readout. Declared
+   after `.card` so it wins; both are unlayered, so a Tailwind `p-*` cannot
+   change a card's padding. */
+.card-compact { padding: 16px; }
+
+.card-inverted {
+  background: var(--surface-mist);
+  border-radius: var(--radius-featurecards);
+  padding: var(--card-padding);
+  color: var(--color-onyx);
+}
+
+.tile {
+  border-radius: var(--radius-categorytiles);
+  padding: var(--card-padding);
+  color: var(--color-pure);
+}
+
+.tile-accent { background: var(--color-cobalt); color: var(--color-pure); }
+.tile-muted {
+  background: var(--surface-obsidian-button);
+  color: var(--color-ivory);
+  border: 1px solid var(--color-slate);
+}
+
+.button-primary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-cobalt);
+  color: var(--color-pure);
+  border-radius: var(--radius-buttons);
+  padding: 12px 18px;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 400;
+  border: none;
+  transition: opacity var(--motion-quick), background-color var(--motion-quick);
+}
+.button-primary:hover { opacity: 0.85; }
+
+.button-secondary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-obsidian-button);
+  border: 1px solid var(--color-slate);
+  color: var(--color-ivory);
+  border-radius: var(--radius-buttons);
+  padding: 12px 18px;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 400;
+  transition: background-color var(--motion-quick), opacity var(--motion-quick);
+}
+.button-secondary:hover { background: #313145; }
+
+.button-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-slate);
+  border-radius: var(--radius-pillbuttons);
+  color: var(--color-ivory);
+  font-family: var(--font-sans);
+  transition: background-color var(--motion-quick), opacity var(--motion-quick);
+}
+.button-pill:hover { background: rgba(255, 255, 255, 0.16); }
+
+.nav-glass {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-navitems);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.field {
+  background: var(--surface-obsidian-button);
+  color: var(--color-ivory);
+  border: 1px solid var(--color-slate);
+  border-radius: var(--radius-inputs);
+  padding: 8px 12px 8px 22px;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  transition: border-color var(--motion-quick), background-color var(--motion-quick);
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--text-mono-label);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.182em;
+  color: var(--color-ash);
+  display: block;
+  margin-bottom: 8px;
+}
+
+/* The numbered chip beside a step title: dark type on a light chip, which is
+   the one place a surface token doubles as a text colour. */
+.step-badge {
+  background: var(--surface-mist);
+  color: var(--color-onyx);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-slate);
+  border-radius: var(--radius-pillbuttons);
+  padding: 4px 12px;
+  font-family: var(--font-mono);
+  font-size: var(--text-mono-label);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.182em;
+  color: var(--color-ivory);
+}
+
+/*
+ * A short aside inside a card — an offline warning, "these are example
+ * numbers", the consequence of a figure just entered. Sentence case at a
+ * readable size, unlike `.badge`, which is a one- or two-word mono chip.
+ */
+.note {
+  display: block;
+  background: var(--surface-obsidian-button);
+  border-radius: var(--radius-inputs);
+  padding: 12px 16px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-ash);
+}
+
+.surface-abyss { background: var(--surface-onyx); }
+
+.divider { border-color: var(--color-slate); }
 
 @media (max-width: 47rem) {
-  .resilience-app .card { padding: 1rem; }
-  .resilience-app main { padding-inline: 1rem; }
+  .card { padding: 20px; }
 }

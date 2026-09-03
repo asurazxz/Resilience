@@ -84,6 +84,8 @@ export interface Transaction {
   amountCents: number;
   description?: string | null;
   occurredOn: string;
+  /** Inclusive end date for an amount earned or spent over multiple days. */
+  occurredUntil?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }

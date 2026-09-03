@@ -28,7 +28,7 @@ from ...features.scheme_navigator.schemas import (
     ExplanationResponse,
     QuestionnaireField,
 )
-from ...integrations.ai.client import GroqClient, LLMClient, LLMUnavailableError
+from ...integrations.ai.client import GrokClient, LLMClient, LLMUnavailableError
 
 router = APIRouter(prefix="/scheme-navigator", tags=["scheme-navigator"])
 
@@ -41,7 +41,7 @@ def get_llm_client() -> LLMClient | None:
     """
 
     try:
-        return GroqClient()
+        return GrokClient()
     except LLMUnavailableError:
         return None
 

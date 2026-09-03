@@ -40,8 +40,12 @@ class Settings(BaseSettings):
     supabase_jwt_audience: str = "authenticated"
     db_pool_size: int = Field(default=5, ge=1, le=20)
     db_max_overflow: int = Field(default=5, ge=0, le=20)
-    groq_api_key: str = ""
-    explainer_model: str = "openai/gpt-oss-120b"
+    # x.ai (Grok) powers the Scheme Navigator assistant. With no key the
+    # feature degrades to its deterministic answers rather than failing.
+    xai_api_key: str = ""
+    xai_model: str = "grok-4.6"
+    xai_base_url: str = "https://api.x.ai/v1"
+    xai_timeout_seconds: float = Field(default=30.0, gt=0, le=120)
 
     @property
     def allowed_origins(self) -> list[str]:

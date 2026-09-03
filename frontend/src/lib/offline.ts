@@ -23,6 +23,14 @@ class ResilienceDatabase extends Dexie {
       bootstrap: "key",
       mutations: "id, ownerId, [ownerId+status], [ownerId+createdAt]"
     });
+    // v2 caches predate `emergencyFundBalanceCents`; the v3 upgrade discards
+    // those stale bootstraps outright rather than patching around them.
+    this.version(3).stores({
+      bootstrap: "key",
+      mutations: "id, ownerId, [ownerId+status], [ownerId+createdAt]"
+    }).upgrade(async (tx) => {
+      await tx.table("bootstrap").clear();
+    });
   }
 }
 

@@ -13,7 +13,7 @@
  * baseline built from real weeks.
  */
 
-import { weeklyNormalisedTotal } from "../income-reality/foundationAdapter";
+import { transactionDailyAmounts, weeklyNormalisedTotal } from "../income-reality/foundationAdapter";
 import type {
   EssentialExpense,
   RecurringWorkCost,
@@ -58,7 +58,8 @@ export function buildFoundationBaseline(
 
   const latestDate = transactions.reduce(
     (latest, transaction) =>
-      transaction.occurredOn > latest ? transaction.occurredOn : latest,
+      (transaction.occurredUntil ?? transaction.occurredOn) > latest
+        ? (transaction.occurredUntil ?? transaction.occurredOn) : latest,
     transactions[0].occurredOn,
   );
   const windowEndMonday = mondayOf(latestDate);
@@ -71,14 +72,11 @@ export function buildFoundationBaseline(
   let incomeCents = 0;
   let variableCostCents = 0;
   for (const transaction of transactions) {
-    if (
-      transaction.occurredOn < windowStartMonday ||
-      transaction.occurredOn > windowEndSunday
-    ) {
-      continue;
+    for (const daily of transactionDailyAmounts(transaction)) {
+      if (daily.date < windowStartMonday || daily.date > windowEndSunday) continue;
+      if (transaction.entryType === "income") incomeCents += daily.amountCents;
+      else variableCostCents += daily.amountCents;
     }
-    if (transaction.entryType === "income") incomeCents += transaction.amountCents;
-    else variableCostCents += transaction.amountCents;
   }
 
   return {

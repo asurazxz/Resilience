@@ -2,6 +2,48 @@
 
 Append significant sessions in reverse chronological order. Keep entries concise and factual.
 
+## 2026-09-03 — Transaction ranges and local-stack recovery
+
+- Added transaction editing and an optional inclusive end date, with server-side ownership/date validation and a non-destructive local Supabase migration.
+- Split range amounts by calendar day in Income Reality and Scenario Simulator so edits flow into derived figures.
+- Removed the duplicate Home emergency-fund card and balance editor, hardened stale cache/money rendering against `NaN`, and made Financial Details display-first with an edit toggle.
+- Started Docker Desktop, applied `20260903150000_transaction_date_ranges.sql` locally, started the API with the working `.venv313` environment, and opened the local PWA.
+- Verified frontend production build and FastAPI readiness. The default `.venv` is Python 3.14 and cannot launch Uvicorn because its dependencies are incomplete; use `.venv313`.
+
+## 2026-09-03 — Cobalt palette, public landing page, and the six-month fund default
+
+- Replaced the Origin palette wholesale with the supplied Cobalt scheme: Onyx canvas, Graphite cards, Obsidian elevated surfaces, Slate borders, Ash body copy, Ivory headings, and Cobalt as the single accent. Structure, typography, radii, spacing and the flat no-shadow elevation are unchanged.
+- Because the scheme has one accent rather than six, the chromatic feature tiles collapsed to an accent tile and a muted tile, alternating so Cobalt punctuates rather than dominates. Chart colours moved into `frontend/src/lib/chartTheme.ts` so the next palette change is a single edit.
+- Measured contrast before assigning roles. Cobalt reaches only 3.4:1 on the canvas, so it is confined to fills, borders, focus rings and chart strokes, never body text; white on a Cobalt fill reaches 4.7:1 and carries the primary action. Slate is restricted to borders. Implementing this surfaced several pre-existing violations where the old accent had been used as small text, which were corrected.
+- Made the landing page the public front door. A signed-out visitor now meets it at the root with a single call to action, and the sign-in form moved to its own route. Previously the root showed a bare sign-in form, which is not a landing page.
+- Fixed the emergency fund default: the code already said 26 weeks, but plan rows created before that change still held the old four-week value, so existing users saw a four-week goal. A migration moves coverage plans off the old default. It cannot distinguish a deliberate four-week choice from the old default, and that trade-off is recorded in the migration and the model documentation.
+- The weekly saving target and recommendation now disappear once the goal is met, replaced by a calm confirmation that still makes raising the goal obvious. Contributions, emergency use and the starting-balance correction are untouched.
+- Verified: 292 backend tests with the database and Ruff clean, 94 frontend tests, TypeScript and production builds clean, zero old-palette values and zero old tile modifiers remaining, and a live browser pass confirming the canvas renders at #171721 and a signed-out visitor reaches the landing page with exactly one call to action.
+
+## 2026-09-03 — Origin dark design system, landing page, and the Financial Score fixes
+
+- Applied the supplied Origin Financial dark design system across every page: Obsidian canvas, DM Serif Display headlines substituting Lyon Display, Inter for UI, Roboto Mono for uppercase labels, flat elevation by surface colour step, and chromatic colour reserved for full-bleed feature tiles. One global token layer and a 25-class semantic contract in `frontend/src/styles.css` are consumed by every feature folder, so the four parallel restyles could not drift.
+- Because the system forbids chromatic accents under 18px, income and cost, matched and unmatched schemes, and warning states now carry a sign, a mono label, or an icon instead of relying on green and red.
+- Added a landing page for visitors who have not onboarded: a display hero, chromatic feature tiles, sample visuals built from real components with fictional figures, and exactly one call to action into onboarding. An existing user never sees it, including when the bootstrap request fails.
+- Diagnosed the reported "financial score not calculated" as two separate faults. The running backend was serving code older than the score route and returned 404, and the score itself withheld a number without saying why. The response now carries a `missingInputs` list naming each absent input with an in-app route, shown whether the score is withheld or merely incomplete.
+- Fixed a request storm found only by watching the live app: the score refetch was keyed off the bootstrap `syncedAt` timestamp, which the server regenerates on every response, producing eight requests per page load. The key is now derived from the user's own data, and a sequence guard stops a stale response overwriting a newer one.
+- Added a cumulative-savings chart per savings goal with a dashed target line and an accessible text summary, a current-week card showing money in, out, and remaining, and renamed the vague "money left" figure to "left after costs" with a line stating what it subtracts.
+- Sync status is now hidden unless a mutation actually failed or conflicted; the offline banner remains, since connectivity is not sync state.
+- Verified: 290 backend tests with the database and Ruff clean, 89 frontend tests, TypeScript and production builds clean, every consumed design class defined, zero light-theme utilities remaining, and a live browser pass confirming the canvas renders at #0f1011 with no horizontal overflow. The score could not be exercised in the browser because the developer's backend process predates the route and needs restarting.
+
+## 2026-09-03 — Financial Score, home page rebuild, and the dated-range consistency fix
+
+- Reviewed the dated-range transaction work through the refreshed Graphify graph and verified every finding against source and a live database probe.
+- Closed the critical inconsistency: a transaction carrying `occurred_until` was spread across its calendar days by the frontend but assigned entirely to its start week by the backend, which distorted the savings recommendation. The backend now adopts the daily spread, both implementations are pinned to the shared fixture `contracts/fixtures/transaction-week-split.json`, and ranges are capped at 366 days in the database, the schema, and the date input.
+- Added a deterministic Financial Score (`GET /api/v1/financial-score`) scoring the emergency fund out of 40, savings habit out of 30, and cash flow out of 30, rescaled over whatever can actually be measured. No AI participates; every figure traces to a documented formula.
+- Rebuilt the Home page around the score: an SVG dial and component breakdown, one row of three key figures, and a single eight-week trend chart, with details left to their own tabs.
+- Redesigned the Savings tab to match the Emergency Fund layout, removed its pinned fund overview, and put both the add-goal form and each goal's detail behind keyboard-operable disclosures. Reworded the Setback planner for a general reader, removed its situation preset picker, and grouped the three suggested actions into one box.
+- Fixed two reported defects at the root: the transaction amount field carried a `pattern` with literal double backslashes so no number could ever satisfy it, and the explainer posted `ruleId` where the API expects `rule_id`. The scheme navigator request bodies are now typed against the generated OpenAPI schemas so that class of drift fails the build.
+- Moved Financial details under Profile with `/settings` redirecting, restored the ability to correct the emergency fund starting balance behind a disclosure, and stopped `formatMoney` from rendering a fabricated S$0.00 by bumping the offline cache version instead.
+- Fixed a genuine 500: the bootstrap created a profile without committing it, and the essential-expense and recurring-cost writes never ensured one, so a new user's first write failed a foreign key. Both paths are fixed and covered by database-backed regression tests.
+- Corrected two flaws in the score design found only by live probing. A user with no measurable emergency fund scored 100 and was labelled resilient, so the band is now capped when the buffer is unmeasured or under half its target. A brand-new user scored 0, so a score is now withheld until the fund or cash flow can actually be measured.
+- Verified: 279 backend tests with the database, 59 frontend tests, Ruff clean, TypeScript and production builds clean, regenerated OpenAPI and TypeScript types, and live end-to-end probes of the score, transactions, explainer, and emergency fund. Not verified in a real browser session because agent sign-in credentials are unavailable.
+
 ## 2026-09-03 — Graphify-led review, emergency-fund redesign, and roadmap refactor
 
 - Reviewed the whole project with the Graphify graph plus source verification; findings recorded in the conversation and driving this session's changes.

@@ -6,18 +6,24 @@
  * nav and the page, so the toggle can never overlap a heading or the sync
  * button. The side nav starts below the bar and slides in from the left; on
  * desktop the main column is shifted right by the nav width only while the
- * nav is open.
+ * nav is open. The always-visible toggle keeps the collapsible menu reachable
+ * on every breakpoint.
  */
 
 .resilience-app {
   --topbar-height: 4rem;
   --side-nav-width: 16rem;
+  background: var(--surface-onyx);
+  /* Body copy is Ash; Ivory and White are opted into per heading or figure. */
+  color: var(--color-ash);
 }
 
 .app-topbar {
   align-items: center;
-  background: color-mix(in srgb, var(--paper) 96%, transparent);
-  border-bottom: 1px solid var(--stone);
+  background: rgba(23, 23, 33, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   display: flex;
   gap: .85rem;
   /* A fixed height keeps the side nav's own `top` exactly flush with the bar. */
@@ -30,7 +36,7 @@
 
 .site-brand {
   align-items: center;
-  color: var(--ink);
+  color: var(--color-ivory);
   display: inline-flex;
   gap: .65rem;
   min-width: 0;
@@ -38,29 +44,60 @@
 }
 
 .site-brand img { height: 2rem; width: 2rem; }
-.site-brand strong { font-weight: 500; letter-spacing: -.02em; line-height: 1.25; }
-.site-brand span { color: var(--ash); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .7rem; }
+.site-brand strong { font-weight: 400; letter-spacing: -.02em; line-height: 1.25; }
+.site-brand span { color: var(--color-ash); font-family: var(--font-mono); font-size: .7rem; }
 
-/* Visible at every width — the only control that opens and closes the nav. */
+/*
+ * Visible at every width — the only control that opens and closes the nav.
+ * The label is an icon; the accessible name lives on `aria-label`, so screen
+ * readers still hear "Menu" / "Close menu". 2.75rem square keeps the touch
+ * target at 44x44 even though the glyph is 24px.
+ */
 .nav-toggle {
-  background: var(--linen);
-  border: 1px solid var(--stone);
-  border-radius: 4px;
-  color: var(--ink);
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-navitems);
+  color: var(--color-ivory);
+  display: inline-flex;
   flex: 0 0 auto;
-  font-size: .85rem;
-  font-weight: 500;
+  justify-content: center;
   min-height: 2.75rem;
-  padding: .45rem .7rem;
-  white-space: nowrap;
+  min-width: 2.75rem;
+  padding: 0;
+  transition: background-color var(--motion-quick);
 }
 
-.nav-toggle:hover { background: #dcdbd5; }
+.nav-toggle:hover { background: rgba(255, 255, 255, 0.18); }
+
+.nav-toggle:focus-visible {
+  outline: 2px solid var(--color-cobalt);
+  outline-offset: 2px;
+}
+
+.nav-toggle svg { display: block; }
+
+/* Three lines that fold into a close mark, on the shared 0.2s ease timing. */
+.nav-toggle-line {
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  transform-origin: center;
+  transition: transform var(--motion-quick), opacity var(--motion-quick);
+}
+
+.nav-toggle-open .nav-toggle-line-top { transform: rotate(45deg) translateY(5px); }
+.nav-toggle-open .nav-toggle-line-middle { opacity: 0; }
+.nav-toggle-open .nav-toggle-line-bottom { transform: rotate(-45deg) translateY(-5px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-toggle-line { transition: none; }
+}
 
 /* Toggleable account-aware side navigation. */
 .side-nav {
-  background: var(--paper);
-  border-right: 1px solid var(--stone);
+  background: var(--surface-onyx);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
   bottom: 0;
   display: flex;
   flex-direction: column;
@@ -78,8 +115,19 @@
 
 .side-nav-open { transform: translateX(0); }
 .side-nav nav { display: grid; gap: .25rem; }
-.side-nav nav a { border-radius: .75rem; padding: .7rem .8rem; font-weight: 600; color: #334155; text-decoration: none; }
-.side-nav nav a.active, .side-nav nav a:hover, .side-nav nav a[aria-current="page"] { background: var(--linen); color: var(--ink); }
+.side-nav nav a {
+  border-radius: var(--radius-navitems);
+  padding: .7rem .8rem;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  color: var(--color-ash);
+  text-decoration: none;
+  transition: background-color var(--motion-quick), color var(--motion-quick);
+}
+.side-nav nav a.active, .side-nav nav a:hover, .side-nav nav a[aria-current="page"] {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-ivory);
+}
 
 @media (prefers-reduced-motion: reduce) {
   .side-nav { transition: none; }
@@ -87,8 +135,11 @@
 
 /* Reserve room for the fixed bar so no heading sits underneath it. */
 .app-main {
-  padding-top: calc(var(--topbar-height) + 1.5rem);
+  padding-top: calc(var(--topbar-height) + 40px);
   transition: margin-left .2s ease;
+  background: var(--surface-onyx);
+  color: var(--color-ash);
+  min-height: 100vh;
 }
 
 .sync-fab, .sync-panel { transition: left .2s ease; }

@@ -268,5 +268,6 @@ class Transaction(Base):
     amount_cents: Mapped[int] = mapped_column(BigInteger)
     description: Mapped[str | None] = mapped_column(Text)
     occurred_on: Mapped[date] = mapped_column(Date)
+    occurred_until: Mapped[date | None] = mapped_column(Date)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

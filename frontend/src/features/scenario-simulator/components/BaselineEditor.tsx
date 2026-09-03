@@ -22,7 +22,7 @@ export interface BaselineEditorProps {
 
 export function BaselineEditor({ baseline, summary, onChange }: BaselineEditorProps) {
   return (
-    <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
+    <div className="card space-y-6">
       <MoneyField
         id="baseline-gross"
         label="Weekly earnings, before costs"
@@ -31,50 +31,50 @@ export function BaselineEditor({ baseline, summary, onChange }: BaselineEditorPr
         onChange={(cents) => onChange({ weekly_gross_earnings_cents: cents })}
       />
 
-      <fieldset className="space-y-4 rounded-lg border border-slate-200 p-3">
-        <legend className="px-1 text-sm font-medium text-slate-700">
-          What work costs you each week
+      <fieldset className="space-y-6 rounded-lg p-4" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+        <legend className="label px-1">
+          What it costs you to work each week
         </legend>
-        <p className="text-xs text-slate-600">
-          Split these two ways. Some costs stop when you stop working, and some keep charging you
-          anyway — that difference is what decides how bad a week off really is.
+        <p className="body-text-sm prose">
+          Split these into two kinds, because they behave differently in a week you do not
+          work: some costs disappear when you stop, others keep charging you anyway.
         </p>
 
         <MoneyField
           id="baseline-variable-costs"
-          label="Costs that stop when you stop working"
+          label="Costs that only happen when you work"
           valueCents={baseline.weekly_variable_work_costs_cents}
-          hint="Fuel, parking, commission. No work that week means you do not pay these."
+          hint="Fuel, parking, commission. If you do not work that week, you do not pay these."
           onChange={(cents) => onChange({ weekly_variable_work_costs_cents: cents })}
         />
 
         <MoneyField
           id="baseline-fixed-costs"
-          label="Liabilities"
+          label="Costs you pay every week, whether you work or not"
           valueCents={baseline.weekly_fixed_work_costs_cents}
           hint="Vehicle or bike rental, insurance, phone plan, loan repayments."
           onChange={(cents) => onChange({ weekly_fixed_work_costs_cents: cents })}
         />
 
         {baseline.weekly_fixed_work_costs_cents > 0 ? (
-          <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-900">
-            So in a week you cannot work at all, you would still pay{' '}
-            <span className="font-semibold tabular-nums">
+          <p className="note">
+            So in a week you cannot work at all, you would still have to pay{' '}
+            <span className="ink-key font-semibold tabular-nums">
               {formatCents(baseline.weekly_fixed_work_costs_cents)}
             </span>
             .
           </p>
         ) : (
-          <p className="rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-600">
-            With nothing here, a week you cannot work costs you nothing to keep going. If you rent
-            a vehicle or pay insurance, add it above.
+          <p className="note">
+            With nothing entered here, a week you cannot work costs you nothing extra. If you
+            rent a vehicle or pay insurance, add it above.
           </p>
         )}
       </fieldset>
 
       <MoneyField
         id="baseline-essentials"
-        label="Weekly essentials"
+        label="What you need to spend each week to get by"
         valueCents={baseline.weekly_essential_expenses_cents}
         hint="Rent, food, utilities, family support."
         onChange={(cents) => onChange({ weekly_essential_expenses_cents: cents })}
@@ -82,28 +82,28 @@ export function BaselineEditor({ baseline, summary, onChange }: BaselineEditorPr
 
       <MoneyField
         id="baseline-savings"
-        label="Savings you could use today"
+        label="Savings you could use right now"
         valueCents={baseline.emergency_savings_cents}
-        hint="What you could draw on if your income stopped."
+        hint="Money you could draw on today if your income stopped."
         onChange={(cents) => onChange({ emergency_savings_cents: cents })}
       />
 
       {summary ? (
-        <dl className="grid grid-cols-2 gap-3 rounded-lg bg-slate-50 p-3 text-xs">
+        <dl className="note grid grid-cols-2 gap-6">
           <div>
-            <dt className="text-slate-500">You keep from work</dt>
-            <dd className="font-semibold tabular-nums text-slate-900">
+            <dt className="mono-label">What you keep from work</dt>
+            <dd className="ink-key mt-2 font-semibold tabular-nums">
               {formatCents(summary.weekly_net_work_income_cents)} a week
             </dd>
           </div>
           <div>
-            <dt className="text-slate-500">Left after essentials</dt>
-            <dd
-              className={`font-semibold tabular-nums ${
-                summary.weekly_surplus_cents < 0 ? 'text-rose-700' : 'text-slate-900'
-              }`}
-            >
-              {formatCents(summary.weekly_surplus_cents)} a week
+            <dt className="mono-label">Left after everyday spending</dt>
+            <dd className="ink-key mt-2 font-semibold tabular-nums">
+              {summary.weekly_surplus_cents < 0 ? '−' : ''}
+              {formatCents(Math.abs(summary.weekly_surplus_cents))} a week
+              {summary.weekly_surplus_cents < 0 ? (
+                <span className="mono-label ml-1">SHORTFALL</span>
+              ) : null}
             </dd>
           </div>
         </dl>

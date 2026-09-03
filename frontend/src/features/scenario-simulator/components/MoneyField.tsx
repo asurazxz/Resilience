@@ -62,12 +62,12 @@ export function MoneyField({ id, label, valueCents, hint, onChange }: MoneyField
   }
 
   return (
-    <div className="space-y-1">
-      <label htmlFor={id} className="text-sm font-medium text-slate-700">
+    <div className="space-y-2">
+      <label htmlFor={id} className="label">
         {label}
       </label>
       <div className="flex items-center gap-2">
-        <span className="text-sm text-slate-500">S$</span>
+        <span className="body-text">S$</span>
         <input
           id={id}
           type="text"
@@ -78,10 +78,10 @@ export function MoneyField({ id, label, valueCents, hint, onChange }: MoneyField
           placeholder="0"
           value={draft}
           onChange={(event) => handleChange(event.target.value)}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-base tabular-nums focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-100"
+          className="field w-full px-3 py-2 text-base tabular-nums"
         />
       </div>
-      {hint ? <p className="text-xs text-slate-500">{hint}</p> : null}
+      {hint ? <p className="body-text-sm">{hint}</p> : null}
     </div>
   );
 }

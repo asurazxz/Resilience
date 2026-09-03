@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import case, func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from ...core.errors import DomainError
@@ -22,6 +22,7 @@ from ..emergency_fund_ledger import (
     weekly_essential_expenses_cents,
     weekly_recurring_work_costs_cents,
 )
+from ..transaction_spread import weekly_amounts
 from .models import (
     DEFAULT_COVERAGE_WEEKS,
     AmountGoal,
@@ -138,28 +139,38 @@ class SqlFinancialContextRepository:
     def list_completed_weekly_surpluses(self, user_id: str) -> list[WeeklySurplus]:
         """``S_w = income_w - variable_costs_w - R - E`` per Monday-Sunday week.
 
-        The three deductions come from the shared ledger module so the Income
+        A ranged transaction (``occurred_on``..``occurred_until``) is spread
+        evenly across its calendar days by :mod:`transaction_spread`, cents
+        remainder landing on the earliest days, and each day's share is
+        aggregated onto the Monday of its ISO week. This mirrors
+        ``transactionDailyAmounts`` on the frontend exactly, so a single
+        transaction produces identical weekly figures on both ends. The two
+        other deductions come from the shared ledger module so the Income
         Reality screen and this feature report the same surplus for a week.
         """
         deductions = self._weekly_deductions_cents(user_id)
-        week_start = func.date_trunc("week", Transaction.occurred_on)
         rows = self.session.execute(
             select(
-                week_start.label("week_start"),
-                func.sum(
-                    case(
-                        (Transaction.entry_type == "income", Transaction.amount_cents),
-                        else_=-Transaction.amount_cents,
-                    )
-                ).label("net_cents"),
-            )
-            .where(Transaction.user_id == UUID(user_id))
-            .group_by(week_start)
+                Transaction.entry_type,
+                Transaction.amount_cents,
+                Transaction.occurred_on,
+                Transaction.occurred_until,
+            ).where(Transaction.user_id == UUID(user_id))
         ).all()
         if rows:
+            income_by_week: dict[date, int] = {}
+            net_by_week: dict[date, int] = {}
+            for row in rows:
+                sign = 1 if row.entry_type == "income" else -1
+                for week, cents in weekly_amounts(
+                    row.amount_cents, row.occurred_on, row.occurred_until
+                ).items():
+                    net_by_week[week] = net_by_week.get(week, 0) + sign * cents
+                    if row.entry_type == "income":
+                        income_by_week[week] = income_by_week.get(week, 0) + cents
             return [
-                WeeklySurplus(row.week_start.date(), int(row.net_cents) - deductions)
-                for row in rows
+                WeeklySurplus(week, net_cents - deductions, income_by_week.get(week, 0))
+                for week, net_cents in net_by_week.items()
             ]
         weeks = self.session.scalars(
             select(WeeklyEntry)
@@ -170,7 +181,14 @@ class SqlFinancialContextRepository:
                 selectinload(WeeklyEntry.input_snapshots),
             )
         ).all()
-        return [WeeklySurplus(week.week_start, _week_surplus(week, deductions)) for week in weeks]
+        return [
+            WeeklySurplus(
+                week.week_start,
+                _week_surplus(week, deductions),
+                sum(item.amount_cents for item in week.earnings),
+            )
+            for week in weeks
+        ]
 
     def get_weekly_essential_expenses_cents(self, user_id: str) -> int | None:
         return weekly_essential_expenses_cents(self.session, UUID(user_id))

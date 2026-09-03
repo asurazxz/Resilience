@@ -44,6 +44,14 @@ const EMPTY_BOOTSTRAP: FoundationBootstrap = {
 interface FoundationContextValue {
   data: FoundationBootstrap;
   loading: boolean;
+  /**
+   * True once `data` reflects a real bootstrap (from cache or from a
+   * successful network fetch), as opposed to `EMPTY_BOOTSTRAP`'s defaults.
+   * Stays false when the initial bootstrap fails and no cache exists, so
+   * callers can avoid treating "we don't know yet" as "onboarding is
+   * incomplete".
+   */
+  bootstrapLoaded: boolean;
   online: boolean;
   pending: PendingMutation[];
   refresh: () => Promise<void>;
@@ -51,6 +59,7 @@ interface FoundationContextValue {
   resolveConflict: (id: string, keepLocal: boolean) => Promise<void>;
   saveOnboarding: (payload: Record<string, unknown>) => Promise<void>;
   saveTransaction: (transaction: Omit<Transaction, "id">) => Promise<void>;
+  updateTransaction: (transactionId: string, transaction: Omit<Transaction, "id">) => Promise<void>;
   deleteTransaction: (transactionId: string) => Promise<void>;
   saveAssumptions: (
     recurring: RecurringWorkCost[],
@@ -66,6 +75,7 @@ export function FoundationProvider({ children }: { children: ReactNode }) {
   const ownerId = user?.id;
   const [data, setData] = useState(EMPTY_BOOTSTRAP);
   const [loading, setLoading] = useState(true);
+  const [bootstrapLoaded, setBootstrapLoaded] = useState(false);
   const [online, setOnline] = useState(navigator.onLine);
   const [pending, setPending] = useState<PendingMutation[]>([]);
   const syncing = useRef(false);
@@ -122,14 +132,17 @@ export function FoundationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
     void (async () => {
-      if (!ownerId) { setData(EMPTY_BOOTSTRAP); setLoading(false); return; }
+      if (!ownerId) { setData(EMPTY_BOOTSTRAP); setLoading(false); setBootstrapLoaded(false); return; }
       const cached = await readCachedBootstrap(ownerId);
-      if (active && cached) setData(cached);
+      if (active && cached) { await updateLocal(cached); setBootstrapLoaded(true); }
       await loadPending();
       try {
         await refresh();
+        if (active) setBootstrapLoaded(true);
       } catch {
-        // Cached data remains the explicit offline fallback.
+        // Cached data remains the explicit offline fallback; if there was no
+        // cache either, bootstrapLoaded stays false so callers know the
+        // profile is still unknown rather than genuinely onboarding-incomplete.
       } finally {
         if (active) setLoading(false);
       }
@@ -218,6 +231,14 @@ export function FoundationProvider({ children }: { children: ReactNode }) {
     await refresh();
   }, [refresh]);
 
+  const updateTransaction = useCallback(async (transactionId: string, transaction: Omit<Transaction, "id">) => {
+    await apiRequest(`/foundation/transactions/${transactionId}`, {
+      method: "PATCH",
+      body: JSON.stringify(transaction),
+    });
+    await refresh();
+  }, [refresh]);
+
   const saveAssumptions = useCallback(
     async (
       recurring: RecurringWorkCost[],
@@ -295,6 +316,7 @@ export function FoundationProvider({ children }: { children: ReactNode }) {
       value={{
         data,
         loading,
+        bootstrapLoaded,
         online,
         pending,
         refresh,
@@ -302,6 +324,7 @@ export function FoundationProvider({ children }: { children: ReactNode }) {
         resolveConflict,
         saveOnboarding,
         saveTransaction,
+        updateTransaction,
         deleteTransaction,
         saveAssumptions,
         resetData

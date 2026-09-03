@@ -23,7 +23,7 @@ export function IncomeRealityPage({ weeks }: IncomeRealityPageProps) {
 
   if (weeks.length === 0) {
     return (
-      <div className="card mt-6 text-slate-600">
+      <div className="card mt-6 body-text">
         No transactions yet. Add income or costs to see your weekly Income Reality breakdown.
       </div>
     );
@@ -31,14 +31,15 @@ export function IncomeRealityPage({ weeks }: IncomeRealityPageProps) {
 
   if (error) {
     return (
-      <p className="mt-6 rounded-2xl bg-rose-50 p-4 text-rose-800" role="alert">
-        Could not load Income Reality: {error}
+      <p className="card mt-6" role="alert">
+        <span className="mono-label block mb-2">Error</span>
+        <span className="body-text">Could not load Income Reality: {error}</span>
       </p>
     );
   }
 
   if (loading && !response) {
-    return <p className="card mt-6 text-slate-600" role="status">Calculating your income reality…</p>;
+    return <p className="card mt-6 body-text" role="status">Calculating your income reality…</p>;
   }
 
   if (!response) {
