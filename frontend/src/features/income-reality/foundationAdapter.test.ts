@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { WeeklyEntry } from "../../types/foundation";
-import { adaptFoundationWeeks } from "./foundationAdapter";
+import { adaptFoundationWeeks, adaptTransactions } from "./foundationAdapter";
 
 function weeklyEntry(overrides: Partial<WeeklyEntry> = {}): WeeklyEntry {
   return {
@@ -19,6 +19,40 @@ function weeklyEntry(overrides: Partial<WeeklyEntry> = {}): WeeklyEntry {
 }
 
 describe("Feature 1 to Income Reality adapter", () => {
+  it("groups irregular transaction activity into its actual Monday-to-Sunday week", () => {
+    const result = adaptTransactions([
+      { id: "1", entryType: "income", amountCents: 12000, occurredOn: "2026-09-02" },
+      { id: "2", entryType: "cost", amountCents: 2500, occurredOn: "2026-09-06" },
+      { id: "3", entryType: "income", amountCents: 8000, occurredOn: "2026-09-07" },
+    ]);
+    expect(result.weeks).toEqual([
+      { week_start: "2026-08-31", platform_earnings: [{ platform: "Recorded income", gross_cents: 12000 }], work_costs_cents: 2500, essential_expenses_cents: 0, recorded_cpf_cents: null },
+      { week_start: "2026-09-07", platform_earnings: [{ platform: "Recorded income", gross_cents: 8000 }], work_costs_cents: 0, essential_expenses_cents: 0, recorded_cpf_cents: null },
+    ]);
+  });
+
+  it("adds weekly-normalised recurring work costs and essentials to every week", () => {
+    const result = adaptTransactions(
+      [
+        { id: "1", entryType: "income", amountCents: 12000, occurredOn: "2026-09-02" },
+        { id: "2", entryType: "cost", amountCents: 2500, occurredOn: "2026-09-06" },
+      ],
+      [
+        { id: "r1", category: "insurance", label: "Insurance", amountCents: 5200, cadence: "monthly", isActive: true },
+        { id: "r2", category: "other", label: "Retired", amountCents: 9900, cadence: "weekly", isActive: false },
+      ],
+      [
+        { id: "e1", category: "housing", label: "Rent", amountCents: 80000, cadence: "monthly", isActive: true },
+        { id: "e2", category: "food", label: "Food", amountCents: 12000, cadence: "weekly", isActive: true },
+      ],
+    );
+
+    // 5200 * 12 / 52 = 1200, added on top of the 2500 recorded cost.
+    expect(result.weeks[0].work_costs_cents).toBe(3700);
+    // 80000 * 12 / 52 = 18462, plus the 12000 weekly food budget.
+    expect(result.weeks[0].essential_expenses_cents).toBe(30462);
+  });
+
   it("aggregates platforms and keeps recorded CPF separate from work costs", () => {
     const result = adaptFoundationWeeks([
       weeklyEntry({

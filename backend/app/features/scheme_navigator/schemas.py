@@ -11,10 +11,32 @@ from datetime import date, datetime
 from enum import StrEnum
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 FieldType = Literal["number", "boolean", "select", "date"]
 Operator = Literal["eq", "neq", "gte", "lte", "gt", "lt", "in"]
+
+MAX_ANSWER_LENGTH = 200
+
+
+def _validate_answers(answers: dict[str, Any]) -> dict[str, Any]:
+    """Keep answers to bounded scalars, whatever the client sends.
+
+    Answers reach a model prompt via the chatbot, so an unbounded blob or a
+    nested structure is refused at the boundary rather than trimmed later.
+    """
+
+    for key, value in answers.items():
+        if value is None or isinstance(value, bool | int | float):
+            continue
+        if isinstance(value, str):
+            if len(value) > MAX_ANSWER_LENGTH:
+                raise ValueError(
+                    f"Answer '{key}' must be {MAX_ANSWER_LENGTH} characters or fewer."
+                )
+            continue
+        raise ValueError(f"Answer '{key}' must be a single text, number, or true/false value.")
+    return answers
 
 
 class SelectOption(BaseModel):
@@ -97,7 +119,9 @@ class SchemeResult(BaseModel):
 
 
 class EvaluationRequest(BaseModel):
-    answers: dict[str, Any] = Field(default_factory=dict)
+    answers: dict[str, Any] = Field(default_factory=dict, max_length=32)
+
+    _check_answers = field_validator("answers")(_validate_answers)
 
 
 class EvaluationResponse(BaseModel):
@@ -115,7 +139,7 @@ class SourceSnippet(BaseModel):
 
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant"]
-    content: str
+    content: str = Field(min_length=1, max_length=1_500)
 
 
 class ChatRequest(BaseModel):
@@ -127,9 +151,11 @@ class ChatRequest(BaseModel):
     privacy trade -- see documentation/features/scheme-navigator.md.
     """
 
-    messages: list[ChatMessage] = Field(default_factory=list)
-    answers: dict[str, Any] = Field(default_factory=dict)
-    results: list[SchemeResult] = Field(default_factory=list)
+    messages: list[ChatMessage] = Field(default_factory=list, max_length=12)
+    answers: dict[str, Any] = Field(default_factory=dict, max_length=32)
+    results: list[SchemeResult] = Field(default_factory=list, max_length=10)
+
+    _check_answers = field_validator("answers")(_validate_answers)
 
 
 class ChatResponse(BaseModel):
@@ -148,7 +174,8 @@ class ExplanationRequest(BaseModel):
     outcome rather than the answers that led to it.
     """
 
-    result: SchemeResult
+    rule_id: str = Field(min_length=1, max_length=100)
+    answers: dict[str, Any] = Field(default_factory=dict, max_length=32)
 
 
 class ExplanationResponse(BaseModel):

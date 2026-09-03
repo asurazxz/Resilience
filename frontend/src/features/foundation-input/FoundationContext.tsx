@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import { ApiError, apiRequest, fetchBootstrap } from "../../lib/api";
+import { useAuth } from "../auth/AuthContext";
 import {
   cacheBootstrap,
   clearOfflineData,
@@ -20,20 +21,23 @@ import type {
   EssentialExpense,
   FoundationBootstrap,
   RecurringWorkCost,
+  Transaction,
   WeeklyEntry
 } from "../../types/foundation";
 
 const EMPTY_BOOTSTRAP: FoundationBootstrap = {
   profile: {
-    id: "00000000-0000-4000-8000-000000000001",
+    id: "",
     currency: "SGD",
     timezone: "Asia/Singapore",
     onboardingCompleted: false,
-    latestEmergencySavingsCents: 0
+    latestEmergencySavingsCents: 0,
+    emergencyFundBalanceCents: 0
   },
   recurringWorkCosts: [],
   essentialExpenses: [],
   weeklyEntries: [],
+  transactions: [],
   syncedAt: new Date(0).toISOString()
 };
 
@@ -46,10 +50,9 @@ interface FoundationContextValue {
   syncNow: () => Promise<void>;
   resolveConflict: (id: string, keepLocal: boolean) => Promise<void>;
   saveOnboarding: (payload: Record<string, unknown>) => Promise<void>;
-  saveWeek: (week: WeeklyEntry) => Promise<void>;
-  deleteWeek: (weekStart: string) => Promise<void>;
+  saveTransaction: (transaction: Omit<Transaction, "id">) => Promise<void>;
+  deleteTransaction: (transactionId: string) => Promise<void>;
   saveAssumptions: (
-    emergencySavingsCents: number,
     recurring: RecurringWorkCost[],
     essentials: EssentialExpense[]
   ) => Promise<void>;
@@ -58,47 +61,9 @@ interface FoundationContextValue {
 
 const FoundationContext = createContext<FoundationContextValue | null>(null);
 
-function repairWeekIdCollision(
-  mutation: PendingMutation,
-  current: FoundationBootstrap | undefined
-): unknown {
-  const match = mutation.path.match(/^\/foundation\/weeks\/(\d{4}-\d{2}-\d{2})$/);
-  if (!match || mutation.method !== "PUT" || !mutation.body || typeof mutation.body !== "object") {
-    return mutation.body;
-  }
-  const body = mutation.body as Record<string, unknown>;
-  const otherWeeks = current?.weeklyEntries.filter((entry) => entry.weekStart !== match[1]) ?? [];
-  const usedEntryIds = new Set(otherWeeks.map((entry) => entry.id));
-  const usedEarningIds = new Set(otherWeeks.flatMap((entry) => entry.earnings.map((item) => item.id)));
-  const usedVariableCostIds = new Set(
-    otherWeeks.flatMap((entry) => entry.variableCosts.map((item) => item.id))
-  );
-  const usedSnapshotIds = new Set(
-    otherWeeks.flatMap((entry) => entry.inputSnapshots.map((item) => item.id))
-  );
-  const replaceUsedItemIds = (value: unknown, usedIds: Set<string>) => {
-    if (!Array.isArray(value)) return value;
-    return value.map((item) => {
-      if (!item || typeof item !== "object") return item;
-      const record = item as Record<string, unknown>;
-      return typeof record.id === "string" && usedIds.has(record.id)
-        ? { ...record, id: crypto.randomUUID() }
-        : item;
-    });
-  };
-  const repaired = {
-    ...body,
-    id: typeof body.id === "string" && usedEntryIds.has(body.id) ? crypto.randomUUID() : body.id,
-    expectedRevision:
-      typeof body.id === "string" && usedEntryIds.has(body.id) ? null : body.expectedRevision,
-    earnings: replaceUsedItemIds(body.earnings, usedEarningIds),
-    variableCosts: replaceUsedItemIds(body.variableCosts, usedVariableCostIds),
-    inputSnapshots: replaceUsedItemIds(body.inputSnapshots, usedSnapshotIds)
-  };
-  return JSON.stringify(repaired) === JSON.stringify(body) ? mutation.body : repaired;
-}
-
 export function FoundationProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const ownerId = user?.id;
   const [data, setData] = useState(EMPTY_BOOTSTRAP);
   const [loading, setLoading] = useState(true);
   const [online, setOnline] = useState(navigator.onLine);
@@ -106,41 +71,39 @@ export function FoundationProvider({ children }: { children: ReactNode }) {
   const syncing = useRef(false);
 
   const loadPending = useCallback(async () => {
-    setPending(await offlineDb.mutations.orderBy("createdAt").toArray());
-  }, []);
+    setPending(ownerId ? await offlineDb.mutations.where("ownerId").equals(ownerId).sortBy("createdAt") : []);
+  }, [ownerId]);
 
   const updateLocal = useCallback(async (next: FoundationBootstrap) => {
     setData(next);
-    await cacheBootstrap(next);
-  }, []);
+    if (ownerId) await cacheBootstrap(ownerId, next);
+  }, [ownerId]);
 
   const refresh = useCallback(async () => {
-    if (!navigator.onLine) return;
+    if (!navigator.onLine || !ownerId) return;
     const next = await fetchBootstrap();
     await updateLocal(next);
-  }, [updateLocal]);
+  }, [ownerId, updateLocal]);
 
   const syncNow = useCallback(async () => {
-    if (syncing.current || !navigator.onLine) return;
+    if (syncing.current || !navigator.onLine || !ownerId) return;
     syncing.current = true;
     try {
-      const queue = await offlineDb.mutations.orderBy("createdAt").toArray();
+      const queue = await offlineDb.mutations.where("ownerId").equals(ownerId).sortBy("createdAt");
       for (const mutation of queue) {
         if (mutation.status === "conflict") break;
         await offlineDb.mutations.update(mutation.id, { status: "syncing", error: undefined });
-        const body = repairWeekIdCollision(mutation, await readCachedBootstrap());
-        if (body !== mutation.body) await offlineDb.mutations.update(mutation.id, { body });
         try {
           await apiRequest(mutation.path, {
             method: mutation.method,
-            body: body === undefined ? undefined : JSON.stringify(body)
+            body: mutation.body === undefined ? undefined : JSON.stringify(mutation.body)
           }, mutation.id);
           await offlineDb.mutations.delete(mutation.id);
         } catch (error) {
           if (error instanceof ApiError) {
             await offlineDb.mutations.update(mutation.id, {
               status: error.status === 409 ? "conflict" : "failed",
-              error: error.body
+              error: error.payload
             });
           } else {
             await offlineDb.mutations.update(mutation.id, { status: "failed" });
@@ -149,17 +112,18 @@ export function FoundationProvider({ children }: { children: ReactNode }) {
         }
       }
       await loadPending();
-      const conflicts = await offlineDb.mutations.where("status").equals("conflict").count();
+      const conflicts = await offlineDb.mutations.where("[ownerId+status]").equals([ownerId, "conflict"]).count();
       if (conflicts === 0) await refresh();
     } finally {
       syncing.current = false;
     }
-  }, [loadPending, refresh]);
+  }, [loadPending, ownerId, refresh]);
 
   useEffect(() => {
     let active = true;
     void (async () => {
-      const cached = await readCachedBootstrap();
+      if (!ownerId) { setData(EMPTY_BOOTSTRAP); setLoading(false); return; }
+      const cached = await readCachedBootstrap(ownerId);
       if (active && cached) setData(cached);
       await loadPending();
       try {
@@ -178,12 +142,15 @@ export function FoundationProvider({ children }: { children: ReactNode }) {
     const handleOffline = () => setOnline(false);
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
+    const handleEmergencyFundChange = () => { void refresh(); };
+    window.addEventListener("resilience:emergency-fund-changed", handleEmergencyFundChange);
     return () => {
       active = false;
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("resilience:emergency-fund-changed", handleEmergencyFundChange);
     };
-  }, [loadPending, refresh, syncNow]);
+  }, [loadPending, ownerId, refresh, syncNow]);
 
   const enqueue = useCallback(
     async (
@@ -195,18 +162,19 @@ export function FoundationProvider({ children }: { children: ReactNode }) {
       const id = crypto.randomUUID();
       await offlineDb.mutations.put({
         id,
+        ownerId: ownerId!,
         method,
         path,
         body,
         createdAt: new Date().toISOString(),
         status: "pending"
       });
-      const current = (await readCachedBootstrap()) ?? data;
+      const current = (await readCachedBootstrap(ownerId!)) ?? data;
       await updateLocal(optimistic(current));
       await loadPending();
       await syncNow();
     },
-    [data, loadPending, syncNow, updateLocal]
+    [data, loadPending, ownerId, syncNow, updateLocal]
   );
 
   const saveOnboarding = useCallback(
@@ -219,7 +187,10 @@ export function FoundationProvider({ children }: { children: ReactNode }) {
           profile: {
             ...current.profile,
             onboardingCompleted: true,
-            latestEmergencySavingsCents: payload.emergencySavingsCents as number
+            latestEmergencySavingsCents: payload.emergencySavingsCents as number,
+            // Onboarding writes the opening balance with no ledger activity yet,
+            // so the balance and the opening balance start out equal.
+            emergencyFundBalanceCents: payload.emergencySavingsCents as number
           },
           recurringWorkCosts: payload.recurringWorkCosts as RecurringWorkCost[],
           essentialExpenses: payload.essentialExpenses as EssentialExpense[],
@@ -234,59 +205,24 @@ export function FoundationProvider({ children }: { children: ReactNode }) {
     [enqueue]
   );
 
-  const saveWeek = useCallback(
-    async (week: WeeklyEntry) => {
-      const existing = data.weeklyEntries.find((item) => item.weekStart === week.weekStart);
-      const body = {
-        id: week.id,
-        expectedRevision: existing?.revision ?? null,
-        hadNoIncome: week.hadNoIncome,
-        emergencySavingsCents: week.emergencySavingsCents,
-        status: week.status,
-        earnings: week.earnings,
-        variableCosts: week.variableCosts,
-        inputSnapshots: week.inputSnapshots
-      };
-      await enqueue("PUT", `/foundation/weeks/${week.weekStart}`, body, (current) => ({
-        ...current,
-        profile: {
-          ...current.profile,
-          latestEmergencySavingsCents: week.emergencySavingsCents
-        },
-        weeklyEntries: [
-          { ...week, revision: existing ? existing.revision + 1 : 1 },
-          ...current.weeklyEntries.filter((item) => item.weekStart !== week.weekStart)
-        ].sort((a, b) => b.weekStart.localeCompare(a.weekStart))
-      }));
-    },
-    [data.weeklyEntries, enqueue]
-  );
+  const saveTransaction = useCallback(async (transaction: Omit<Transaction, "id">) => {
+    await apiRequest("/foundation/transactions", {
+      method: "POST",
+      body: JSON.stringify(transaction),
+    });
+    await refresh();
+  }, [refresh]);
 
-  const deleteWeekAction = useCallback(
-    async (weekStart: string) => {
-      await enqueue("DELETE", `/foundation/weeks/${weekStart}`, undefined, (current) => ({
-        ...current,
-        weeklyEntries: current.weeklyEntries.filter((item) => item.weekStart !== weekStart)
-      }));
-    },
-    [enqueue]
-  );
+  const deleteTransaction = useCallback(async (transactionId: string) => {
+    await apiRequest(`/foundation/transactions/${transactionId}`, { method: "DELETE" });
+    await refresh();
+  }, [refresh]);
 
   const saveAssumptions = useCallback(
     async (
-      emergencySavingsCents: number,
       recurring: RecurringWorkCost[],
       essentials: EssentialExpense[]
     ) => {
-      await enqueue(
-        "PATCH",
-        "/foundation/profile",
-        { latestEmergencySavingsCents: emergencySavingsCents },
-        (current) => ({
-          ...current,
-          profile: { ...current.profile, latestEmergencySavingsCents: emergencySavingsCents }
-        })
-      );
       const existingRecurring = new Set(data.recurringWorkCosts.map((item) => item.id));
       const nextRecurring = new Set(recurring.map((item) => item.id));
       for (const item of recurring) {
@@ -327,7 +263,7 @@ export function FoundationProvider({ children }: { children: ReactNode }) {
         await offlineDb.mutations.delete(id);
         await refresh();
       } else {
-        const server = mutation.error?.error.details?.serverRecord;
+        const server = mutation.error?.details?.serverRecord;
         const body = mutation.body as Record<string, unknown>;
         await offlineDb.mutations.update(id, {
           status: "pending",
@@ -344,15 +280,15 @@ export function FoundationProvider({ children }: { children: ReactNode }) {
   );
 
   const resetData = useCallback(async () => {
-    if (!navigator.onLine) throw new Error("Reconnect before resetting demo data.");
+    if (!navigator.onLine) throw new Error("Reconnect before deleting your data.");
     await apiRequest<FoundationBootstrap>("/foundation/data", {
       method: "DELETE",
       headers: { "X-Confirm-Reset": "RESET DEMO DATA" }
     });
-    await clearOfflineData();
+    if (ownerId) await clearOfflineData(ownerId);
     await refresh();
     await loadPending();
-  }, [loadPending, refresh]);
+  }, [loadPending, ownerId, refresh]);
 
   return (
     <FoundationContext.Provider
@@ -365,8 +301,8 @@ export function FoundationProvider({ children }: { children: ReactNode }) {
         syncNow,
         resolveConflict,
         saveOnboarding,
-        saveWeek,
-        deleteWeek: deleteWeekAction,
+        saveTransaction,
+        deleteTransaction,
         saveAssumptions,
         resetData
       }}

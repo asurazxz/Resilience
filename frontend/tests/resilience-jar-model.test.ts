@@ -5,11 +5,12 @@ import {
   addDaysToIsoDate,
   buildBalanceTimeline,
   centsToDollars,
+  coverageGoalLabel,
+  DEFAULT_COVERAGE_GOAL_WEEKS,
   dollarsToCents,
   monthlyTargetToWeeklyCents,
   recommendationExplanation,
   singaporeToday,
-  visualFillPercent,
   weeklyToMonthlyCents,
   weeklyTargetToMonthlyCents,
 } from "../src/features/resilience-jar/model.ts";
@@ -26,11 +27,11 @@ test("money input converts to integer cents without floating-point arithmetic", 
   assert.equal(centsToDollars(1_234), "12.34");
 });
 
-test("visual fill is capped while the API percentage remains uncapped", () => {
-  assert.equal(visualFillPercent(null), 0);
-  assert.equal(visualFillPercent(-5), 0);
-  assert.equal(visualFillPercent(45.5), 45.5);
-  assert.equal(visualFillPercent(125), 100);
+test("the coverage goal is described in weeks and in months", () => {
+  assert.equal(DEFAULT_COVERAGE_GOAL_WEEKS, 26);
+  assert.equal(coverageGoalLabel(26), "26 weeks of essentials ≈ 6 months");
+  assert.equal(coverageGoalLabel(13), "13 weeks of essentials ≈ 3 months");
+  assert.equal(coverageGoalLabel(1), "1 week of essentials");
 });
 
 test("recommendation methods have transparent explanations", () => {

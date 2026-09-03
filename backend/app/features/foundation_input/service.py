@@ -3,6 +3,10 @@ import json
 from datetime import UTC, date, datetime
 from uuid import UUID, uuid4
 
+from sqlalchemy import delete, select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session, selectinload
+
 from backend.app.core.errors import DomainError
 from backend.app.db.models import (
     EmergencySavingsSnapshot,
@@ -10,11 +14,13 @@ from backend.app.db.models import (
     IdempotencyReceipt,
     Profile,
     RecurringWorkCost,
+    Transaction,
     WeeklyEarning,
     WeeklyEntry,
     WeeklyInputSnapshot,
     WeeklyVariableCost,
 )
+from backend.app.features.emergency_fund_ledger import emergency_fund_balance
 from backend.app.features.foundation_input.schemas import (
     EssentialExpenseInput,
     EssentialExpenseResponse,
@@ -25,19 +31,27 @@ from backend.app.features.foundation_input.schemas import (
     ProfileUpdate,
     RecurringWorkCostInput,
     RecurringWorkCostResponse,
+    TransactionInput,
+    TransactionResponse,
     WeeklyEntryResponse,
     WeeklyEntryUpsert,
 )
-from sqlalchemy import delete, select
-from sqlalchemy.orm import Session, selectinload
 
 
 def ensure_profile(session: Session, user_id: UUID) -> Profile:
     profile = session.get(Profile, user_id)
-    if profile is None:
-        profile = Profile(id=user_id)
-        session.add(profile)
+    if profile is not None:
+        return profile
+    profile = Profile(id=user_id)
+    session.add(profile)
+    try:
         session.flush()
+    except IntegrityError:
+        # A concurrent request created the row first; adopt theirs.
+        session.rollback()
+        profile = session.get(Profile, user_id)
+        if profile is None:
+            raise
     return profile
 
 
@@ -54,11 +68,18 @@ def get_bootstrap(session: Session, user_id: UUID) -> FoundationBootstrap:
         .order_by(EssentialExpense.created_at, EssentialExpense.id)
     ).all()
     weeks = session.scalars(_week_query(user_id).limit(12)).unique().all()
+    transactions = session.scalars(
+        select(Transaction)
+        .where(Transaction.user_id == user_id)
+        .order_by(Transaction.occurred_on.desc(), Transaction.created_at.desc())
+        .limit(100)
+    ).all()
     return FoundationBootstrap(
-        profile=_profile_response(profile),
+        profile=_profile_response(profile, emergency_fund_balance(session, user_id)),
         recurring_work_costs=[_recurring_response(item) for item in recurring],
         essential_expenses=[_essential_response(item) for item in essentials],
         weekly_entries=[_week_response(item) for item in weeks],
+        transactions=[_transaction_response(item) for item in transactions],
         synced_at=datetime.now(UTC),
     )
 
@@ -83,15 +104,41 @@ def complete_onboarding(
 
 def update_profile(session: Session, user_id: UUID, payload: ProfileUpdate) -> ProfileResponse:
     profile = ensure_profile(session, user_id)
-    profile.latest_emergency_savings_cents = payload.latest_emergency_savings_cents
-    session.add(
-        EmergencySavingsSnapshot(
-            id=uuid4(), user_id=user_id, amount_cents=payload.latest_emergency_savings_cents
-        )
-    )
+    if "display_name" in payload.model_fields_set:
+        profile.display_name = _optional_text(payload.display_name)
+    if "phone_number" in payload.model_fields_set:
+        profile.phone_number = _optional_text(payload.phone_number)
+    if "date_of_birth" in payload.model_fields_set:
+        profile.date_of_birth = payload.date_of_birth
     session.commit()
     session.refresh(profile)
-    return _profile_response(profile)
+    return _profile_response(profile, emergency_fund_balance(session, user_id))
+
+
+def create_transaction(
+    session: Session, user_id: UUID, payload: TransactionInput
+) -> TransactionResponse:
+    ensure_profile(session, user_id)
+    transaction = Transaction(
+        id=uuid4(),
+        user_id=user_id,
+        entry_type=payload.entry_type,
+        amount_cents=payload.amount_cents,
+        description=_optional_text(payload.description),
+        occurred_on=payload.occurred_on,
+    )
+    session.add(transaction)
+    session.commit()
+    session.refresh(transaction)
+    return _transaction_response(transaction)
+
+
+def delete_transaction(session: Session, user_id: UUID, transaction_id: UUID) -> None:
+    transaction = session.get(Transaction, transaction_id)
+    if transaction is None or transaction.user_id != user_id:
+        raise DomainError(404, "NOT_FOUND", "Transaction not found.")
+    session.delete(transaction)
+    session.commit()
 
 
 def put_recurring_cost(
@@ -196,7 +243,26 @@ def put_week(
             response_body=response.model_dump(mode="json", by_alias=True),
         )
     )
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError:
+        # A concurrent retry with the same key won the race; return its result.
+        session.rollback()
+        receipt = session.scalar(
+            select(IdempotencyReceipt).where(
+                IdempotencyReceipt.user_id == user_id,
+                IdempotencyReceipt.idempotency_key == idempotency_key,
+            )
+        )
+        if receipt is None:
+            raise
+        if receipt.request_hash != request_hash:
+            raise DomainError(
+                409,
+                "IDEMPOTENCY_KEY_REUSED",
+                "This idempotency key was already used for a different request.",
+            ) from None
+        return WeeklyEntryResponse.model_validate(receipt.response_body)
     return response
 
 
@@ -307,8 +373,9 @@ def _upsert_week(
         )
         for item in payload.input_snapshots
     ]
-    profile = ensure_profile(session, user_id)
-    profile.latest_emergency_savings_cents = payload.emergency_savings_cents
+    # The weekly figure is a historical snapshot only. Writing it back into the
+    # profile's opening balance is what caused the emergency-fund double count.
+    ensure_profile(session, user_id)
     session.flush()
     snapshot = session.scalar(
         select(EmergencySavingsSnapshot).where(
@@ -344,13 +411,29 @@ def _week_query(user_id: UUID):
     )
 
 
-def _profile_response(profile: Profile) -> ProfileResponse:
+def _profile_response(
+    profile: Profile, emergency_fund_balance_cents: int | None = None
+) -> ProfileResponse:
+    """``latestEmergencySavingsCents`` is the stored opening balance ``O``.
+
+    ``emergencyFundBalanceCents`` is the derived balance ``B`` and is the value
+    every screen should show. It falls back to ``O`` only where no session is
+    available to aggregate the ledger (the profile PATCH response).
+    """
     return ProfileResponse(
         id=profile.id,
         currency=profile.currency,
         timezone=profile.timezone,
         onboarding_completed=profile.onboarding_completed_at is not None,
         latest_emergency_savings_cents=profile.latest_emergency_savings_cents,
+        emergency_fund_balance_cents=(
+            profile.latest_emergency_savings_cents
+            if emergency_fund_balance_cents is None
+            else emergency_fund_balance_cents
+        ),
+        display_name=profile.display_name,
+        phone_number=profile.phone_number,
+        date_of_birth=profile.date_of_birth,
     )
 
 
@@ -378,6 +461,14 @@ def _recurring_response(item: RecurringWorkCost) -> RecurringWorkCostResponse:
 
 def _essential_response(item: EssentialExpense) -> EssentialExpenseResponse:
     return EssentialExpenseResponse.model_validate(item)
+
+
+def _transaction_response(item: Transaction) -> TransactionResponse:
+    return TransactionResponse.model_validate(item)
+
+
+def _optional_text(value: str | None) -> str | None:
+    return value.strip() if value and value.strip() else None
 
 
 def _week_response(week: WeeklyEntry) -> WeeklyEntryResponse:

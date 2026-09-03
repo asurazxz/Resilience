@@ -11,17 +11,20 @@ HTTP/schema layer are checked against one shared set of worked examples.
 
 import json
 from pathlib import Path
+from uuid import UUID
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app.features.income_reality.router import router
+from backend.app.core.auth import current_user_id
+from backend.app.features.income_reality.router import router
 
 FIXTURES_DIR = Path(__file__).resolve().parents[4] / "contracts" / "fixtures" / "income-reality"
 SCENARIOS = ["typical-week", "zero-income-week", "multi-week-deficit"]
 
 app = FastAPI()
 app.include_router(router, prefix="/income-reality", tags=["income-reality"])
+app.dependency_overrides[current_user_id] = lambda: UUID("00000000-0000-4000-8000-000000000001")
 client = TestClient(app)
 
 

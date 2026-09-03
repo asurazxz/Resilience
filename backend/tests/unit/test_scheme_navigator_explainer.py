@@ -11,12 +11,12 @@ from typing import Any
 
 import pytest
 
-from app.features.scheme_navigator.evaluator import evaluate_rule
-from app.features.scheme_navigator.explainer import build_prompt, explain
-from app.features.scheme_navigator.rules import RULES
-from app.features.scheme_navigator.schemas import SchemeResult, SchemeStatus
-from app.features.scheme_navigator.sources import snippets_for
-from app.integrations.ai.client import LLMUnavailableError
+from backend.app.features.scheme_navigator.evaluator import evaluate_rule
+from backend.app.features.scheme_navigator.explainer import build_prompt, explain
+from backend.app.features.scheme_navigator.rules import RULES
+from backend.app.features.scheme_navigator.schemas import SchemeResult, SchemeStatus
+from backend.app.features.scheme_navigator.sources import snippets_for
+from backend.app.integrations.ai.client import LLMUnavailableError
 
 WIS = next(rule for rule in RULES if rule.id == "workfare-income-supplement")
 

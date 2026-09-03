@@ -9,8 +9,9 @@ language, but it never produces one.
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
+from .fields import FIELD_REGISTRY
 from .schemas import (
     Condition,
     EvaluationResponse,
@@ -30,10 +31,80 @@ _OPERATORS: dict[Operator, Callable[[object, object], bool]] = {
     "in": lambda answer, target: answer in target,
 }
 
+_UNANSWERED = object()
+
+
+def _coerce_number(value: object) -> object:
+    if isinstance(value, bool):
+        return _UNANSWERED
+    if isinstance(value, int | float):
+        return value
+    if isinstance(value, str):
+        text = value.strip()
+        try:
+            return int(text)
+        except ValueError:
+            pass
+        try:
+            return float(text)
+        except ValueError:
+            return _UNANSWERED
+    return _UNANSWERED
+
+
+def _coerce_date(value: object) -> object:
+    if isinstance(value, date):
+        return value
+    if isinstance(value, str):
+        try:
+            return date.fromisoformat(value.strip())
+        except ValueError:
+            return _UNANSWERED
+    return _UNANSWERED
+
+
+def _coerce(field_key: str, value: object) -> object:
+    """Return the typed answer, or ``_UNANSWERED`` when it cannot be used.
+
+    An answer the questionnaire could never have produced -- a list where a
+    number belongs, ``"yes"`` where a boolean belongs -- counts as unanswered
+    rather than as a failed condition, so the user is asked again instead of
+    being told they do not qualify.
+    """
+
+    field = FIELD_REGISTRY.get(field_key)
+    if field is None or value is None:
+        return _UNANSWERED
+    if field.field_type == "number":
+        return _coerce_number(value)
+    if field.field_type == "boolean":
+        return value if isinstance(value, bool) else _UNANSWERED
+    if field.field_type == "select":
+        allowed = {option.value for option in field.options or []}
+        return value if isinstance(value, str) and value in allowed else _UNANSWERED
+    if field.field_type == "date":
+        return _coerce_date(value)
+    return _UNANSWERED
+
+
+def coerce_answers(answers: dict[str, object]) -> dict[str, object]:
+    """Drop unknown keys and anything that does not fit its field's type."""
+
+    coerced: dict[str, object] = {}
+    for key, value in answers.items():
+        typed = _coerce(key, value)
+        if typed is not _UNANSWERED:
+            coerced[key] = typed
+    return coerced
+
 
 def _condition_passes(condition: Condition, answer: object) -> bool:
     comparator = _OPERATORS[condition.operator]
-    return bool(comparator(answer, condition.value))
+    try:
+        return bool(comparator(answer, condition.value))
+    except TypeError:
+        # A rule compared incomparable types; never a match, never a crash.
+        return False
 
 
 def evaluate_rule(rule: SchemeRule, answers: dict[str, object]) -> SchemeResult:
@@ -41,15 +112,13 @@ def evaluate_rule(rule: SchemeRule, answers: dict[str, object]) -> SchemeResult:
 
     Missing information always takes priority over a false result: a
     condition is only ever judged "not matched" once every field it needs
-    has actually been answered.
+    has actually been answered, with an answer of the type that field
+    expects.
     """
 
+    answers = coerce_answers(answers)
     missing_fields = sorted(
-        {
-            condition.field
-            for condition in rule.conditions
-            if condition.field not in answers or answers[condition.field] is None
-        }
+        {condition.field for condition in rule.conditions if condition.field not in answers}
     )
 
     if missing_fields:

@@ -6,9 +6,9 @@ from datetime import date
 
 import pytest
 
-from app.features.scheme_navigator.questionnaire import build_questionnaire
-from app.features.scheme_navigator.rules import RULES
-from app.features.scheme_navigator.schemas import Condition, SchemeRule
+from backend.app.features.scheme_navigator.questionnaire import build_questionnaire
+from backend.app.features.scheme_navigator.rules import RULES
+from backend.app.features.scheme_navigator.schemas import Condition, SchemeRule
 
 
 def _rule(field_keys: list[str]) -> SchemeRule:

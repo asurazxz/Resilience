@@ -3,17 +3,18 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   HttpResilienceJarApi,
   readCachedSummary,
-  ResilienceJarApiError,
   type ResilienceJarApi,
 } from "./api.ts";
+import { ApiError } from "../../lib/api";
 import {
   centsToDollars,
+  coverageGoalLabel,
+  DEFAULT_COVERAGE_GOAL_WEEKS,
   dollarsToCents,
   formatMoney,
   monthlyTargetToWeeklyCents,
   recommendationExplanation,
   singaporeToday,
-  visualFillPercent,
   weeklyToMonthlyCents,
   weeklyTargetToMonthlyCents,
 } from "./model.ts";
@@ -54,8 +55,9 @@ export function ResilienceJarPage({
     useState<TargetFrequency>("weekly");
   const [goalMode, setGoalMode] = useState<Goal["mode"]>("coverage");
   const [goalAmount, setGoalAmount] = useState("1000.00");
-  const [goalWeeks, setGoalWeeks] = useState("4");
+  const [goalWeeks, setGoalWeeks] = useState(String(DEFAULT_COVERAGE_GOAL_WEEKS));
   const [contributionAmount, setContributionAmount] = useState("");
+  const [fundBalance, setFundBalance] = useState("");
   const [contributionDate, setContributionDate] = useState(singaporeToday());
   const [contributionNote, setContributionNote] = useState("");
   const [withdrawalOpen, setWithdrawalOpen] = useState(startWithEmergencyUse);
@@ -137,6 +139,7 @@ export function ResilienceJarPage({
   }, [startWithEmergencyUse, summary]);
 
   function syncPlanForms(next: JarSummary) {
+    setFundBalance(centsToDollars(next.progress.contribution_total_cents));
     setTargetAmount(centsToDollars(next.plan.target_amount_cents));
     setTargetFrequency(next.plan.target_frequency);
     setGoalMode(next.plan.goal.mode);
@@ -261,6 +264,16 @@ export function ResilienceJarPage({
     });
   }
 
+  async function saveFundBalance(event: FormEvent) {
+    event.preventDefault();
+    const amountCents = dollarsToCents(fundBalance);
+    if (amountCents === null || amountCents < 0) {
+      setError("Enter a fund balance of zero or more.");
+      return;
+    }
+    await runMutation(() => client.setOpeningBalance(amountCents), "Fund balance updated.");
+  }
+
   async function saveWithdrawal(event: FormEvent) {
     event.preventDefault();
     const amountCents = dollarsToCents(withdrawalAmount);
@@ -331,6 +344,7 @@ export function ResilienceJarPage({
       const next = await action();
       setSummary(next);
       syncPlanForms(next);
+      window.dispatchEvent(new Event("resilience:emergency-fund-changed"));
       if (confirmation) setSuccessMessage(confirmation);
     } catch (requestError) {
       setError(errorMessage(requestError));
@@ -361,10 +375,12 @@ export function ResilienceJarPage({
       : targetFrequency === "monthly"
         ? weeklyTargetToMonthlyCents(summary.recommendation.amount_cents)
         : summary.recommendation.amount_cents;
-  const fillPercent = visualFillPercent(progress.progress_percent);
   const isPaused = summary.plan.status === "paused";
-  const isOverGoal = (progress.progress_percent ?? 0) > 100;
   const mutationsDisabled = saving || offline;
+  const goalDescription =
+    summary.plan.goal.mode === "coverage"
+      ? coverageGoalLabel(summary.plan.goal.weeks)
+      : "Your chosen amount";
   const parsedGoalWeeks = Number(goalWeeks);
   const coverageGoalPreview =
     goalMode === "coverage" &&
@@ -494,57 +510,64 @@ export function ResilienceJarPage({
         aria-labelledby="jar-progress-title"
         hidden={view !== "jar"}
       >
-        <div
-          className="jar-visual"
-          role="progressbar"
-          aria-labelledby="jar-progress-title"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={Math.round(fillPercent)}
-          aria-valuetext={
-            progress.progress_percent === null
-              ? "Goal percentage unavailable"
-              : `${progress.progress_percent}% of goal, ${formatMoney(progress.contribution_total_cents)} tracked`
-          }
-        >
-          <div className="jar-visual-fill" style={{ height: `${fillPercent}%` }} />
-          <span>
-            {progress.progress_percent === null
-              ? "—"
-              : `${progress.progress_percent}%`}
-          </span>
-        </div>
         <div className="jar-progress-copy">
-          <p className="jar-eyebrow" id="jar-progress-title">
-            Emergency fund progress
-          </p>
+          <div className="jar-progress-title-row">
+            <p className="jar-eyebrow" id="jar-progress-title">
+              Emergency fund
+            </p>
+            {progress.goal_reached ? (
+              <span className="jar-goal-badge jar-goal-badge-reached">
+                <span aria-hidden="true">✓</span> Goal reached
+              </span>
+            ) : (
+              <span className="jar-goal-badge">Still building</span>
+            )}
+          </div>
           <div className="jar-progress-metrics">
             <div>
-              <span>Fund balance</span>
+              <span>Current balance</span>
               <strong>{formatMoney(progress.contribution_total_cents)}</strong>
             </div>
             <div className="jar-goal-amount">
-              <span>Goal amount</span>
+              <span>Goal target</span>
               <strong>{formatMoney(progress.goal_target_cents)}</strong>
+              <small>{goalDescription}</small>
+            </div>
+            <div>
+              <span>Still to save</span>
+              <strong>
+                {progress.goal_reached
+                  ? formatMoney(0)
+                  : formatMoney(progress.remaining_cents)}
+              </strong>
+            </div>
+            <div>
+              <span>Coverage</span>
+              <strong>
+                {progress.coverage_weeks === null
+                  ? "—"
+                  : `${progress.coverage_weeks} weeks`}
+              </strong>
               <small>
-                {summary.plan.goal.mode === "coverage"
-                  ? `${summary.plan.goal.weeks} weeks of essential expenses`
-                  : "Your chosen amount"}
+                {progress.coverage_weeks === null
+                  ? "Add essential expenses to see this"
+                  : "of essential expenses"}
               </small>
             </div>
           </div>
-          {isOverGoal && <p className="jar-goal-passed">Goal passed</p>}
-          {progress.coverage_days === null ? (
+          {progress.coverage_weeks === null ? (
             <p className="jar-muted">
-              Add weekly essential expenses to see days and weeks of coverage.
+              Add your everyday essentials to see how many weeks this fund covers.
             </p>
           ) : (
             <p>
-              About {progress.coverage_days} days ({progress.coverage_weeks} weeks) of essential expenses.
+              This covers about {progress.coverage_weeks}{" "}
+              {progress.coverage_weeks === 1 ? "week" : "weeks"} of essential expenses.
             </p>
           )}
           <p className="jar-muted">
-            Other emergency savings remain separate from this tracked fund.
+            This fund is your baseline buffer for weeks when you cannot work. Money
+            you are saving for something specific belongs in Savings.
           </p>
           <div className="jar-plan-strip">
             <div>
@@ -568,25 +591,6 @@ export function ResilienceJarPage({
         <article className="jar-card jar-projection">
           <p className="jar-eyebrow">Projected completion</p>
           <ProjectionCopy summary={summary} />
-        </article>
-        <article className="jar-card jar-milestones">
-          <h2>Milestones</h2>
-          {summary.milestones.length === 0 ? (
-            <p className="jar-muted">Set a goal amount to see your milestones.</p>
-          ) : (
-            <ol>
-              {summary.milestones.map((milestone) => (
-                <li className={milestone.reached ? "is-reached" : ""} key={milestone.percentage}>
-                  <span aria-hidden="true">{milestone.reached ? "✓" : milestone.percentage}</span>
-                  <div>
-                    <strong>{milestone.percentage}%</strong>
-                    <small>{formatMoney(milestone.target_cents)}</small>
-                  </div>
-                  <em>{milestone.reached ? "Reached" : "Ahead"}</em>
-                </li>
-              ))}
-            </ol>
-          )}
         </article>
       </section>
 
@@ -690,6 +694,11 @@ export function ResilienceJarPage({
 
         <section className="jar-card" aria-labelledby="jar-goal-title">
           <h2 id="jar-goal-title">Emergency fund goal</h2>
+          <p className="jar-muted">
+            This fund is a baseline buffer, not a savings plan. Most people aim for
+            about six months of essential expenses ({DEFAULT_COVERAGE_GOAL_WEEKS} weeks).
+            Named goals such as a course or a new phone live in Savings.
+          </p>
           <form onSubmit={(event) => void saveGoal(event)}>
             <fieldset>
               <legend>Set the goal by</legend>
@@ -720,12 +729,16 @@ export function ResilienceJarPage({
                     type="number"
                     min="1"
                     max="52"
+                    placeholder={String(DEFAULT_COVERAGE_GOAL_WEEKS)}
                     required
                     step="1"
                     value={goalWeeks}
                     onChange={(event) => setGoalWeeks(event.target.value)}
                   />
                 </label>
+                <p className="jar-muted">
+                  {DEFAULT_COVERAGE_GOAL_WEEKS} weeks is about six months of essentials.
+                </p>
                 {coverageGoalPreview !== null && (
                   <p className="jar-goal-preview" aria-live="polite">
                     <span>Goal amount using your latest expenses</span>
@@ -767,6 +780,15 @@ export function ResilienceJarPage({
         aria-labelledby="jar-contributions-title"
         hidden={view !== "jar"}
       >
+        <form className="jar-card mb-6" onSubmit={(event) => void saveFundBalance(event)}>
+          <h2>Fund balance</h2>
+          <p className="jar-muted">Set the amount currently available for emergencies. Resilience keeps your recorded deposits and emergency use as activity history.</p>
+          <label>
+            Current balance (SGD)
+            <input inputMode="decimal" maxLength={10} pattern="\d+(\.\d{1,2})?" required title="Enter an amount with up to two decimal places" value={fundBalance} onChange={(event) => setFundBalance(event.target.value)} />
+          </label>
+          <button className="jar-button" disabled={mutationsDisabled} type="submit">Update balance</button>
+        </form>
         <div className="jar-contribution-heading">
           <div>
             <h2 id="jar-contributions-title">Emergency fund activity</h2>
@@ -969,9 +991,8 @@ function ProjectionCopy({ summary }: { summary: JarSummary }) {
 }
 
 function errorMessage(error: unknown): string {
-  if (error instanceof ResilienceJarApiError) {
-    const firstFieldError = Object.values(error.body.field_errors)[0];
-    return firstFieldError ?? error.body.message;
+  if (error instanceof ApiError) {
+    return error.fieldErrors?.[0]?.message ?? error.message;
   }
   return error instanceof Error
     ? error.message

@@ -20,9 +20,18 @@ export function centsToDollars(cents: number): string {
   return (cents / 100).toFixed(2);
 }
 
-export function visualFillPercent(progressPercent: number | null): number {
-  if (progressPercent === null) return 0;
-  return Math.min(Math.max(progressPercent, 0), 100);
+/** The recommended baseline buffer: about six months of essential expenses. */
+export const DEFAULT_COVERAGE_GOAL_WEEKS = 26;
+
+/**
+ * Describes a coverage goal in the two units people think in, e.g.
+ * "26 weeks of essentials ≈ 6 months".
+ */
+export function coverageGoalLabel(weeks: number): string {
+  const base = `${weeks} ${weeks === 1 ? "week" : "weeks"} of essentials`;
+  const months = Math.round((weeks * 12) / 52);
+  if (months < 1) return base;
+  return `${base} ≈ ${months} ${months === 1 ? "month" : "months"}`;
 }
 
 export function weeklyToMonthlyCents(weeklyCents: number): number {

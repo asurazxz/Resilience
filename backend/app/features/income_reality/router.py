@@ -9,7 +9,12 @@ calculation to engine.py, which stays pure and framework-independent.
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from typing import Annotated
+from uuid import UUID
+
+from fastapi import APIRouter, Depends
+
+from backend.app.core.auth import current_user_id
 
 from . import engine
 from .assumptions import IncomeAssumptions
@@ -25,7 +30,10 @@ router = APIRouter()
 
 
 @router.post("/breakdown", response_model=IncomeRealityResponse)
-def post_breakdown(request: IncomeRealityRequest) -> IncomeRealityResponse:
+def post_breakdown(
+    request: IncomeRealityRequest,
+    _user_id: Annotated[UUID, Depends(current_user_id)],
+) -> IncomeRealityResponse:
     assumptions = IncomeAssumptions(
         apply_cpf=request.assumptions.apply_cpf,
         cpf_rate_bps=request.assumptions.cpf_rate_bps,

@@ -31,11 +31,46 @@ class ProfileResponse(ApiModel):
     currency: str
     timezone: str
     onboarding_completed: bool
+    # The stored opening balance ``O``, not the spendable balance.
     latest_emergency_savings_cents: MoneyCents
+    # ``B = O + deposits - withdrawals``; this is what the UI shows.
+    emergency_fund_balance_cents: int = 0
+    display_name: str | None = None
+    phone_number: str | None = None
+    date_of_birth: date | None = None
 
 
 class ProfileUpdate(ApiModel):
-    latest_emergency_savings_cents: MoneyCents
+    display_name: Annotated[str | None, Field(default=None, max_length=80)] = None
+    phone_number: Annotated[str | None, Field(default=None, max_length=30)] = None
+    date_of_birth: date | None = None
+
+    @model_validator(mode="after")
+    def validate_date_of_birth(self) -> "ProfileUpdate":
+        if self.date_of_birth and self.date_of_birth > date.today():
+            raise ValueError("dateOfBirth cannot be in the future")
+        return self
+
+
+class TransactionInput(ApiModel):
+    entry_type: Literal["income", "cost"]
+    amount_cents: PositiveMoneyCents
+    description: Annotated[str | None, Field(default=None, max_length=160)] = None
+    occurred_on: date
+
+    @model_validator(mode="after")
+    def validate_date_and_description(self) -> "TransactionInput":
+        if self.occurred_on > date.today():
+            raise ValueError("occurredOn cannot be in the future")
+        if self.description is not None and not self.description.strip():
+            self.description = None
+        return self
+
+
+class TransactionResponse(TransactionInput):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
 
 
 class RecurringWorkCostInput(ApiModel):
@@ -148,24 +183,5 @@ class FoundationBootstrap(ApiModel):
     recurring_work_costs: list[RecurringWorkCostResponse]
     essential_expenses: list[EssentialExpenseResponse]
     weekly_entries: list[WeeklyEntryResponse]
+    transactions: list[TransactionResponse] = Field(default_factory=list)
     synced_at: datetime
-
-
-class CsvPreviewRow(ApiModel):
-    row_number: int
-    status: Literal["valid", "invalid"]
-    week_start: date | None = None
-    record_type: Literal["earning", "variable_work_cost"] | None = None
-    source: str | None = None
-    category: str | None = None
-    description: str | None = None
-    amount_cents: MoneyCents | None = None
-    errors: list[str] = Field(default_factory=list)
-
-
-class CsvPreviewResponse(ApiModel):
-    file_name: str
-    file_sha256: str
-    rows: list[CsvPreviewRow]
-    valid_count: int
-    invalid_count: int

@@ -45,4 +45,18 @@ npx supabase migration list --linked
 
 Apply schema only through committed migrations. Share `DATABASE_URL` through the team's password manager or hosting secret store, never chat or Git. Each teammate must receive Supabase project membership separately; verification codes and access tokens are individual and must not be shared.
 
-The merged application currently persists Foundation Input and Income Reality source data in PostgreSQL. Emergency Fund demo state remains browser-local, while Scenario Simulator requests and Scheme Navigator answers are stateless unless a future migration adds persistence.
+## Applying migrations locally
+
+`npm run db:reset` rebuilds the local database from every migration and is the safe default. To apply only the migrations that have not run yet, without dropping data:
+
+```powershell
+npx supabase migration up --local
+```
+
+`npx supabase db push --local` is the equivalent for a linked project's local shadow. Both read the same ordered files in `migrations/`.
+
+## What is persisted
+
+The application persists Foundation Input and Income Reality source data, the Emergency Fund (`profiles.latest_emergency_savings_cents` as the opening balance, `emergency_fund_plans`, `emergency_fund_contributions`), the ad-hoc `transactions` ledger, and Savings Goals (`goals` with `goal_type = 'savings'`, plus `goal_contributions`). Scenario Simulator requests and Scheme Navigator answers remain stateless.
+
+`documentation/features/emergency-fund-model.md` defines how the emergency-fund and savings-goal figures are derived from these tables. The two ledgers never write to each other.

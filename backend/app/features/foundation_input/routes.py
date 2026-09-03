@@ -1,14 +1,16 @@
 from datetime import date
-from pathlib import Path
 from typing import Annotated
 from uuid import UUID, uuid4
 
-from backend.app.core.settings import Settings, get_settings
+from fastapi import APIRouter, Depends, Header, Query
+from fastapi.responses import Response
+from sqlalchemy.orm import Session
+
+from backend.app.core.auth import current_user_id
+from backend.app.core.errors import DomainError
 from backend.app.db.models import EssentialExpense, RecurringWorkCost
 from backend.app.db.session import get_session
-from backend.app.features.foundation_input.csv_import import parse_csv_preview
 from backend.app.features.foundation_input.schemas import (
-    CsvPreviewResponse,
     EssentialExpenseInput,
     EssentialExpenseResponse,
     FoundationBootstrap,
@@ -17,12 +19,16 @@ from backend.app.features.foundation_input.schemas import (
     ProfileUpdate,
     RecurringWorkCostInput,
     RecurringWorkCostResponse,
+    TransactionInput,
+    TransactionResponse,
     WeeklyEntryResponse,
     WeeklyEntryUpsert,
 )
 from backend.app.features.foundation_input.service import (
     complete_onboarding,
+    create_transaction,
     delete_owned,
+    delete_transaction,
     delete_week,
     get_bootstrap,
     get_week,
@@ -33,19 +39,12 @@ from backend.app.features.foundation_input.service import (
     reset_demo_data,
     update_profile,
 )
-from fastapi import APIRouter, Depends, File, Header, Query, UploadFile
-from fastapi.responses import PlainTextResponse, Response
-from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/foundation", tags=["foundation-input"])
 
 
-def demo_user(settings: Annotated[Settings, Depends(get_settings)]) -> UUID:
-    return settings.demo_user_id
-
-
 SessionDep = Annotated[Session, Depends(get_session)]
-UserDep = Annotated[UUID, Depends(demo_user)]
+UserDep = Annotated[UUID, Depends(current_user_id)]
 
 
 @router.get("/bootstrap", response_model=FoundationBootstrap)
@@ -151,22 +150,17 @@ def week_delete(
     return Response(status_code=204)
 
 
-@router.get("/imports/csv/template", response_class=PlainTextResponse)
-def csv_template() -> PlainTextResponse:
-    fixture = Path(__file__).parents[4] / "contracts" / "fixtures" / "foundation-input-template.csv"
-    return PlainTextResponse(
-        fixture.read_text(encoding="utf-8"),
-        headers={
-            "Content-Disposition": 'attachment; filename="resilience-foundation-template.csv"'
-        },
-    )
+@router.post("/transactions", response_model=TransactionResponse, status_code=201)
+def transaction_create(
+    payload: TransactionInput, session: SessionDep, user_id: UserDep
+) -> TransactionResponse:
+    return create_transaction(session, user_id, payload)
 
 
-@router.post("/imports/csv/preview", response_model=CsvPreviewResponse)
-async def csv_preview(file: Annotated[UploadFile, File()]) -> CsvPreviewResponse:
-    if not file.filename or not file.filename.lower().endswith(".csv"):
-        raise ValueError("Upload a .csv file")
-    return parse_csv_preview(file.filename, await file.read())
+@router.delete("/transactions/{transaction_id}", status_code=204)
+def transaction_delete(transaction_id: UUID, session: SessionDep, user_id: UserDep) -> Response:
+    delete_transaction(session, user_id, transaction_id)
+    return Response(status_code=204)
 
 
 @router.delete("/data", response_model=FoundationBootstrap)
@@ -176,5 +170,9 @@ def data_reset(
     user_id: UserDep,
 ) -> FoundationBootstrap:
     if confirm != "RESET DEMO DATA":
-        raise ValueError("X-Confirm-Reset must be RESET DEMO DATA")
+        raise DomainError(
+            422,
+            "RESET_CONFIRMATION_REQUIRED",
+            "X-Confirm-Reset must be RESET DEMO DATA.",
+        )
     return reset_demo_data(session, user_id)

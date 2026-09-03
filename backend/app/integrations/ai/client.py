@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 from typing import Any, Protocol
 
-from ...core.config import settings
+from ...core.settings import get_settings
 
 # Covers the answer plus any reasoning tokens the model emits before it.
 MAX_OUTPUT_TOKENS = 4096
@@ -50,6 +50,7 @@ class GroqClient:
         except ImportError as exc:  # pragma: no cover - import guard
             raise LLMUnavailableError("groq package is not installed") from exc
 
+        settings = get_settings()
         if not settings.groq_api_key:
             raise LLMUnavailableError("GROQ_API_KEY is not configured")
 

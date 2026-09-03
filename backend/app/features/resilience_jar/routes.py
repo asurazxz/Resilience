@@ -1,85 +1,88 @@
-from __future__ import annotations
-
 from collections.abc import Callable
-from typing import Any
+from typing import Annotated
+from uuid import UUID
 
-from .fixtures import DEMO_USER_ID, build_demo_service
+from fastapi import APIRouter, Depends, Response
+from sqlalchemy.orm import Session
+
+from ...core.auth import current_user_id
+from ...db.session import get_session
+from ..foundation_input.service import ensure_profile
+from .schemas import ContributionPatch, ContributionWrite, OpeningBalanceRequest, PlanPatch
 from .serializers import contribution_dict, summary_dict
-from .service import DomainError, ResilienceJarService
+from .service import ResilienceJarService
+from .sql_repositories import (
+    SqlContributionRepository,
+    SqlFinancialContextRepository,
+    SqlPlanRepository,
+)
+
+SessionDep = Annotated[Session, Depends(get_session)]
 
 
 def create_router(
-    service: ResilienceJarService,
+    service_override: ResilienceJarService | None = None,
     *,
-    user_id_provider: Callable[[], str],
-):
+    user_id_provider: Callable[[], str] | None = None,
+) -> APIRouter:
     """Create the feature router without coupling it to shared app composition."""
-    from fastapi import APIRouter, Body, Depends, Response
-    from fastapi.responses import JSONResponse
 
-    router = APIRouter(prefix="/api/v1/resilience-jar", tags=["resilience-jar"])
+    router = APIRouter(prefix="/resilience-jar", tags=["resilience-jar"])
+    user_dependency = (
+        (lambda: user_id_provider()) if user_id_provider is not None else current_user_id
+    )
+    UserDep = Annotated[UUID, Depends(user_dependency)]
 
-    def error_response(error: DomainError) -> JSONResponse:
-        return JSONResponse(status_code=error.status_code, content=error.as_dict())
+    def service(session: Session, user_id: UUID) -> ResilienceJarService:
+        if service_override is not None:
+            return service_override
+        ensure_profile(session, user_id)
+        return ResilienceJarService(
+            SqlPlanRepository(session),
+            SqlContributionRepository(session),
+            SqlFinancialContextRepository(session),
+        )
 
     @router.get("/summary")
-    def get_summary(user_id: str = Depends(user_id_provider)):
-        try:
-            return summary_dict(service.get_summary(user_id))
-        except DomainError as error:
-            return error_response(error)
+    def get_summary(session: SessionDep, user_id: UserDep):
+        return summary_dict(service(session, user_id).get_summary(str(user_id)))
 
     @router.patch("/plan")
-    def patch_plan(
-        payload: dict[str, Any] = Body(...),  # noqa: B008
-        user_id: str = Depends(user_id_provider),
+    def patch_plan(payload: PlanPatch, session: SessionDep, user_id: UserDep):
+        return summary_dict(service(session, user_id).patch_plan(str(user_id), payload))
+
+    @router.put("/opening-balance")
+    def set_opening_balance(
+        payload: OpeningBalanceRequest, session: SessionDep, user_id: UserDep
     ):
-        try:
-            return summary_dict(service.patch_plan(user_id, payload))
-        except DomainError as error:
-            return error_response(error)
+        return summary_dict(service(session, user_id).set_opening_balance(str(user_id), payload))
 
     @router.post("/contributions", status_code=201)
-    def create_contribution(
-        payload: dict[str, Any] = Body(...),  # noqa: B008
-        user_id: str = Depends(user_id_provider),
-    ):
-        try:
-            return contribution_dict(service.create_contribution(user_id, payload))
-        except DomainError as error:
-            return error_response(error)
+    def create_contribution(payload: ContributionWrite, session: SessionDep, user_id: UserDep):
+        return contribution_dict(
+            service(session, user_id).create_contribution(str(user_id), payload)
+        )
 
     @router.post("/withdrawals", status_code=201)
-    def create_withdrawal(
-        payload: dict[str, Any] = Body(...),  # noqa: B008
-        user_id: str = Depends(user_id_provider),
-    ):
-        try:
-            return contribution_dict(service.create_withdrawal(user_id, payload))
-        except DomainError as error:
-            return error_response(error)
+    def create_withdrawal(payload: ContributionWrite, session: SessionDep, user_id: UserDep):
+        return contribution_dict(service(session, user_id).create_withdrawal(str(user_id), payload))
 
     @router.patch("/contributions/{contribution_id}")
     def update_contribution(
-        contribution_id: str,
-        payload: dict[str, Any] = Body(...),  # noqa: B008
-        user_id: str = Depends(user_id_provider),
+        contribution_id: UUID,
+        payload: ContributionPatch,
+        session: SessionDep,
+        user_id: UserDep,
     ):
-        try:
-            return contribution_dict(service.update_contribution(user_id, contribution_id, payload))
-        except DomainError as error:
-            return error_response(error)
+        return contribution_dict(
+            service(session, user_id).update_contribution(
+                str(user_id), str(contribution_id), payload
+            )
+        )
 
     @router.delete("/contributions/{contribution_id}", status_code=204)
-    def delete_contribution(contribution_id: str, user_id: str = Depends(user_id_provider)):
-        try:
-            service.delete_contribution(user_id, contribution_id)
-            return Response(status_code=204)
-        except DomainError as error:
-            return error_response(error)
+    def delete_contribution(contribution_id: UUID, session: SessionDep, user_id: UserDep):
+        service(session, user_id).delete_contribution(str(user_id), str(contribution_id))
+        return Response(status_code=204)
 
     return router
-
-
-def create_demo_router():
-    return create_router(build_demo_service(), user_id_provider=lambda: DEMO_USER_ID)

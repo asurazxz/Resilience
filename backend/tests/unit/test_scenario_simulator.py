@@ -7,14 +7,14 @@ manifest.
 
 import unittest
 
-from app.features.scenario_simulator import (
+from backend.app.features.scenario_simulator import (
     BaselineFinances,
     ShockScenario,
     project_weeks,
     result_to_dict,
     simulate,
 )
-from app.features.scenario_simulator.engine import MAX_HORIZON_WEEKS
+from backend.app.features.scenario_simulator.engine import MAX_HORIZON_WEEKS
 
 # A Singapore platform worker renting a vehicle: S$900 gross, S$150 fuel,
 # S$250 rental, S$400 essentials, S$1,200 saved. Weekly surplus is S$100.

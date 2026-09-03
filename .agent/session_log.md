@@ -2,13 +2,23 @@
 
 Append significant sessions in reverse chronological order. Keep entries concise and factual.
 
+## 2026-09-03 — Graphify-led review, emergency-fund redesign, and roadmap refactor
+
+- Reviewed the whole project with the Graphify graph plus source verification; findings recorded in the conversation and driving this session's changes.
+- Defined the emergency-fund and savings calculation model in `documentation/features/emergency-fund-model.md`: balance = opening balance + deposits − withdrawals, essentials-only weekly expenses, default 26-week coverage goal, reached/remaining instead of percentages, and a separate savings-goal ledger.
+- Fixed the balance double-count: weekly entries no longer write the profile opening balance; one SQL-aggregate ledger module now serves both the Foundation bootstrap (`profile.emergencyFundBalanceCents`) and the Emergency Fund summary. Regression test added against the live database.
+- Added the Savings Goals feature end to end (migration reusing `goals`/`goal_contributions`, `/api/v1/savings-goals` routes, `/savings` tab with the pinned emergency-fund overview).
+- Backend refactor: single `backend.app` import root and one pytest config, one pydantic-settings module, local Supabase JWT verification with JWKS caching and remote fallback, one `DomainError` and one `{error:{...}}` envelope, every route under `/api/v1`, Pydantic request models for the Emergency Fund router, answer coercion in the scheme evaluator, validated `X-Request-ID`, IntegrityError handling, deduplicated requirements, CSV import retired, Ruff clean.
+- Frontend refactor: always-visible collapsible menu with a fixed top bar, one `apiRequest`/`ApiError` client with 401 refresh-and-retry, dead weekly-entry and CSV code removed, Scenario Simulator seeded from real transactions and expenses, Income Reality surplus now subtracts recurring and essential costs like the fund does, percentage-of-goal and milestone UI removed.
+- Verified: 242 backend tests with the database (222 + 20 skipped without), Ruff clean, `tsc -b`, 44 frontend tests, production build, regenerated OpenAPI and TypeScript types, and a live in-process contract probe of bootstrap, Emergency Fund, Savings, Scheme Navigator, and Scenario routes. Not verified in a real browser session because sign-in credentials are not available to the agent.
+
 ## 2026-09-03 — Apply the mobile editorial visual system
 
 - Reworked the shared React visual layer around the supplied DESIGN.md: warm paper surfaces, ink typography, Forest action states, 4px geometry, warm shadows, and a blue selection accent.
 - Replaced the mobile horizontal route strip with an accessible fixed **Menu / Close** disclosure, while keeping the full navigation visible on wider screens.
 - Applied the same tokens to the Emergency Fund and Scheme assistant so the expanded integrated flows remain visually cohesive; documented the rules and 390px test expectation in `frontend/README.md`.
 - Verified the production frontend build, all 26 frontend tests, a 390px browser view of Home and Income Overview, mobile menu navigation, and an error-free browser console. Refreshed Graphify after the code changes.
-- Created the team Figma design file, but further MCP writes are blocked by the Starter-plan quota. Capturing the live screen also needs explicit approval because it would export visible local financial data to Figma.
+- In the user-shared Figma file, created an editable three-screen 390px mobile demo (home, income pattern, and navigation), with reusable local action styling and working taps between the Menu, Home, and Income Pattern frames. The temporary raw capture was removed after the editable screens were verified.
 
 ## 2026-09-03 — Simplify and connect the integrated user journey
 

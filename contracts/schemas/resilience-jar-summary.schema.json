@@ -79,14 +79,18 @@
         "goal_target_cents",
         "progress_percent",
         "coverage_days",
-        "coverage_weeks"
+        "coverage_weeks",
+        "goal_reached",
+        "remaining_cents"
       ],
       "properties": {
         "contribution_total_cents": { "type": "integer", "minimum": 0 },
         "goal_target_cents": { "type": ["integer", "null"], "minimum": 1 },
         "progress_percent": { "type": ["number", "null"], "minimum": 0 },
         "coverage_days": { "type": ["number", "null"], "minimum": 0 },
-        "coverage_weeks": { "type": ["number", "null"], "minimum": 0 }
+        "coverage_weeks": { "type": ["number", "null"], "minimum": 0 },
+        "goal_reached": { "type": "boolean" },
+        "remaining_cents": { "type": ["integer", "null"], "minimum": 0 }
       }
     },
     "goal_review": {

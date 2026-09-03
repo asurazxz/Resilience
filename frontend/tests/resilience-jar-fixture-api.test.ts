@@ -46,6 +46,26 @@ test("coverage goal target follows weekly essential expenses", async () => {
   assert.equal(summary.progress.goal_target_cents, 420_000);
 });
 
+test("the default goal is 26 weeks of essentials and reports what is left", async () => {
+  const api = new FixtureResilienceJarApi();
+  const summary = await api.getSummary();
+
+  assert.deepEqual(summary.plan.goal, { mode: "coverage", weeks: 26 });
+  assert.equal(summary.progress.goal_target_cents, 1_820_000);
+  assert.equal(summary.progress.goal_reached, false);
+  assert.equal(summary.progress.remaining_cents, 1_820_000 - 12_500);
+});
+
+test("reaching the goal sets goal_reached and leaves nothing remaining", async () => {
+  const api = new FixtureResilienceJarApi();
+  const reached = await api.patchPlan({
+    goal: { mode: "amount", amount_cents: 10_000 },
+  });
+
+  assert.equal(reached.progress.goal_reached, true);
+  assert.equal(reached.progress.remaining_cents, 0);
+});
+
 test("expense-change alert clears only when the goal is reviewed and saved", async () => {
   const api = new FixtureResilienceJarApi();
   const initial = await api.getSummary();

@@ -24,7 +24,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/v1/foundation/onboarding": {
@@ -65,7 +70,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/v1/foundation/profile": {
@@ -106,7 +116,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/v1/foundation/recurring-work-costs/{item_id}": {
@@ -116,6 +131,11 @@
         ],
         "summary": "Recurring Put",
         "operationId": "recurring_put_api_v1_foundation_recurring_work_costs__item_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "item_id",
@@ -167,6 +187,11 @@
         ],
         "summary": "Recurring Delete",
         "operationId": "recurring_delete_api_v1_foundation_recurring_work_costs__item_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "item_id",
@@ -203,6 +228,11 @@
         ],
         "summary": "Essential Put",
         "operationId": "essential_put_api_v1_foundation_essential_expenses__item_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "item_id",
@@ -254,6 +284,11 @@
         ],
         "summary": "Essential Delete",
         "operationId": "essential_delete_api_v1_foundation_essential_expenses__item_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "item_id",
@@ -290,6 +325,11 @@
         ],
         "summary": "Weeks List",
         "operationId": "weeks_list_api_v1_foundation_weeks_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "limit",
@@ -356,6 +396,11 @@
         ],
         "summary": "Week Get",
         "operationId": "week_get_api_v1_foundation_weeks__week_start__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "week_start",
@@ -397,6 +442,11 @@
         ],
         "summary": "Week Put",
         "operationId": "week_put_api_v1_foundation_weeks__week_start__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "week_start",
@@ -465,6 +515,11 @@
         ],
         "summary": "Week Delete",
         "operationId": "week_delete_api_v1_foundation_weeks__week_start__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "week_start",
@@ -494,54 +549,79 @@
         }
       }
     },
-    "/api/v1/foundation/imports/csv/template": {
-      "get": {
-        "tags": [
-          "foundation-input"
-        ],
-        "summary": "Csv Template",
-        "operationId": "csv_template_api_v1_foundation_imports_csv_template_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/foundation/imports/csv/preview": {
+    "/api/v1/foundation/transactions": {
       "post": {
         "tags": [
           "foundation-input"
         ],
-        "summary": "Csv Preview",
-        "operationId": "csv_preview_api_v1_foundation_imports_csv_preview_post",
+        "summary": "Transaction Create",
+        "operationId": "transaction_create_api_v1_foundation_transactions_post",
         "requestBody": {
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_csv_preview_api_v1_foundation_imports_csv_preview_post"
+                "$ref": "#/components/schemas/TransactionInput"
               }
             }
           },
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CsvPreviewResponse"
+                  "$ref": "#/components/schemas/TransactionResponse"
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/foundation/transactions/{transaction_id}": {
+      "delete": {
+        "tags": [
+          "foundation-input"
+        ],
+        "summary": "Transaction Delete",
+        "operationId": "transaction_delete_api_v1_foundation_transactions__transaction_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "transaction_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Transaction Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -563,6 +643,11 @@
         ],
         "summary": "Data Reset",
         "operationId": "data_reset_api_v1_foundation_data_delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "X-Confirm-Reset",
@@ -636,6 +721,800 @@
               }
             }
           }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/scheme-navigator/questionnaire": {
+      "get": {
+        "tags": [
+          "scheme-navigator"
+        ],
+        "summary": "Get Questionnaire",
+        "description": "Returns only the questions actually needed by the currently loaded\nscheme rules, in a stable display order.",
+        "operationId": "get_questionnaire_api_v1_scheme_navigator_questionnaire_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/QuestionnaireField"
+                  },
+                  "type": "array",
+                  "title": "Response Get Questionnaire Api V1 Scheme Navigator Questionnaire Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/scheme-navigator/evaluate": {
+      "post": {
+        "tags": [
+          "scheme-navigator"
+        ],
+        "summary": "Evaluate",
+        "description": "Evaluates the submitted answers against every loaded scheme rule.\n\nAny field a rule needs that is absent from ``answers`` yields a\n``missing_information`` result for that scheme rather than a guess.",
+        "operationId": "evaluate_api_v1_scheme_navigator_evaluate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/scheme-navigator/explain": {
+      "post": {
+        "tags": [
+          "scheme-navigator"
+        ],
+        "summary": "Explain Result",
+        "description": "Rephrases an already-decided result in plain language.\n\nThe status is decided by the evaluator and only described here. If the\nmodel is unconfigured or unreachable, this returns a deterministic\nexplanation rather than an error.",
+        "operationId": "explain_result_api_v1_scheme_navigator_explain_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExplanationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExplanationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/scheme-navigator/chat": {
+      "post": {
+        "tags": [
+          "scheme-navigator"
+        ],
+        "summary": "Chat Turn",
+        "description": "Answers a scoped question about the loaded schemes and this app.\n\nDegrades to a canned reply when the model is unconfigured or\nunreachable, so the chat panel never surfaces a server error.",
+        "operationId": "chat_turn_api_v1_scheme_navigator_chat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/scenario-simulator/simulate": {
+      "post": {
+        "tags": [
+          "scenario-simulator"
+        ],
+        "summary": "Estimate cash flow and emergency-buffer runway for one financial shock",
+        "operationId": "simulate_scenario_api_v1_scenario_simulator_simulate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioResultResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/savings-goals": {
+      "get": {
+        "tags": [
+          "savings-goals"
+        ],
+        "summary": "List Goals",
+        "operationId": "list_goals_api_v1_savings_goals_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavingsGoalListResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "savings-goals"
+        ],
+        "summary": "Create Goal",
+        "operationId": "create_goal_api_v1_savings_goals_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SavingsGoalCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavingsGoalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/savings-goals/{goal_id}": {
+      "patch": {
+        "tags": [
+          "savings-goals"
+        ],
+        "summary": "Patch Goal",
+        "operationId": "patch_goal_api_v1_savings_goals__goal_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "goal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Goal Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SavingsGoalPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavingsGoalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "savings-goals"
+        ],
+        "summary": "Delete Goal",
+        "operationId": "delete_goal_api_v1_savings_goals__goal_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "goal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Goal Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/savings-goals/{goal_id}/contributions": {
+      "post": {
+        "tags": [
+          "savings-goals"
+        ],
+        "summary": "Add Contribution",
+        "operationId": "add_contribution_api_v1_savings_goals__goal_id__contributions_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "goal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Goal Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SavingsGoalContributionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavingsGoalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/savings-goals/{goal_id}/contributions/{contribution_id}": {
+      "delete": {
+        "tags": [
+          "savings-goals"
+        ],
+        "summary": "Delete Contribution",
+        "operationId": "delete_contribution_api_v1_savings_goals__goal_id__contributions__contribution_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "goal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Goal Id"
+            }
+          },
+          {
+            "name": "contribution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Contribution Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/resilience-jar/summary": {
+      "get": {
+        "tags": [
+          "resilience-jar"
+        ],
+        "summary": "Get Summary",
+        "operationId": "get_summary_api_v1_resilience_jar_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/resilience-jar/plan": {
+      "patch": {
+        "tags": [
+          "resilience-jar"
+        ],
+        "summary": "Patch Plan",
+        "operationId": "patch_plan_api_v1_resilience_jar_plan_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/resilience-jar/opening-balance": {
+      "put": {
+        "tags": [
+          "resilience-jar"
+        ],
+        "summary": "Set Opening Balance",
+        "operationId": "set_opening_balance_api_v1_resilience_jar_opening_balance_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpeningBalanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/resilience-jar/contributions": {
+      "post": {
+        "tags": [
+          "resilience-jar"
+        ],
+        "summary": "Create Contribution",
+        "operationId": "create_contribution_api_v1_resilience_jar_contributions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContributionWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/resilience-jar/withdrawals": {
+      "post": {
+        "tags": [
+          "resilience-jar"
+        ],
+        "summary": "Create Withdrawal",
+        "operationId": "create_withdrawal_api_v1_resilience_jar_withdrawals_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContributionWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/resilience-jar/contributions/{contribution_id}": {
+      "patch": {
+        "tags": [
+          "resilience-jar"
+        ],
+        "summary": "Update Contribution",
+        "operationId": "update_contribution_api_v1_resilience_jar_contributions__contribution_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "contribution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Contribution Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContributionPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "resilience-jar"
+        ],
+        "summary": "Delete Contribution",
+        "operationId": "delete_contribution_api_v1_resilience_jar_contributions__contribution_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "contribution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Contribution Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -692,6 +1571,27 @@
   },
   "components": {
     "schemas": {
+      "AmountGoalInput": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "const": "amount",
+            "title": "Mode"
+          },
+          "amount_cents": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Amount Cents"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "mode",
+          "amount_cents"
+        ],
+        "title": "AmountGoalInput"
+      },
       "AssumptionsIn": {
         "properties": {
           "apply_cpf": {
@@ -710,71 +1610,203 @@
         "type": "object",
         "title": "AssumptionsIn"
       },
-      "Body_csv_preview_api_v1_foundation_imports_csv_preview_post": {
+      "BaselineFinancesPayload": {
         "properties": {
-          "file": {
-            "type": "string",
-            "contentMediaType": "application/octet-stream",
-            "title": "File"
+          "weekly_gross_earnings_cents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Weekly Gross Earnings Cents"
+          },
+          "weekly_variable_work_costs_cents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Weekly Variable Work Costs Cents"
+          },
+          "weekly_fixed_work_costs_cents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Weekly Fixed Work Costs Cents"
+          },
+          "weekly_essential_expenses_cents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Weekly Essential Expenses Cents"
+          },
+          "emergency_savings_cents": {
+            "type": "integer",
+            "maximum": 1000000000.0,
+            "minimum": 0.0,
+            "title": "Emergency Savings Cents"
           }
         },
         "type": "object",
         "required": [
-          "file"
+          "weekly_gross_earnings_cents",
+          "weekly_variable_work_costs_cents",
+          "weekly_fixed_work_costs_cents",
+          "weekly_essential_expenses_cents",
+          "emergency_savings_cents"
         ],
-        "title": "Body_csv_preview_api_v1_foundation_imports_csv_preview_post"
+        "title": "BaselineFinancesPayload"
       },
-      "CsvPreviewResponse": {
+      "BaselineSummaryResponse": {
         "properties": {
-          "fileName": {
-            "type": "string",
-            "title": "Filename"
-          },
-          "fileSha256": {
-            "type": "string",
-            "title": "Filesha256"
-          },
-          "rows": {
-            "items": {
-              "$ref": "#/components/schemas/CsvPreviewRow"
-            },
-            "type": "array",
-            "title": "Rows"
-          },
-          "validCount": {
+          "weekly_gross_earnings_cents": {
             "type": "integer",
-            "title": "Validcount"
+            "title": "Weekly Gross Earnings Cents"
           },
-          "invalidCount": {
+          "weekly_work_costs_cents": {
             "type": "integer",
-            "title": "Invalidcount"
+            "title": "Weekly Work Costs Cents"
+          },
+          "weekly_net_work_income_cents": {
+            "type": "integer",
+            "title": "Weekly Net Work Income Cents"
+          },
+          "weekly_essential_expenses_cents": {
+            "type": "integer",
+            "title": "Weekly Essential Expenses Cents"
+          },
+          "weekly_surplus_cents": {
+            "type": "integer",
+            "title": "Weekly Surplus Cents"
+          },
+          "emergency_savings_cents": {
+            "type": "integer",
+            "title": "Emergency Savings Cents"
+          },
+          "emergency_savings_weeks_of_essentials": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emergency Savings Weeks Of Essentials"
+          },
+          "runway_weeks": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Runway Weeks"
           }
         },
         "type": "object",
         "required": [
-          "fileName",
-          "fileSha256",
-          "rows",
-          "validCount",
-          "invalidCount"
+          "weekly_gross_earnings_cents",
+          "weekly_work_costs_cents",
+          "weekly_net_work_income_cents",
+          "weekly_essential_expenses_cents",
+          "weekly_surplus_cents",
+          "emergency_savings_cents",
+          "emergency_savings_weeks_of_essentials",
+          "runway_weeks"
         ],
-        "title": "CsvPreviewResponse"
+        "title": "BaselineSummaryResponse"
       },
-      "CsvPreviewRow": {
+      "ChatMessage": {
         "properties": {
-          "rowNumber": {
-            "type": "integer",
-            "title": "Rownumber"
-          },
-          "status": {
+          "role": {
             "type": "string",
             "enum": [
-              "valid",
-              "invalid"
+              "user",
+              "assistant"
             ],
-            "title": "Status"
+            "title": "Role"
           },
-          "weekStart": {
+          "content": {
+            "type": "string",
+            "maxLength": 1500,
+            "minLength": 1,
+            "title": "Content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ChatMessage"
+      },
+      "ChatRequest": {
+        "properties": {
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            },
+            "type": "array",
+            "maxItems": 12,
+            "title": "Messages"
+          },
+          "answers": {
+            "additionalProperties": true,
+            "type": "object",
+            "maxProperties": 32,
+            "title": "Answers"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SchemeResult"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "title": "ChatRequest",
+        "description": "A chatbot turn.\n\nUnlike the explainer, this deliberately carries the user's ``answers``:\nthe assistant is expected to field questions like \"why didn't I match\nWIS?\", which cannot be answered without them. That is a conscious\nprivacy trade -- see documentation/features/scheme-navigator.md."
+      },
+      "ChatResponse": {
+        "properties": {
+          "reply": {
+            "type": "string",
+            "title": "Reply"
+          },
+          "is_ai_generated": {
+            "type": "boolean",
+            "title": "Is Ai Generated"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reply",
+          "is_ai_generated",
+          "generated_at"
+        ],
+        "title": "ChatResponse"
+      },
+      "ContributionPatch": {
+        "properties": {
+          "amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Cents"
+          },
+          "contribution_date": {
             "anyOf": [
               {
                 "type": "string",
@@ -784,83 +1816,79 @@
                 "type": "null"
               }
             ],
-            "title": "Weekstart"
+            "title": "Contribution Date"
           },
-          "recordType": {
+          "note": {
             "anyOf": [
               {
                 "type": "string",
-                "enum": [
-                  "earning",
-                  "variable_work_cost"
-                ]
+                "maxLength": 200
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Recordtype"
-          },
-          "source": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Source"
-          },
-          "category": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "amountCents": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "maximum": 100000000.0,
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Amountcents"
-          },
-          "errors": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Errors"
+            "title": "Note"
           }
         },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ContributionPatch"
+      },
+      "ContributionWrite": {
+        "properties": {
+          "amount_cents": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Amount Cents"
+          },
+          "contribution_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Contribution Date"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
         "type": "object",
         "required": [
-          "rowNumber",
-          "status"
+          "amount_cents",
+          "contribution_date"
         ],
-        "title": "CsvPreviewRow"
+        "title": "ContributionWrite"
+      },
+      "CoverageGoalInput": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "const": "coverage",
+            "title": "Mode"
+          },
+          "weeks": {
+            "type": "integer",
+            "maximum": 52.0,
+            "minimum": 1.0,
+            "title": "Weeks"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "mode",
+          "weeks"
+        ],
+        "title": "CoverageGoalInput"
       },
       "EarningInput": {
         "properties": {
@@ -1036,6 +2064,100 @@
         ],
         "title": "EssentialExpenseResponse"
       },
+      "EvaluationRequest": {
+        "properties": {
+          "answers": {
+            "additionalProperties": true,
+            "type": "object",
+            "maxProperties": 32,
+            "title": "Answers"
+          }
+        },
+        "type": "object",
+        "title": "EvaluationRequest"
+      },
+      "EvaluationResponse": {
+        "properties": {
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SchemeResult"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "generated_at",
+          "results"
+        ],
+        "title": "EvaluationResponse"
+      },
+      "ExplanationRequest": {
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Rule Id"
+          },
+          "answers": {
+            "additionalProperties": true,
+            "type": "object",
+            "maxProperties": 32,
+            "title": "Answers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule_id"
+        ],
+        "title": "ExplanationRequest",
+        "description": "Asks for a plain-language explanation of an already-decided result.\n\nThe caller sends back a ``SchemeResult`` the evaluator produced. The\nexplainer never re-derives the status, so the request carries the\noutcome rather than the answers that led to it."
+      },
+      "ExplanationResponse": {
+        "properties": {
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "next_steps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Next Steps"
+          },
+          "source_urls": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Source Urls"
+          },
+          "is_ai_generated": {
+            "type": "boolean",
+            "title": "Is Ai Generated"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "summary",
+          "is_ai_generated",
+          "generated_at"
+        ],
+        "title": "ExplanationResponse"
+      },
       "FoundationBootstrap": {
         "properties": {
           "profile": {
@@ -1061,6 +2183,13 @@
             },
             "type": "array",
             "title": "Weeklyentries"
+          },
+          "transactions": {
+            "items": {
+              "$ref": "#/components/schemas/TransactionResponse"
+            },
+            "type": "array",
+            "title": "Transactions"
           },
           "syncedAt": {
             "type": "string",
@@ -1201,6 +2330,39 @@
         ],
         "title": "InputSnapshot"
       },
+      "OfficialResourceResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "last_reviewed": {
+            "type": "string",
+            "title": "Last Reviewed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "url",
+          "last_reviewed"
+        ],
+        "title": "OfficialResourceResponse"
+      },
       "OnboardingRequest": {
         "properties": {
           "emergencySavingsCents": {
@@ -1254,6 +2416,115 @@
         ],
         "title": "OnboardingRequest"
       },
+      "OpeningBalanceRequest": {
+        "properties": {
+          "amount_cents": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Amount Cents"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "amount_cents"
+        ],
+        "title": "OpeningBalanceRequest"
+      },
+      "PlanPatch": {
+        "properties": {
+          "recommendation_method": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecommendationMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "target_frequency": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TargetFrequency"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "target_amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Amount Cents"
+          },
+          "weekly_target_cents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekly Target Cents"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "goal": {
+            "anyOf": [
+              {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/AmountGoalInput"
+                  },
+                  {
+                    "$ref": "#/components/schemas/CoverageGoalInput"
+                  }
+                ],
+                "discriminator": {
+                  "propertyName": "mode",
+                  "mapping": {
+                    "amount": "#/components/schemas/AmountGoalInput",
+                    "coverage": "#/components/schemas/CoverageGoalInput"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goal"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "PlanPatch"
+      },
+      "PlanStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "paused"
+        ],
+        "title": "PlanStatus"
+      },
       "PlatformEarningIn": {
         "properties": {
           "platform": {
@@ -1292,6 +2563,42 @@
         ],
         "title": "PlatformEarningOut"
       },
+      "PreparatoryActionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity"
+          },
+          "resource_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Resource Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "detail",
+          "severity",
+          "resource_ids"
+        ],
+        "title": "PreparatoryActionResponse"
+      },
       "ProfileResponse": {
         "properties": {
           "id": {
@@ -1316,6 +2623,45 @@
             "maximum": 100000000.0,
             "minimum": 0.0,
             "title": "Latestemergencysavingscents"
+          },
+          "emergencyFundBalanceCents": {
+            "type": "integer",
+            "title": "Emergencyfundbalancecents",
+            "default": 0
+          },
+          "displayName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Displayname"
+          },
+          "phoneNumber": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phonenumber"
+          },
+          "dateOfBirth": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dateofbirth"
           }
         },
         "type": "object",
@@ -1330,18 +2676,141 @@
       },
       "ProfileUpdate": {
         "properties": {
-          "latestEmergencySavingsCents": {
-            "type": "integer",
-            "maximum": 100000000.0,
-            "minimum": 0.0,
-            "title": "Latestemergencysavingscents"
+          "displayName": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Displayname"
+          },
+          "phoneNumber": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 30
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phonenumber"
+          },
+          "dateOfBirth": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dateofbirth"
+          }
+        },
+        "type": "object",
+        "title": "ProfileUpdate"
+      },
+      "QuestionnaireField": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "field_type": {
+            "type": "string",
+            "enum": [
+              "number",
+              "boolean",
+              "select",
+              "date"
+            ],
+            "title": "Field Type"
+          },
+          "help_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Help Text"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "options": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SelectOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Options"
+          },
+          "min_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Value"
+          },
+          "max_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Value"
           }
         },
         "type": "object",
         "required": [
-          "latestEmergencySavingsCents"
+          "key",
+          "label",
+          "field_type"
         ],
-        "title": "ProfileUpdate"
+        "title": "QuestionnaireField",
+        "description": "One prompt shown to the user. Derived from whichever scheme rules\nactually reference it, not hand-written per scheme."
+      },
+      "RecommendationMethod": {
+        "type": "string",
+        "enum": [
+          "conservative_4_week",
+          "latest_week"
+        ],
+        "title": "RecommendationMethod"
       },
       "RecurringWorkCostInput": {
         "properties": {
@@ -1462,6 +2931,709 @@
           "updatedAt"
         ],
         "title": "RecurringWorkCostResponse"
+      },
+      "SavingsGoalContributionCreate": {
+        "properties": {
+          "amountCents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Amountcents"
+          },
+          "contributedOn": {
+            "type": "string",
+            "format": "date",
+            "title": "Contributedon"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "amountCents",
+          "contributedOn"
+        ],
+        "title": "SavingsGoalContributionCreate"
+      },
+      "SavingsGoalContributionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "amountCents": {
+            "type": "integer",
+            "title": "Amountcents"
+          },
+          "contributedOn": {
+            "type": "string",
+            "format": "date",
+            "title": "Contributedon"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "amountCents",
+          "contributedOn",
+          "note",
+          "createdAt"
+        ],
+        "title": "SavingsGoalContributionResponse"
+      },
+      "SavingsGoalCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "targetCents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Targetcents"
+          },
+          "targetDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetdate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "targetCents"
+        ],
+        "title": "SavingsGoalCreate"
+      },
+      "SavingsGoalListResponse": {
+        "properties": {
+          "goals": {
+            "items": {
+              "$ref": "#/components/schemas/SavingsGoalResponse"
+            },
+            "type": "array",
+            "title": "Goals"
+          }
+        },
+        "type": "object",
+        "required": [
+          "goals"
+        ],
+        "title": "SavingsGoalListResponse"
+      },
+      "SavingsGoalPatch": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "targetCents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetcents"
+          },
+          "targetDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetdate"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "completed",
+                  "archived"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "title": "SavingsGoalPatch"
+      },
+      "SavingsGoalResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "targetCents": {
+            "type": "integer",
+            "title": "Targetcents"
+          },
+          "targetDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetdate"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "completed",
+              "archived"
+            ],
+            "title": "Status"
+          },
+          "savedCents": {
+            "type": "integer",
+            "title": "Savedcents"
+          },
+          "remainingCents": {
+            "type": "integer",
+            "title": "Remainingcents"
+          },
+          "reached": {
+            "type": "boolean",
+            "title": "Reached"
+          },
+          "suggestedWeeklyCents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggestedweeklycents"
+          },
+          "contributions": {
+            "items": {
+              "$ref": "#/components/schemas/SavingsGoalContributionResponse"
+            },
+            "type": "array",
+            "title": "Contributions"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "targetCents",
+          "targetDate",
+          "status",
+          "savedCents",
+          "remainingCents",
+          "reached",
+          "suggestedWeeklyCents",
+          "contributions",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "SavingsGoalResponse"
+      },
+      "ScenarioResultResponse": {
+        "properties": {
+          "baseline": {
+            "$ref": "#/components/schemas/BaselineSummaryResponse"
+          },
+          "scenario": {
+            "$ref": "#/components/schemas/ScenarioSummaryResponse"
+          },
+          "weeks": {
+            "items": {
+              "$ref": "#/components/schemas/WeekProjectionResponse"
+            },
+            "type": "array",
+            "title": "Weeks"
+          },
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/PreparatoryActionResponse"
+            },
+            "type": "array",
+            "title": "Actions"
+          },
+          "resources": {
+            "items": {
+              "$ref": "#/components/schemas/OfficialResourceResponse"
+            },
+            "type": "array",
+            "title": "Resources"
+          },
+          "disclaimers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Disclaimers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "baseline",
+          "scenario",
+          "weeks",
+          "actions",
+          "resources",
+          "disclaimers"
+        ],
+        "title": "ScenarioResultResponse"
+      },
+      "ScenarioSummaryResponse": {
+        "properties": {
+          "horizon_weeks": {
+            "type": "integer",
+            "title": "Horizon Weeks"
+          },
+          "weeks_affected": {
+            "type": "integer",
+            "title": "Weeks Affected"
+          },
+          "recovery_weeks": {
+            "type": "integer",
+            "title": "Recovery Weeks"
+          },
+          "weekly_net_work_income_during_shock_cents": {
+            "type": "integer",
+            "title": "Weekly Net Work Income During Shock Cents"
+          },
+          "weekly_net_cash_flow_during_shock_cents": {
+            "type": "integer",
+            "title": "Weekly Net Cash Flow During Shock Cents"
+          },
+          "unexpected_cost_cents": {
+            "type": "integer",
+            "title": "Unexpected Cost Cents"
+          },
+          "total_income_lost_cents": {
+            "type": "integer",
+            "title": "Total Income Lost Cents"
+          },
+          "lowest_buffer_cents": {
+            "type": "integer",
+            "title": "Lowest Buffer Cents"
+          },
+          "lowest_buffer_week": {
+            "type": "integer",
+            "title": "Lowest Buffer Week"
+          },
+          "buffer_runway_weeks": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buffer Runway Weeks"
+          },
+          "first_shortfall_week": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Shortfall Week"
+          },
+          "total_shortfall_cents": {
+            "type": "integer",
+            "title": "Total Shortfall Cents"
+          },
+          "buffer_at_horizon_cents": {
+            "type": "integer",
+            "title": "Buffer At Horizon Cents"
+          },
+          "buffer_holds_through_horizon": {
+            "type": "boolean",
+            "title": "Buffer Holds Through Horizon"
+          },
+          "full_income_resumes_week": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Income Resumes Week"
+          }
+        },
+        "type": "object",
+        "required": [
+          "horizon_weeks",
+          "weeks_affected",
+          "recovery_weeks",
+          "weekly_net_work_income_during_shock_cents",
+          "weekly_net_cash_flow_during_shock_cents",
+          "unexpected_cost_cents",
+          "total_income_lost_cents",
+          "lowest_buffer_cents",
+          "lowest_buffer_week",
+          "buffer_runway_weeks",
+          "first_shortfall_week",
+          "total_shortfall_cents",
+          "buffer_at_horizon_cents",
+          "buffer_holds_through_horizon",
+          "full_income_resumes_week"
+        ],
+        "title": "ScenarioSummaryResponse"
+      },
+      "SchemeResult": {
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "title": "Rule Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "agency": {
+            "type": "string",
+            "title": "Agency"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SchemeStatus"
+          },
+          "matched_facts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Matched Facts"
+          },
+          "unmatched_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unmatched Reasons"
+          },
+          "missing_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Fields"
+          },
+          "official_source_url": {
+            "type": "string",
+            "title": "Official Source Url"
+          },
+          "application_url": {
+            "type": "string",
+            "title": "Application Url"
+          },
+          "last_reviewed_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Last Reviewed Date"
+          },
+          "simplified_note": {
+            "type": "string",
+            "title": "Simplified Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule_id",
+          "name",
+          "agency",
+          "status",
+          "official_source_url",
+          "application_url",
+          "last_reviewed_date",
+          "simplified_note"
+        ],
+        "title": "SchemeResult"
+      },
+      "SchemeStatus": {
+        "type": "string",
+        "enum": [
+          "matched",
+          "not_matched",
+          "missing_information"
+        ],
+        "title": "SchemeStatus"
+      },
+      "SelectOption": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "label"
+        ],
+        "title": "SelectOption"
+      },
+      "ShockScenarioPayload": {
+        "properties": {
+          "income_reduction_percent": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Income Reduction Percent"
+          },
+          "weeks_affected": {
+            "type": "integer",
+            "maximum": 52.0,
+            "minimum": 0.0,
+            "title": "Weeks Affected"
+          },
+          "unexpected_cost_cents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Unexpected Cost Cents",
+            "default": 0
+          },
+          "recovery_weeks": {
+            "type": "integer",
+            "maximum": 52.0,
+            "minimum": 0.0,
+            "title": "Recovery Weeks",
+            "default": 0
+          },
+          "horizon_weeks": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 52.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Horizon Weeks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "income_reduction_percent",
+          "weeks_affected"
+        ],
+        "title": "ShockScenarioPayload"
+      },
+      "SimulationRequest": {
+        "properties": {
+          "baseline": {
+            "$ref": "#/components/schemas/BaselineFinancesPayload"
+          },
+          "scenario": {
+            "$ref": "#/components/schemas/ShockScenarioPayload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "baseline",
+          "scenario"
+        ],
+        "title": "SimulationRequest"
+      },
+      "TargetFrequency": {
+        "type": "string",
+        "enum": [
+          "weekly",
+          "monthly"
+        ],
+        "title": "TargetFrequency"
+      },
+      "TransactionInput": {
+        "properties": {
+          "entryType": {
+            "type": "string",
+            "enum": [
+              "income",
+              "cost"
+            ],
+            "title": "Entrytype"
+          },
+          "amountCents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Amountcents"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 160
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "occurredOn": {
+            "type": "string",
+            "format": "date",
+            "title": "Occurredon"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entryType",
+          "amountCents",
+          "occurredOn"
+        ],
+        "title": "TransactionInput"
+      },
+      "TransactionResponse": {
+        "properties": {
+          "entryType": {
+            "type": "string",
+            "enum": [
+              "income",
+              "cost"
+            ],
+            "title": "Entrytype"
+          },
+          "amountCents": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Amountcents"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 160
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "occurredOn": {
+            "type": "string",
+            "format": "date",
+            "title": "Occurredon"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entryType",
+          "amountCents",
+          "occurredOn",
+          "id",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "TransactionResponse"
       },
       "TrendSummaryOut": {
         "properties": {
@@ -1634,6 +3806,64 @@
           "surplus_cents"
         ],
         "title": "WeekBreakdownOut"
+      },
+      "WeekProjectionResponse": {
+        "properties": {
+          "week": {
+            "type": "integer",
+            "title": "Week"
+          },
+          "gross_earnings_cents": {
+            "type": "integer",
+            "title": "Gross Earnings Cents"
+          },
+          "work_costs_cents": {
+            "type": "integer",
+            "title": "Work Costs Cents"
+          },
+          "net_work_income_cents": {
+            "type": "integer",
+            "title": "Net Work Income Cents"
+          },
+          "essential_expenses_cents": {
+            "type": "integer",
+            "title": "Essential Expenses Cents"
+          },
+          "one_off_cost_cents": {
+            "type": "integer",
+            "title": "One Off Cost Cents"
+          },
+          "net_cash_flow_cents": {
+            "type": "integer",
+            "title": "Net Cash Flow Cents"
+          },
+          "buffer_open_cents": {
+            "type": "integer",
+            "title": "Buffer Open Cents"
+          },
+          "buffer_close_cents": {
+            "type": "integer",
+            "title": "Buffer Close Cents"
+          },
+          "shortfall_cents": {
+            "type": "integer",
+            "title": "Shortfall Cents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "week",
+          "gross_earnings_cents",
+          "work_costs_cents",
+          "net_work_income_cents",
+          "essential_expenses_cents",
+          "one_off_cost_cents",
+          "net_cash_flow_cents",
+          "buffer_open_cents",
+          "buffer_close_cents",
+          "shortfall_cents"
+        ],
+        "title": "WeekProjectionResponse"
       },
       "WeeklyEntryIn": {
         "properties": {
@@ -1833,6 +4063,12 @@
           "emergencySavingsCents"
         ],
         "title": "WeeklyEntryUpsert"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   }

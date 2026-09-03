@@ -6,7 +6,6 @@ export {
   type ResilienceJarApi,
 } from "./api.ts";
 export type {
-  ApiErrorBody,
   CompletionProjection,
   Contribution,
   ContributionWrite,

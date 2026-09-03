@@ -1,12 +1,29 @@
 # Feature 03 — Emergency Fund
 
-**Date:** 2026-09-01
+**Date:** 2026-09-03
+
+> **The calculation model lives in
+> [`emergency-fund-model.md`](./emergency-fund-model.md).** That document is the
+> single definition of the balance `B`, the weekly essential expenses `E`, the
+> goal target `T`, `reached`/`remaining`, and the weekly surplus `S_w`. This
+> document describes the feature around it. Where the two disagree, the model
+> document wins.
 
 ## Scope
 
 The Emergency Fund is a mobile-first feature slice for building a safety buffer against income disruptions and unexpected costs. Users choose a weekly or monthly contribution target and record contributions or emergency use. It calculates recommendations, essential-expense coverage, milestones, and a completion projection deterministically. It never holds, transfers, or withdraws money; a withdrawal entry only records money the user moved outside Resilience. Other savings remain separate from the balance tracked in this fund.
 
-The feature is mounted in the shared React shell at `/resilience-jar`, with less-frequent plan controls at `/resilience-jar/plan`. It currently uses a typed browser fixture adapter; the backend domain service and in-memory repositories remain available behind the stable `resilience-jar` interfaces. Database persistence and live Income Reality inputs are follow-up work.
+The feature is mounted in the shared React shell at `/resilience-jar`, with less-frequent plan controls at `/resilience-jar/plan`. It is backed by PostgreSQL through `sql_repositories.py`; the typed browser fixture adapter and the in-memory repositories remain for offline demos and unit tests.
+
+## 2026-09-03 changes
+
+- **The emergency-fund double count is fixed.** Saving a weekly entry no longer writes the displayed balance back into `profiles.latest_emergency_savings_cents`. The weekly `emergency_savings_cents` value and the `emergency_savings_snapshots` row stay as historical snapshots. Previously an opening balance of S$1,000 plus a S$50 deposit displayed S$1,050, and saving a week turned it into S$1,100.
+- **One balance function.** `backend/app/features/emergency_fund_ledger.py` owns `emergency_fund_balance()`, `weekly_essential_expenses_cents()`, and `weekly_recurring_work_costs_cents()`. Each is a single SQL aggregate. The Foundation bootstrap, the jar summary, and the surplus calculation all call it, so the three previously duplicated implementations can no longer drift.
+- **`E` is essentials only.** Recurring work costs no longer inflate the coverage goal: the fund covers weeks the user cannot work, so vehicle rental and similar work costs are not what it has to replace. They are still deducted from the weekly surplus.
+- **The default coverage goal is 26 weeks** (about six months), replacing 4.
+- **`progress` gains `goal_reached` and `remaining_cents`**, so the UI can show "S$X to go" without recomputing the target.
+- **`profile.emergencyFundBalanceCents`** is the derived balance `B` and is what screens should show. `profile.latestEmergencySavingsCents` now returns the raw stored opening balance `O`.
+- **Savings Goals** are a separate feature; see [`savings-goals.md`](./savings-goals.md). They never touch the emergency-fund tables.
 
 ## Business rules
 
@@ -16,8 +33,8 @@ The feature is mounted in the shared React shell at `/resilience-jar`, with less
 - Calculations floor to whole cents. No completed week produces an `insufficient_data` state; a non-positive latest week produces a zero recommendation.
 - A recommendation is advisory. Changing method or previewing a weekly/monthly cadence does not change the accepted target; users must accept the suggestion or edit and save the target.
 - Plans persist `target_frequency` and the exact `target_amount_cents` entered in that cadence. Weekly amounts are their own calculation value; monthly amounts use `floor(monthly × 12 ÷ 52)` as the canonical weekly equivalent for projections. Weekly recommendations shown monthly use `floor(weekly × 52 ÷ 12)`.
-- A goal is either a positive amount in cents or 1–52 whole weeks of essential expenses. Coverage-goal amounts change with the current weekly essential-expense input.
-- Progress is the sum of positive deposit records less recorded emergency-use withdrawals. A withdrawal must be positive and cannot exceed the tracked emergency fund balance. Percentages remain uncapped in data while the fund visual is capped at 100%.
+- A goal is either a positive amount in cents or 1–52 whole weeks of essential expenses, defaulting to 26 weeks. Coverage-goal amounts change with the current weekly essential-expense input, which counts active `essential_expenses` only.
+- Progress is `B = opening balance + deposits - withdrawals`, reported as `progress.contribution_total_cents`, alongside `progress.remaining_cents` (`max(T - B, 0)`) and `progress.goal_reached` (`T is not None and B >= T`). A withdrawal must be positive and cannot exceed the tracked emergency fund balance. Percentages remain uncapped in data while the fund visual is capped at 100%.
 - The projected completion date uses the accepted target's weekly equivalent, not the advisory recommendation: `today + ceil(remaining goal / weekly equivalent) × 7 days`. It is unavailable without a derived goal, pauses with the plan, and reports completion immediately when the goal is met.
 - Milestones are fixed at 25%, 50%, 75%, and 100% of the current derived goal. Coverage-goal milestones recalculate when essential expenses change.
 - Pausing retains all settings and contribution access while suppressing the weekly prompt.
@@ -46,6 +63,7 @@ The feature router factory in `backend/app/features/resilience_jar/routes.py` ex
 
 - `GET /api/v1/resilience-jar/summary`
 - `PATCH /api/v1/resilience-jar/plan`
+- `PUT /api/v1/resilience-jar/opening-balance` — stores `O = entered_balance - N` so `B` equals what the user typed
 - `POST /api/v1/resilience-jar/contributions`
 - `POST /api/v1/resilience-jar/withdrawals`
 - `PATCH /api/v1/resilience-jar/contributions/{contribution_id}`
@@ -73,7 +91,10 @@ The plan stores `goal_expense_baseline_cents`. The summary returns `goal_review`
 
 ## Verification performed
 
-- The integrated backend suite passes 188 tests with 3 database-dependent tests skipped by default; Ruff passes.
+- `.venv313/Scripts/python.exe -m pytest backend/tests -q` — 222 passed, 20 skipped (the database-backed tests).
+- `RUN_DATABASE_TESTS=1 .venv313/Scripts/python.exe -m pytest backend/tests -q` — 242 passed against local Supabase.
+- `.venv313/Scripts/python.exe -m ruff check backend` — clean.
+- Database-backed seam tests cover the double-count regression, the three ledger functions, the Foundation transaction endpoints, `SqlPlanRepository`/`SqlContributionRepository`/`SqlFinancialContextRepository`, and the jar HTTP routes against the real SQL path, each on a throwaway user that is deleted afterwards.
 - The integrated frontend suite passes 26 tests, including Emergency Fund model, fixture-adapter, and routing coverage.
 - The TypeScript and production PWA build passes.
 - The shared dev app serves `/resilience-jar` and `/resilience-jar/plan` successfully.
@@ -83,6 +104,7 @@ Tests cover both formulas, cent rounding, weak/negative weeks, insufficient hist
 
 ## Limitations and follow-up
 
-- The local React shell uses synthetic data backed only by that browser origin's local cache. Clearing site data, changing browser/origin, or an incompatible future fixture shape resets the demo; this is not a replacement for shared database persistence.
-- In-memory repositories reset on process restart. PostgreSQL adapters and any coordinated migration are required before shared integration.
+- The offline fixture adapter is backed only by that browser origin's local cache. Clearing site data, changing browser/origin, or an incompatible future fixture shape resets the demo.
+- `progress_percent` and `milestones` are still returned for compatibility but no screen renders them; the model document treats `remaining`, `coverage_weeks`, and `reached` as the user-facing numbers.
+- Whether work costs belong in `E` is a reversible assumption. Changing it means changing `weekly_essential_expenses_cents()` in `emergency_fund_ledger.py` and nothing else.
 - Authentication, real money movement, notifications, deployment, and elaborate animation remain out of scope.

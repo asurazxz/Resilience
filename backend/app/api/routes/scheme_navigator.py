@@ -8,9 +8,12 @@ eligibility logic lives here -- see
 from __future__ import annotations
 
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
+from ...core.auth import current_user_id
+from ...core.errors import DomainError
 from ...features.scheme_navigator.chat import chat
 from ...features.scheme_navigator.evaluator import evaluate_all
 from ...features.scheme_navigator.explainer import explain
@@ -27,7 +30,7 @@ from ...features.scheme_navigator.schemas import (
 )
 from ...integrations.ai.client import GroqClient, LLMClient, LLMUnavailableError
 
-router = APIRouter(prefix="/api/scheme-navigator", tags=["scheme-navigator"])
+router = APIRouter(prefix="/scheme-navigator", tags=["scheme-navigator"])
 
 
 def get_llm_client() -> LLMClient | None:
@@ -44,7 +47,9 @@ def get_llm_client() -> LLMClient | None:
 
 
 @router.get("/questionnaire", response_model=list[QuestionnaireField])
-def get_questionnaire() -> list[QuestionnaireField]:
+def get_questionnaire(
+    _user_id: Annotated[UUID, Depends(current_user_id)],
+) -> list[QuestionnaireField]:
     """Returns only the questions actually needed by the currently loaded
     scheme rules, in a stable display order."""
 
@@ -52,7 +57,10 @@ def get_questionnaire() -> list[QuestionnaireField]:
 
 
 @router.post("/evaluate", response_model=EvaluationResponse)
-def evaluate(request: EvaluationRequest) -> EvaluationResponse:
+def evaluate(
+    request: EvaluationRequest,
+    _user_id: Annotated[UUID, Depends(current_user_id)],
+) -> EvaluationResponse:
     """Evaluates the submitted answers against every loaded scheme rule.
 
     Any field a rule needs that is absent from ``answers`` yields a
@@ -66,6 +74,7 @@ def evaluate(request: EvaluationRequest) -> EvaluationResponse:
 def explain_result(
     request: ExplanationRequest,
     client: Annotated[LLMClient | None, Depends(get_llm_client)],
+    _user_id: Annotated[UUID, Depends(current_user_id)],
 ) -> ExplanationResponse:
     """Rephrases an already-decided result in plain language.
 
@@ -74,16 +83,18 @@ def explain_result(
     explanation rather than an error.
     """
 
-    if not any(rule.id == request.result.rule_id for rule in RULES):
-        raise HTTPException(status_code=404, detail="Unknown scheme rule")
-
-    return explain(request.result, client)
+    results = evaluate_all(RULES, request.answers).results
+    result = next((item for item in results if item.rule_id == request.rule_id), None)
+    if result is None:
+        raise DomainError(404, "SCHEME_RULE_NOT_FOUND", "Unknown scheme rule")
+    return explain(result, client)
 
 
 @router.post("/chat", response_model=ChatResponse)
 def chat_turn(
     request: ChatRequest,
     client: Annotated[LLMClient | None, Depends(get_llm_client)],
+    _user_id: Annotated[UUID, Depends(current_user_id)],
 ) -> ChatResponse:
     """Answers a scoped question about the loaded schemes and this app.
 
@@ -91,4 +102,7 @@ def chat_turn(
     unreachable, so the chat panel never surfaces a server error.
     """
 
-    return chat(request.messages, request.answers, request.results, client)
+    # Client results are display state, not an authority boundary. Rebuild them
+    # from the submitted answers before they can influence a model prompt.
+    results = evaluate_all(RULES, request.answers).results
+    return chat(request.messages, request.answers, results, client)

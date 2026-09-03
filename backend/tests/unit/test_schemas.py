@@ -1,8 +1,9 @@
 from uuid import uuid4
 
 import pytest
-from backend.app.features.foundation_input.schemas import EarningInput, WeeklyEntryUpsert
 from pydantic import ValidationError
+
+from backend.app.features.foundation_input.schemas import EarningInput, WeeklyEntryUpsert
 
 
 def test_other_platform_requires_label() -> None:

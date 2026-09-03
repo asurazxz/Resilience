@@ -27,7 +27,7 @@ Each area has its own UI, deterministic logic or rules, tests, and feature docum
 |---|---|---|
 | 1 | **Foundation & data intake** | PWA shell, onboarding, manual weekly entries, assumptions, strict CSV preview/import, IndexedDB cache, ordered offline queue, FastAPI persistence, and PostgreSQL migrations. |
 | 2 | **Income Reality Engine** | Deterministic net-income and surplus calculations, recent-week trend, recorded-CPF handling, FastAPI endpoint, and transparent UI. |
-| 3 | **Emergency Fund** | Adjustable weekly/monthly targets, contribution and withdrawal tracking, expense coverage, projection, and progress visualisation. The current UI uses a browser-local fixture adapter. |
+| 3 | **Emergency Fund & Savings** | Database-backed emergency fund with a default 26-week (about six months) essential-expense goal, opening balance plus deposit/withdrawal ledger, coverage and reached state, weekly targets and projection. A separate Savings tab tracks named savings goals on top of that baseline. See [`documentation/features/emergency-fund-model.md`](documentation/features/emergency-fund-model.md). |
 | 4 | **Scheme Navigator & AI explainer** | Deterministic scheme pre-screening, official sources, missing-information states, optional Groq explanations, and a cross-route chatbot with deterministic fallbacks. |
 | 5 | **Scenario Simulator** | Deterministic cash-flow and buffer-runway calculations, adjustable shocks and recovery, preparatory actions, API integration, and estimate disclaimers. |
 
@@ -61,7 +61,7 @@ Frontend and backend feature folders mirror the same five product boundaries. Se
 
 ## Local setup
 
-The development app runs all five features in one React shell. Foundation Input, Income Reality, the Scenario Simulator, and the Scheme Navigator use FastAPI; the Emergency Fund currently uses a browser-local fixture adapter. The Scheme Navigator chatbot is available across all routes.
+The development app runs all five features in one React shell. Every feature, including the Emergency Fund and Savings goals, is served by FastAPI under `/api/v1` with one error envelope. The Scheme Navigator chatbot is available across all routes.
 
 All commands below are verified on Windows with Node.js 24.13, npm 11.6, Python 3.13, Docker Desktop 29.1, and the repository-pinned Supabase CLI 2.116.0. Python 3.12 is also supported. macOS/Linux users can use the equivalent activation and copy commands.
 
@@ -154,7 +154,7 @@ Do not commit `.env`, credentials, user uploads, local databases, or real financ
 
 - [`documentation/codebase-structure.md`](documentation/codebase-structure.md) — current architecture, dependency boundaries, and placement rules.
 - [`documentation/dev2-feature-03-05-integration.md`](documentation/dev2-feature-03-05-integration.md) — post-merge integration and verification record.
-- Feature notes: [Foundation Input](documentation/features/foundation-input.md), [Income Reality](documentation/features/income-reality.md), [Emergency Fund](documentation/features/resilience-jar.md), [Scheme Navigator](documentation/features/scheme-navigator.md), and [Scenario Simulator](documentation/features/scenario-simulator.md).
+- Feature notes: [Foundation Input](documentation/features/foundation-input.md), [Income Reality](documentation/features/income-reality.md), [Emergency Fund](documentation/features/resilience-jar.md), [Emergency Fund model](documentation/features/emergency-fund-model.md), [Savings Goals](documentation/features/savings-goals.md), [Scheme Navigator](documentation/features/scheme-navigator.md), and [Scenario Simulator](documentation/features/scenario-simulator.md).
 - [`documentation/initial-scaffold.md`](documentation/initial-scaffold.md) — historical sprint plan and original acceptance boundaries.
 - [`.agent/RULES.md`](.agent/RULES.md) — mandatory operating rules for coding agents.
 - [`.agent/session_log.md`](.agent/session_log.md) — concise record of significant agent sessions.

@@ -7,54 +7,33 @@ import type {
   QuestionnaireField,
   SchemeResult,
 } from "./types";
+import { apiRequest } from "../../lib/api";
 
-const API_BASE_URL: string =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "";
-
-export async function fetchQuestionnaire(): Promise<QuestionnaireField[]> {
-  const response = await fetch(`${API_BASE_URL}/api/scheme-navigator/questionnaire`);
-  if (!response.ok) {
-    throw new Error(`Failed to load questionnaire (${response.status})`);
-  }
-  return (await response.json()) as QuestionnaireField[];
+export function fetchQuestionnaire(): Promise<QuestionnaireField[]> {
+  return apiRequest<QuestionnaireField[]>("/scheme-navigator/questionnaire");
 }
 
-export async function evaluateAnswers(answers: Answers): Promise<EvaluationResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/scheme-navigator/evaluate`, {
+export function evaluateAnswers(answers: Answers): Promise<EvaluationResponse> {
+  return apiRequest<EvaluationResponse>("/scheme-navigator/evaluate", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ answers }),
   });
-  if (!response.ok) {
-    throw new Error(`Failed to evaluate answers (${response.status})`);
-  }
-  return (await response.json()) as EvaluationResponse;
 }
 
-export async function explainResult(result: SchemeResult): Promise<ExplanationResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/scheme-navigator/explain`, {
+export function explainResult(result: SchemeResult, answers: Answers): Promise<ExplanationResponse> {
+  return apiRequest<ExplanationResponse>("/scheme-navigator/explain", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ result }),
+    body: JSON.stringify({ ruleId: result.rule_id, answers }),
   });
-  if (!response.ok) {
-    throw new Error(`Failed to explain result (${response.status})`);
-  }
-  return (await response.json()) as ExplanationResponse;
 }
 
-export async function sendChatMessage(
+export function sendChatMessage(
   messages: ChatMessage[],
   answers: Answers,
   results: SchemeResult[],
 ): Promise<ChatResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/scheme-navigator/chat`, {
+  return apiRequest<ChatResponse>("/scheme-navigator/chat", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ messages, answers, results }),
   });
-  if (!response.ok) {
-    throw new Error(`Chat request failed (${response.status})`);
-  }
-  return (await response.json()) as ChatResponse;
 }

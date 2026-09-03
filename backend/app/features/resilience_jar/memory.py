@@ -36,6 +36,12 @@ class InMemoryContributionRepository:
             reverse=True,
         )
 
+    def get(self, user_id: str, contribution_id: str) -> Contribution | None:
+        existing = self._contributions.get(contribution_id)
+        if existing is None or existing.user_id != user_id:
+            return None
+        return existing
+
     def create(
         self,
         user_id: str,
@@ -92,15 +98,38 @@ class InMemoryContributionRepository:
 
 
 class InMemoryFinancialContextRepository:
-    def __init__(self) -> None:
+    """In-memory twin of the SQL context, including the emergency-fund balance.
+
+    The balance is ``opening + deposits - withdrawals``, so this needs to see
+    the contribution repository it is paired with. Without one it reports the
+    opening balance alone.
+    """
+
+    def __init__(self, contributions: InMemoryContributionRepository | None = None) -> None:
         self._surpluses: dict[str, list[WeeklySurplus]] = {}
         self._essential_expenses: dict[str, int | None] = {}
+        self._opening_balances: dict[str, int] = {}
+        self._contributions = contributions
 
     def list_completed_weekly_surpluses(self, user_id: str) -> list[WeeklySurplus]:
         return list(self._surpluses.get(user_id, []))
 
     def get_weekly_essential_expenses_cents(self, user_id: str) -> int | None:
         return self._essential_expenses.get(user_id)
+
+    def get_emergency_fund_balance_cents(self, user_id: str) -> int:
+        return self._opening_balances.get(user_id, 0) + self._net_activity_cents(user_id)
+
+    def set_emergency_fund_balance_cents(self, user_id: str, amount_cents: int) -> None:
+        self._opening_balances[user_id] = amount_cents - self._net_activity_cents(user_id)
+
+    def _net_activity_cents(self, user_id: str) -> int:
+        if self._contributions is None:
+            return 0
+        return sum(
+            item.amount_cents if item.entry_type == "deposit" else -item.amount_cents
+            for item in self._contributions.list_for_user(user_id)
+        )
 
     def set_surpluses(self, user_id: str, surpluses: list[WeeklySurplus]) -> None:
         self._surpluses[user_id] = list(surpluses)

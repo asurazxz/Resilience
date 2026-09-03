@@ -2,8 +2,9 @@ import os
 from uuid import uuid4
 
 import pytest
-from backend.app.main import app
 from fastapi.testclient import TestClient
+
+from backend.app.main import app
 
 pytestmark = pytest.mark.skipif(
     os.getenv("RUN_DATABASE_TESTS") != "1",

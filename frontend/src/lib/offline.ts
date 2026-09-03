@@ -1,15 +1,16 @@
 import Dexie, { type EntityTable } from "dexie";
 
-import type { ApiErrorBody, FoundationBootstrap } from "../types/foundation";
+import type { ApiErrorPayload, FoundationBootstrap } from "../types/foundation";
 
 export interface PendingMutation {
   id: string;
+  ownerId: string;
   method: "PUT" | "PATCH" | "DELETE";
   path: string;
   body?: unknown;
   createdAt: string;
   status: "pending" | "syncing" | "conflict" | "failed";
-  error?: ApiErrorBody;
+  error?: ApiErrorPayload;
 }
 
 class ResilienceDatabase extends Dexie {
@@ -18,25 +19,32 @@ class ResilienceDatabase extends Dexie {
 
   constructor() {
     super("resilience-foundation");
-    this.version(1).stores({
+    this.version(2).stores({
       bootstrap: "key",
-      mutations: "id, status, createdAt"
+      mutations: "id, ownerId, [ownerId+status], [ownerId+createdAt]"
     });
   }
 }
 
 export const offlineDb = new ResilienceDatabase();
 
-export const cacheBootstrap = (value: FoundationBootstrap) =>
-  offlineDb.bootstrap.put({ key: "current", value });
+const bootstrapKey = (ownerId: string) => `bootstrap:${ownerId}`;
 
-export async function readCachedBootstrap(): Promise<FoundationBootstrap | undefined> {
-  return (await offlineDb.bootstrap.get("current"))?.value;
+export const cacheBootstrap = (ownerId: string, value: FoundationBootstrap) =>
+  offlineDb.bootstrap.put({ key: bootstrapKey(ownerId), value });
+
+export async function readCachedBootstrap(ownerId: string): Promise<FoundationBootstrap | undefined> {
+  return (await offlineDb.bootstrap.get(bootstrapKey(ownerId)))?.value;
 }
 
-export async function clearOfflineData(): Promise<void> {
+export async function clearOfflineData(ownerId?: string): Promise<void> {
   await offlineDb.transaction("rw", offlineDb.bootstrap, offlineDb.mutations, async () => {
-    await offlineDb.bootstrap.clear();
-    await offlineDb.mutations.clear();
+    if (!ownerId) {
+      await offlineDb.bootstrap.clear();
+      await offlineDb.mutations.clear();
+      return;
+    }
+    await offlineDb.bootstrap.delete(bootstrapKey(ownerId));
+    await offlineDb.mutations.where("ownerId").equals(ownerId).delete();
   });
 }

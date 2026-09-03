@@ -10,9 +10,9 @@ from datetime import date
 
 import pytest
 
-from app.features.scheme_navigator.evaluator import evaluate_all, evaluate_rule
-from app.features.scheme_navigator.rules import RULES
-from app.features.scheme_navigator.schemas import Condition, SchemeRule, SchemeStatus
+from backend.app.features.scheme_navigator.evaluator import evaluate_all, evaluate_rule
+from backend.app.features.scheme_navigator.rules import RULES
+from backend.app.features.scheme_navigator.schemas import Condition, SchemeRule, SchemeStatus
 
 WIS = next(rule for rule in RULES if rule.id == "workfare-income-supplement")
 COMCARE = next(rule for rule in RULES if rule.id == "comcare-short-to-medium-term-assistance")
@@ -196,7 +196,7 @@ class TestOperatorCoverage:
             summary="Synthetic rule for operator tests.",
             simplified_note="Test-only rule.",
             conditions=[
-                Condition(field="value", operator=operator, value=value, description="check")
+                Condition(field="age", operator=operator, value=value, description="check")
             ],
         )
 
@@ -219,6 +219,52 @@ class TestOperatorCoverage:
         self, operator: str, target: object, answer: object, expected_matched: bool
     ) -> None:
         rule = self._rule_with(operator, target)
-        result = evaluate_rule(rule, {"value": answer})
+        result = evaluate_rule(rule, {"age": answer})
 
         assert (result.status == SchemeStatus.MATCHED) is expected_matched
+
+
+class TestAnswerCoercion:
+    """Answers arrive as JSON from a browser; the evaluator must never crash
+    on a value of the wrong shape, and must ask again rather than guess."""
+
+    def test_numeric_string_is_accepted_as_a_number(self) -> None:
+        typed = evaluate_rule(WIS, wis_answers(age=35))
+        as_text = evaluate_rule(WIS, wis_answers(age="35"))
+
+        assert as_text.status == typed.status
+        assert as_text.missing_fields == []
+
+    def test_unparseable_number_counts_as_unanswered(self) -> None:
+        result = evaluate_rule(WIS, wis_answers(age="thirty-five"))
+
+        assert result.status == SchemeStatus.MISSING_INFORMATION
+        assert "age" in result.missing_fields
+
+    def test_list_where_a_select_belongs_counts_as_unanswered(self) -> None:
+        result = evaluate_rule(WIS, wis_answers(citizenship_status=["singapore_citizen"]))
+
+        assert result.status == SchemeStatus.MISSING_INFORMATION
+        assert "citizenship_status" in result.missing_fields
+
+    def test_select_value_outside_the_options_counts_as_unanswered(self) -> None:
+        result = evaluate_rule(WIS, wis_answers(citizenship_status="martian"))
+
+        assert result.status == SchemeStatus.MISSING_INFORMATION
+        assert "citizenship_status" in result.missing_fields
+
+    def test_yes_where_a_boolean_belongs_counts_as_unanswered(self) -> None:
+        result = evaluate_rule(WIS, wis_answers(owns_more_than_one_property="yes"))
+
+        assert result.status == SchemeStatus.MISSING_INFORMATION
+        assert "owns_more_than_one_property" in result.missing_fields
+
+    def test_unknown_keys_are_dropped(self) -> None:
+        result = evaluate_rule(WIS, wis_answers(not_a_real_field={"nested": True}))
+
+        assert result.status == evaluate_rule(WIS, wis_answers()).status
+
+    def test_evaluate_all_never_raises_on_hostile_answers(self) -> None:
+        response = evaluate_all(RULES, {"age": {"a": 1}, "citizenship_status": 7, "junk": None})
+
+        assert all(result.status == SchemeStatus.MISSING_INFORMATION for result in response.results)

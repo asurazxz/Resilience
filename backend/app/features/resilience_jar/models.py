@@ -26,9 +26,12 @@ class AmountGoal:
     mode: str = "amount"
 
 
+DEFAULT_COVERAGE_WEEKS = 26
+
+
 @dataclass(frozen=True)
 class CoverageGoal:
-    weeks: int
+    weeks: int = DEFAULT_COVERAGE_WEEKS
     mode: str = "coverage"
 
 
@@ -49,7 +52,7 @@ class JarPlan:
     target_amount_cents: int = 0
     weekly_target_cents: int = 0
     status: PlanStatus = PlanStatus.ACTIVE
-    goal: Goal = CoverageGoal(weeks=4)
+    goal: Goal = CoverageGoal(weeks=DEFAULT_COVERAGE_WEEKS)
     goal_expense_baseline_cents: int | None = None
     updated_at: datetime | None = None
 
@@ -87,6 +90,8 @@ class Progress:
     progress_percent: float | None
     coverage_days: float | None
     coverage_weeks: float | None
+    goal_reached: bool = False
+    remaining_cents: int | None = None
 
 
 @dataclass(frozen=True)

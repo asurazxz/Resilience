@@ -1,6 +1,7 @@
-import { writeCachedSummary, type ResilienceJarApi } from "./api.ts";
+import type { ResilienceJarApi } from "./api.ts";
 import {
   addDaysToIsoDate,
+  DEFAULT_COVERAGE_GOAL_WEEKS,
   monthlyTargetToWeeklyCents,
   singaporeToday,
   weeklyTargetToMonthlyCents,
@@ -25,7 +26,7 @@ const initialFixture: JarSummary = {
     target_amount_cents: 9_000,
     weekly_target_cents: 9_000,
     status: "active",
-    goal: { mode: "coverage", weeks: 4 },
+    goal: { mode: "coverage", weeks: DEFAULT_COVERAGE_GOAL_WEEKS },
     goal_expense_baseline_cents: 65_000,
     updated_at: null,
   },
@@ -40,10 +41,12 @@ const initialFixture: JarSummary = {
   },
   progress: {
     contribution_total_cents: 12_500,
-    goal_target_cents: 280_000,
-    progress_percent: 4.5,
+    goal_target_cents: 1_820_000,
+    progress_percent: 0.7,
     coverage_days: 1.3,
     coverage_weeks: 0.2,
+    goal_reached: false,
+    remaining_cents: 1_807_500,
   },
   goal_review: {
     status: "expenses_changed",
@@ -57,11 +60,12 @@ const initialFixture: JarSummary = {
     weeks_remaining: 33,
     remaining_cents: 267_500,
   },
+  // Milestones remain in the payload for API compatibility; no screen shows them.
   milestones: [
-    { percentage: 25, target_cents: 70_000, reached: false },
-    { percentage: 50, target_cents: 140_000, reached: false },
-    { percentage: 75, target_cents: 210_000, reached: false },
-    { percentage: 100, target_cents: 280_000, reached: false },
+    { percentage: 25, target_cents: 455_000, reached: false },
+    { percentage: 50, target_cents: 910_000, reached: false },
+    { percentage: 75, target_cents: 1_365_000, reached: false },
+    { percentage: 100, target_cents: 1_820_000, reached: false },
   ],
   weekly_essential_expenses_cents: 70_000,
   contributions: [
@@ -97,6 +101,7 @@ const initialFixture: JarSummary = {
 
 export class FixtureResilienceJarApi implements ResilienceJarApi {
   private summary: JarSummary;
+  private openingBalanceCents = 0;
 
   constructor(startingSummary?: JarSummary | null) {
     this.summary = clone(startingSummary ?? initialFixture);
@@ -153,6 +158,12 @@ export class FixtureResilienceJarApi implements ResilienceJarApi {
           ? "latest_week_20_percent"
           : "four_week_median_capped_by_latest",
     };
+    this.recalculateProgress();
+    return this.snapshot();
+  }
+
+  async setOpeningBalance(amountCents: number): Promise<JarSummary> {
+    this.openingBalanceCents = amountCents;
     this.recalculateProgress();
     return this.snapshot();
   }
@@ -244,7 +255,7 @@ export class FixtureResilienceJarApi implements ResilienceJarApi {
   }
 
   private recalculateProgress(): void {
-    const total = this.summary.contributions.reduce(
+    const total = this.openingBalanceCents + this.summary.contributions.reduce(
       (sum, contribution) =>
         sum +
         (contribution.entry_type === "deposit"
@@ -273,6 +284,8 @@ export class FixtureResilienceJarApi implements ResilienceJarApi {
         expenses === null || expenses <= 0
           ? null
           : oneDecimal(total / expenses),
+      goal_reached: goalTarget !== null && total >= goalTarget,
+      remaining_cents: goalTarget === null ? null : Math.max(goalTarget - total, 0),
     };
     this.recalculateProjectionAndMilestones();
     const baseline = this.summary.plan.goal_expense_baseline_cents;
@@ -350,7 +363,7 @@ export class FixtureResilienceJarApi implements ResilienceJarApi {
 
   private async snapshot(): Promise<JarSummary> {
     const snapshot = clone(this.summary);
-    writeCachedSummary(snapshot);
+    if (typeof window !== "undefined") window.localStorage.setItem("resilience.jar.summary.v1", JSON.stringify(snapshot));
     return snapshot;
   }
 }

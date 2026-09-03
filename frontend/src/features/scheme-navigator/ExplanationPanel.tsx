@@ -2,12 +2,14 @@ import { useState } from "react";
 
 import { explainResult } from "./api";
 import type { ExplanationResponse, SchemeResult } from "./types";
+import { useChatContext } from "./ChatContext";
 
 interface ExplanationPanelProps {
   result: SchemeResult;
 }
 
 export function ExplanationPanel({ result }: ExplanationPanelProps) {
+  const { answers } = useChatContext();
   const [explanation, setExplanation] = useState<ExplanationResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -16,7 +18,7 @@ export function ExplanationPanel({ result }: ExplanationPanelProps) {
     setLoading(true);
     setErrorMessage(null);
     try {
-      setExplanation(await explainResult(result));
+      setExplanation(await explainResult(result, answers));
     } catch {
       setErrorMessage("Could not load an explanation right now.");
     } finally {

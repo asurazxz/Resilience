@@ -100,6 +100,30 @@ class ProgressTests(unittest.TestCase):
 
         self.assertEqual(280_000, result.goal_target_cents)
         self.assertEqual(25.0, result.progress_percent)
+        self.assertEqual(210_000, result.remaining_cents)
+        self.assertFalse(result.goal_reached)
+
+    def test_coverage_goal_defaults_to_twenty_six_weeks(self) -> None:
+        result = calculate_progress(CoverageGoal(), [0], 30_461)
+
+        self.assertEqual(26, CoverageGoal().weeks)
+        self.assertEqual(791_986, result.goal_target_cents)
+
+    def test_goal_is_reached_once_the_balance_meets_the_target(self) -> None:
+        exact = calculate_progress(AmountGoal(100_000), [100_000], 70_000)
+        beyond = calculate_progress(AmountGoal(100_000), [120_000], 70_000)
+
+        self.assertTrue(exact.goal_reached)
+        self.assertEqual(0, exact.remaining_cents)
+        self.assertTrue(beyond.goal_reached)
+        self.assertEqual(0, beyond.remaining_cents)
+
+    def test_remaining_and_reached_are_unavailable_without_a_target(self) -> None:
+        result = calculate_progress(CoverageGoal(26), [2_500], None)
+
+        self.assertIsNone(result.goal_target_cents)
+        self.assertIsNone(result.remaining_cents)
+        self.assertFalse(result.goal_reached)
 
     def test_progress_over_goal_is_not_capped(self) -> None:
         result = calculate_progress(AmountGoal(10_000), [12_500], 70_000)

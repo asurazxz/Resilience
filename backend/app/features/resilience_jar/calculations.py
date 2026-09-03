@@ -122,12 +122,18 @@ def calculate_progress(
             Decimal(contribution_total) * Decimal(7) / Decimal(weekly_essential_expenses_cents)
         )
 
+    remaining_cents = (
+        max(goal_target_cents - contribution_total, 0) if goal_target_cents is not None else None
+    )
+
     return Progress(
         contribution_total_cents=contribution_total,
         goal_target_cents=goal_target_cents,
         progress_percent=progress_percent,
         coverage_days=coverage_days,
         coverage_weeks=coverage_weeks,
+        goal_reached=goal_target_cents is not None and contribution_total >= goal_target_cents,
+        remaining_cents=remaining_cents,
     )
 
 

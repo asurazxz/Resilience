@@ -2,6 +2,20 @@
 
 Read this file before executing any repository task. Add an entry only after a real error has been encountered and resolved.
 
+## 2026-09-03 — Never write a derived total back into its own base column
+
+- **Symptom:** Saving a weekly entry raised the emergency-fund balance by the sum of all contributions each time (S$1,050 became S$1,100 with no new deposit).
+- **Root cause:** The bootstrap returned the derived balance (opening balance + ledger) in the same field the client sent back as the week's savings, and the week upsert stored that value into the opening-balance column, so the ledger was added twice.
+- **Resolution:** Weekly entries only snapshot the balance; one ledger module computes the balance with a SQL aggregate; the bootstrap exposes the derived value under a separate `emergencyFundBalanceCents` field. A live-database regression test guards it.
+- **Prevention:** Keep stored inputs and derived outputs in differently named fields, and never let a write path accept a derived value for a base column.
+
+## 2026-09-03 — FastAPI 0.141 no longer exposes `.path` on top-level included routers
+
+- **Symptom:** `[r.path for r in app.routes]` raised `AttributeError` while listing mounted routes.
+- **Root cause:** Routers included with `include_router` appear as `_IncludedRouter` wrappers in `app.routes` on this FastAPI version.
+- **Resolution:** Flatten via `r.original_router.routes` when the wrapper is encountered, or read `app.openapi()["paths"]`.
+- **Prevention:** Use the OpenAPI document to enumerate routes; do not assume `app.routes` is flat.
+
 ## 2026-09-03 — Fall back to the in-app browser when the verification CLI is absent
 
 - **Symptom:** The prescribed `agent-browser` visual verification command was not installed on the Windows host, and the in-app runtime rejected `networkidle` despite exposing it in the generic API type.

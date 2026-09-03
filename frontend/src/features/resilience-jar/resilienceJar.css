@@ -164,57 +164,33 @@
   padding: 1.25rem;
 }
 
-.jar-visual {
-  align-items: center;
-  border: 0.35rem solid var(--jar-ink);
-  border-radius: 1.4rem 1.4rem 2.2rem 2.2rem;
-  display: flex;
-  flex: 0 0 8rem;
-  height: 10rem;
-  justify-content: center;
-  overflow: hidden;
-  position: relative;
-}
-
-.jar-visual::before {
-  border: 0.3rem solid var(--jar-ink);
-  border-radius: 0.4rem;
-  content: "";
-  height: 0.8rem;
-  left: 1.1rem;
-  position: absolute;
-  right: 1.1rem;
-  top: -0.35rem;
-  z-index: 2;
-}
-
-.jar-visual-fill {
-  background: repeating-linear-gradient(
-    135deg,
-    #65b88e,
-    #65b88e 0.65rem,
-    #8ccba9 0.65rem,
-    #8ccba9 1.3rem
-  );
-  bottom: 0;
-  left: 0;
-  position: absolute;
-  right: 0;
-  transition: height 180ms ease-out;
-}
-
-.jar-visual span {
-  background: rgba(255, 255, 255, 0.92);
-  border-radius: 10rem;
-  font-weight: 800;
-  padding: 0.35rem 0.6rem;
-  position: relative;
-  z-index: 1;
-}
-
 .jar-progress-copy {
   flex: 1;
   min-width: 0;
+}
+
+.jar-progress-title-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: space-between;
+}
+
+/* The fund states one thing plainly: reached, or still building. */
+.jar-goal-badge {
+  background: #edf2ef;
+  border-radius: 10rem;
+  color: var(--jar-muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+  padding: 0.3rem 0.7rem;
+  white-space: nowrap;
+}
+
+.jar-goal-badge-reached {
+  background: var(--jar-green);
+  color: #fff;
 }
 
 .jar-progress-metrics {
@@ -238,8 +214,13 @@
 }
 
 .jar-progress-metrics strong {
-  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-size: clamp(1.25rem, 3.2vw, 1.85rem);
   line-height: 1.15;
+}
+
+.jar-progress-metrics small {
+  color: var(--jar-muted);
+  font-size: 0.75rem;
 }
 
 .jar-goal-amount {
@@ -250,11 +231,6 @@
 
 .jar-goal-amount small {
   color: var(--jar-muted);
-}
-
-.jar-goal-passed {
-  color: var(--jar-green);
-  font-weight: 800;
 }
 
 .jar-plan-strip {
@@ -594,7 +570,7 @@
 .jar-insights {
   display: grid;
   gap: 1rem;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  grid-template-columns: minmax(0, 1fr);
   margin: 0;
 }
 
@@ -602,62 +578,6 @@
   font-size: clamp(1.55rem, 4vw, 2.15rem);
   line-height: 1.15;
   margin-top: 0.4rem;
-}
-
-.jar-milestones ol {
-  display: grid;
-  gap: 0.65rem;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  list-style: none;
-  margin: 0.75rem 0 0;
-  padding: 0;
-}
-
-.jar-milestones li {
-  align-items: center;
-  border: 1px solid var(--jar-border);
-  border-radius: 0.75rem;
-  display: grid;
-  gap: 0.35rem;
-  justify-items: center;
-  padding: 0.75rem 0.45rem;
-  text-align: center;
-}
-
-.jar-milestones li > span {
-  align-items: center;
-  background: #edf2ef;
-  border-radius: 50%;
-  display: inline-flex;
-  font-size: 0.75rem;
-  font-weight: 850;
-  height: 2rem;
-  justify-content: center;
-  width: 2rem;
-}
-
-.jar-milestones li > div {
-  display: grid;
-}
-
-.jar-milestones small,
-.jar-milestones em {
-  color: var(--jar-muted);
-  font-size: 0.75rem;
-}
-
-.jar-milestones em {
-  font-style: normal;
-}
-
-.jar-milestones .is-reached {
-  background: var(--jar-light);
-  border-color: #65a98a;
-}
-
-.jar-milestones .is-reached > span {
-  background: var(--jar-green);
-  color: #fff;
 }
 
 .jar-chart-card {
@@ -743,10 +663,6 @@
     flex: 1;
   }
 
-  .jar-visual {
-    align-self: center;
-  }
-
   .jar-grid,
   .jar-contribution-form,
   .jar-withdrawal-form,
@@ -792,17 +708,8 @@
     justify-self: start;
   }
 
-  .jar-milestones ol {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .jar-chart-canvas {
     height: 15rem;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .jar-visual-fill {
-    transition: none;
-  }
-}

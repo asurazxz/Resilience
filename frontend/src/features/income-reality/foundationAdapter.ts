@@ -1,4 +1,9 @@
-import type { WeeklyEntry } from "../../types/foundation";
+import type {
+  EssentialExpense,
+  RecurringWorkCost,
+  Transaction,
+  WeeklyEntry,
+} from "../../types/foundation";
 import type { PlatformEarning, WeeklyEntryIn } from "./types";
 
 export interface AdaptedIncomeRealityWeeks {
@@ -64,4 +69,51 @@ export function adaptFoundationWeeks(entries: WeeklyEntry[]): AdaptedIncomeReali
   weeks.sort((left, right) => left.week_start.localeCompare(right.week_start));
 
   return { weeks, missingExpenseSnapshotCount };
+}
+
+/** Weekly-normalised total of the active rows only. */
+export function weeklyNormalisedTotal(
+  items: Array<{ amountCents: number; cadence: "weekly" | "monthly"; isActive: boolean }>,
+): number {
+  return items
+    .filter((item) => item.isActive)
+    .reduce((total, item) => total + weeklyAmount(item.amountCents, item.cadence), 0);
+}
+
+/**
+ * Group individual ledger items into Monday-to-Sunday actuals for irregular work.
+ *
+ * Each week carries the same three deductions the backend uses for a weekly
+ * surplus: variable cost transactions, weekly-normalised recurring work costs,
+ * and weekly-normalised essential expenses. Without the last two the screen
+ * would report a larger surplus than every other feature.
+ */
+export function adaptTransactions(
+  transactions: Transaction[],
+  recurringWorkCosts: RecurringWorkCost[] = [],
+  essentialExpenses: EssentialExpense[] = [],
+): AdaptedIncomeRealityWeeks {
+  const weeklyRecurringWorkCosts = weeklyNormalisedTotal(recurringWorkCosts);
+  const weeklyEssentialExpenses = weeklyNormalisedTotal(essentialExpenses);
+  const grouped = new Map<string, { income: number; costs: number }>();
+  for (const transaction of transactions) {
+    const occurred = new Date(`${transaction.occurredOn}T00:00:00Z`);
+    const monday = new Date(occurred);
+    monday.setUTCDate(occurred.getUTCDate() - ((occurred.getUTCDay() + 6) % 7));
+    const weekStart = monday.toISOString().slice(0, 10);
+    const totals = grouped.get(weekStart) ?? { income: 0, costs: 0 };
+    if (transaction.entryType === "income") totals.income += transaction.amountCents;
+    else totals.costs += transaction.amountCents;
+    grouped.set(weekStart, totals);
+  }
+  return {
+    weeks: Array.from(grouped, ([week_start, totals]) => ({
+      week_start,
+      platform_earnings: totals.income ? [{ platform: "Recorded income", gross_cents: totals.income }] : [],
+      work_costs_cents: totals.costs + weeklyRecurringWorkCosts,
+      essential_expenses_cents: weeklyEssentialExpenses,
+      recorded_cpf_cents: null,
+    })).sort((left, right) => left.week_start.localeCompare(right.week_start)),
+    missingExpenseSnapshotCount: 0,
+  };
 }

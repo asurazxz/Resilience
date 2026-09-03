@@ -1,20 +1,12 @@
-# Provisional backend manifest.
-#
-# feature/01-foundation-input owns the canonical manifest. This file currently
-# contains the union needed by the merged development features and their tests.
+# Runtime dependencies for the Resilience backend.
+# Each package appears exactly once; requirements-dev.txt adds test tooling.
 
 fastapi==0.141.1
-groq==1.7.0
-httpx==0.27.2
-httpx2==2.0.0
+uvicorn[standard]==0.52.4
 pydantic==2.13.5
-pytest==8.3.3
-python-dotenv==1.2.3
-truststore==0.10.4
-uvicorn[standard]==0.52.4
-fastapi==0.141.1
-uvicorn[standard]==0.52.4
 pydantic-settings==2.15.0
 SQLAlchemy==2.0.52
 psycopg[binary,pool]==3.3.5
-python-multipart==0.0.32
+PyJWT[crypto]==2.10.1
+httpx==0.28.1
+groq==1.7.0

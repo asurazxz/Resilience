@@ -24,6 +24,9 @@ export interface ScenarioSimulatorPageProps {
 }
 
 export function ScenarioSimulatorPage({ baseline }: ScenarioSimulatorPageProps) {
+  // A baseline supplied by the caller is built from the user's own records, so
+  // it must never be labelled as example data.
+  const usingExampleBaseline = baseline === undefined;
   const {
     baseline: currentBaseline,
     scenario,
@@ -51,7 +54,13 @@ export function ScenarioSimulatorPage({ baseline }: ScenarioSimulatorPageProps) 
         title="Your money now"
         description="A normal week for you. Change anything that does not match."
         badge={
-          baselineEdited ? null : (
+          !usingExampleBaseline ? (
+            baselineEdited ? null : (
+              <p className="inline-block rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+                From your own records — your last four weeks and your regular costs
+              </p>
+            )
+          ) : baselineEdited ? null : (
             <p className="inline-block rounded-md bg-amber-100 px-2 py-1 text-xs font-medium text-amber-900">
               Example figures — edit them to see your own situation
             </p>

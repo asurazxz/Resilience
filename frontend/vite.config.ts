@@ -37,11 +37,8 @@ export default defineConfig({
     host: "127.0.0.1",
     port: 5173,
     proxy: {
+      // Every backend route lives under /api/v1, so one rule covers them all.
       "/api": {
-        target: "http://127.0.0.1:8000",
-        changeOrigin: true
-      },
-      "/scenario-simulator/simulate": {
         target: "http://127.0.0.1:8000",
         changeOrigin: true
       }

@@ -4,8 +4,13 @@ Workstream 1 mounts this router on the application; nothing here holds state or
 performs calculations of its own.
 """
 
-from fastapi import APIRouter, HTTPException
+from typing import Annotated
+from uuid import UUID
 
+from fastapi import APIRouter, Depends
+
+from ...core.auth import current_user_id
+from ...core.errors import DomainError
 from .engine import simulate
 from .models import BaselineFinances, ShockScenario
 from .schemas import ScenarioResultResponse, SimulationRequest
@@ -19,21 +24,16 @@ router = APIRouter(prefix="/scenario-simulator", tags=["scenario-simulator"])
     response_model=ScenarioResultResponse,
     summary="Estimate cash flow and emergency-buffer runway for one financial shock",
 )
-def simulate_scenario(request: SimulationRequest) -> ScenarioResultResponse:
+def simulate_scenario(
+    request: SimulationRequest,
+    _user_id: Annotated[UUID, Depends(current_user_id)],
+) -> ScenarioResultResponse:
     try:
         baseline = BaselineFinances(**request.baseline.model_dump())
         scenario = ShockScenario(**request.scenario.model_dump())
     except ValueError as error:
         # The engine enforces the same bounds as the payload schema; this
         # catches any rule the transport layer does not express.
-        raise HTTPException(
-            status_code=422,
-            detail={
-                "error": {
-                    "code": "scenario_invalid_input",
-                    "message": str(error),
-                }
-            },
-        ) from error
+        raise DomainError(422, "SCENARIO_INVALID_INPUT", str(error)) from error
 
     return ScenarioResultResponse.model_validate(result_to_dict(simulate(baseline, scenario)))

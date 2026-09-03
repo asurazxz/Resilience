@@ -28,11 +28,16 @@ export interface Recommendation {
 }
 
 export interface JarProgress {
+  /** The current fund balance: opening balance + deposits − withdrawals. */
   contribution_total_cents: number;
   goal_target_cents: number | null;
+  /** Still returned by the API for compatibility. No screen renders it. */
   progress_percent: number | null;
   coverage_days: number | null;
   coverage_weeks: number | null;
+  goal_reached: boolean;
+  /** max(target − balance, 0); null when there is no target. */
+  remaining_cents: number | null;
 }
 
 export interface GoalReview {
@@ -59,6 +64,7 @@ export interface CompletionProjection {
   remaining_cents: number | null;
 }
 
+/** Still returned by the API for compatibility. No screen renders milestones. */
 export interface Milestone {
   percentage: 25 | 50 | 75 | 100;
   target_cents: number;
@@ -74,12 +80,6 @@ export interface JarSummary {
   milestones: Milestone[];
   weekly_essential_expenses_cents: number | null;
   contributions: Contribution[];
-}
-
-export interface ApiErrorBody {
-  code: string;
-  message: string;
-  field_errors: Record<string, string>;
 }
 
 export type PlanPatch = Partial<

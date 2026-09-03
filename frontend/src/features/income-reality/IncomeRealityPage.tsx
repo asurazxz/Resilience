@@ -24,7 +24,7 @@ export function IncomeRealityPage({ weeks }: IncomeRealityPageProps) {
   if (weeks.length === 0) {
     return (
       <div className="card mt-6 text-slate-600">
-        No confirmed weekly entries yet. Record a week to see your Income Reality breakdown.
+        No transactions yet. Add income or costs to see your weekly Income Reality breakdown.
       </div>
     );
   }

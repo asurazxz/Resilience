@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import UTC, date, datetime
-from typing import Any
 from zoneinfo import ZoneInfo
 
+from ...core.errors import DomainError
 from .calculations import (
     calculate_completion_projection,
     calculate_milestones,
@@ -17,41 +17,24 @@ from .models import (
     AmountGoal,
     Contribution,
     CoverageGoal,
+    Goal,
     GoalReview,
     JarPlan,
     JarSummary,
-    PlanStatus,
-    RecommendationMethod,
-    TargetFrequency,
 )
 from .repositories import (
     ContributionRepository,
     FinancialContextRepository,
     PlanRepository,
 )
-
-
-class DomainError(Exception):
-    def __init__(
-        self,
-        code: str,
-        message: str,
-        *,
-        status_code: int = 400,
-        field_errors: dict[str, str] | None = None,
-    ) -> None:
-        super().__init__(message)
-        self.code = code
-        self.message = message
-        self.status_code = status_code
-        self.field_errors = field_errors or {}
-
-    def as_dict(self) -> dict[str, object]:
-        return {
-            "code": self.code,
-            "message": self.message,
-            "field_errors": self.field_errors,
-        }
+from .schemas import (
+    AmountGoalInput,
+    ContributionPatch,
+    ContributionWrite,
+    CoverageGoalInput,
+    OpeningBalanceRequest,
+    PlanPatch,
+)
 
 
 class ResilienceJarService:
@@ -73,16 +56,8 @@ class ResilienceJarService:
         contributions = self._contributions.list_for_user(user_id)
         surpluses = self._financial_context.list_completed_weekly_surpluses(user_id)
         essential_expenses = self._financial_context.get_weekly_essential_expenses_cents(user_id)
-        progress = calculate_progress(
-            plan.goal,
-            [
-                contribution.amount_cents
-                if contribution.entry_type == "deposit"
-                else -contribution.amount_cents
-                for contribution in contributions
-            ],
-            essential_expenses,
-        )
+        balance = self._financial_context.get_emergency_fund_balance_cents(user_id)
+        progress = calculate_progress(plan.goal, [balance], essential_expenses)
         return JarSummary(
             plan=plan,
             recommendation=recommend_weekly_savings(plan.recommendation_method, surpluses),
@@ -96,62 +71,35 @@ class ResilienceJarService:
             contributions=tuple(contributions),
         )
 
-    def patch_plan(self, user_id: str, payload: dict[str, Any]) -> JarSummary:
-        self._require_object(payload)
-        allowed_fields = {
-            "recommendation_method",
-            "target_frequency",
-            "target_amount_cents",
-            "weekly_target_cents",
-            "status",
-            "goal",
-        }
-        self._reject_unknown_fields(payload, allowed_fields)
-        if not payload:
-            raise DomainError(
-                "validation_error",
-                "At least one plan field is required.",
-                field_errors={"body": "Provide a field to update."},
-            )
-
+    def patch_plan(self, user_id: str, payload: PlanPatch) -> JarSummary:
         plan = self._get_or_create_plan(user_id)
         changes: dict[str, object] = {}
 
-        if "recommendation_method" in payload:
-            changes["recommendation_method"] = self._parse_enum(
-                RecommendationMethod,
-                payload["recommendation_method"],
-                "recommendation_method",
-            )
-        if "target_frequency" in payload:
-            changes["target_frequency"] = self._parse_enum(
-                TargetFrequency, payload["target_frequency"], "target_frequency"
-            )
+        if payload.recommendation_method is not None:
+            changes["recommendation_method"] = payload.recommendation_method
+        if payload.target_frequency is not None:
+            changes["target_frequency"] = payload.target_frequency
         target_frequency = changes.get("target_frequency", plan.target_frequency)
-        if "target_amount_cents" in payload:
-            target_amount_cents = self._non_negative_integer(
-                payload["target_amount_cents"], "target_amount_cents"
-            )
-            changes["target_amount_cents"] = target_amount_cents
+
+        if payload.target_amount_cents is not None:
+            changes["target_amount_cents"] = payload.target_amount_cents
             changes["weekly_target_cents"] = target_amount_to_weekly_cents(
-                target_amount_cents, target_frequency
+                payload.target_amount_cents, target_frequency
             )
-        elif "weekly_target_cents" in payload:
-            weekly_target_cents = self._non_negative_integer(
-                payload["weekly_target_cents"], "weekly_target_cents"
-            )
-            changes["weekly_target_cents"] = weekly_target_cents
+        elif payload.weekly_target_cents is not None:
+            changes["weekly_target_cents"] = payload.weekly_target_cents
             changes["target_amount_cents"] = weekly_cents_to_target_amount(
-                weekly_target_cents, target_frequency
+                payload.weekly_target_cents, target_frequency
             )
-        elif "target_frequency" in payload:
+        elif payload.target_frequency is not None:
             changes["target_amount_cents"] = weekly_cents_to_target_amount(
                 plan.weekly_target_cents, target_frequency
             )
-        if "status" in payload:
-            changes["status"] = self._parse_enum(PlanStatus, payload["status"], "status")
-        if "goal" in payload:
-            changes["goal"] = self._parse_goal(payload["goal"])
+
+        if payload.status is not None:
+            changes["status"] = payload.status
+        if payload.goal is not None:
+            changes["goal"] = _goal_from_input(payload.goal)
             current_expenses = self._financial_context.get_weekly_essential_expenses_cents(user_id)
             changes["goal_expense_baseline_cents"] = (
                 current_expenses if current_expenses is not None and current_expenses > 0 else None
@@ -161,36 +109,23 @@ class ResilienceJarService:
         self._plans.save(plan.updated(**changes))
         return self.get_summary(user_id)
 
-    def create_contribution(self, user_id: str, payload: dict[str, Any]) -> Contribution:
-        self._require_object(payload)
-        allowed_fields = {"amount_cents", "contribution_date", "note"}
-        self._reject_unknown_fields(payload, allowed_fields)
-        missing = [field for field in ("amount_cents", "contribution_date") if field not in payload]
-        if missing:
-            raise DomainError(
-                "validation_error",
-                "Required contribution fields are missing.",
-                field_errors={field: "This field is required." for field in missing},
-            )
-        amount_cents = self._positive_integer(payload["amount_cents"], "amount_cents")
-        contribution_date = self._contribution_date(payload["contribution_date"])
-        note = self._note(payload.get("note"))
-        return self._contributions.create(user_id, "deposit", amount_cents, contribution_date, note)
+    def set_opening_balance(self, user_id: str, payload: OpeningBalanceRequest) -> JarSummary:
+        self._financial_context.set_emergency_fund_balance_cents(user_id, payload.amount_cents)
+        return self.get_summary(user_id)
 
-    def create_withdrawal(self, user_id: str, payload: dict[str, Any]) -> Contribution:
-        self._require_object(payload)
-        allowed_fields = {"amount_cents", "contribution_date", "note"}
-        self._reject_unknown_fields(payload, allowed_fields)
-        missing = [field for field in ("amount_cents", "contribution_date") if field not in payload]
-        if missing:
+    def create_contribution(self, user_id: str, payload: ContributionWrite) -> Contribution:
+        return self._contributions.create(
+            user_id,
+            "deposit",
+            payload.amount_cents,
+            self._checked_date(payload.contribution_date),
+            payload.note,
+        )
+
+    def create_withdrawal(self, user_id: str, payload: ContributionWrite) -> Contribution:
+        if payload.amount_cents > self._ledger_balance(user_id):
             raise DomainError(
-                "validation_error",
-                "Required withdrawal fields are missing.",
-                field_errors={field: "This field is required." for field in missing},
-            )
-        amount_cents = self._positive_integer(payload["amount_cents"], "amount_cents")
-        if amount_cents > self._ledger_balance(user_id):
-            raise DomainError(
+                400,
                 "insufficient_jar_balance",
                 "Withdrawal cannot exceed the tracked emergency fund balance.",
                 field_errors={"amount_cents": "Use an amount within the tracked balance."},
@@ -198,53 +133,36 @@ class ResilienceJarService:
         return self._contributions.create(
             user_id,
             "withdrawal",
-            amount_cents,
-            self._contribution_date(payload["contribution_date"]),
-            self._note(payload.get("note")),
+            payload.amount_cents,
+            self._checked_date(payload.contribution_date),
+            payload.note,
         )
 
     def update_contribution(
         self,
         user_id: str,
         contribution_id: str,
-        payload: dict[str, Any],
+        payload: ContributionPatch,
     ) -> Contribution:
-        self._require_object(payload)
-        allowed_fields = {"amount_cents", "contribution_date", "note"}
-        self._reject_unknown_fields(payload, allowed_fields)
-        if not payload:
-            raise DomainError(
-                "validation_error",
-                "At least one contribution field is required.",
-                field_errors={"body": "Provide a field to update."},
-            )
-        existing = next(
-            (
-                contribution
-                for contribution in self._contributions.list_for_user(user_id)
-                if contribution.id == contribution_id
-            ),
-            None,
-        )
+        existing = self._contributions.get(user_id, contribution_id)
         if existing is None:
             self._not_found()
 
         amount_cents = (
-            self._positive_integer(payload["amount_cents"], "amount_cents")
-            if "amount_cents" in payload
-            else existing.amount_cents
+            payload.amount_cents if payload.amount_cents is not None else existing.amount_cents
         )
         contribution_date = (
-            self._contribution_date(payload["contribution_date"])
-            if "contribution_date" in payload
+            self._checked_date(payload.contribution_date)
+            if payload.contribution_date is not None
             else existing.contribution_date
         )
-        note = self._note(payload["note"]) if "note" in payload else existing.note
+        note = payload.note if "note" in payload.model_fields_set else existing.note
         remaining_balance = self._ledger_balance(user_id, excluding_contribution_id=existing.id) + (
             amount_cents if existing.entry_type == "deposit" else -amount_cents
         )
         if remaining_balance < 0:
             raise DomainError(
+                400,
                 "insufficient_jar_balance",
                 "This change would make the tracked emergency fund balance negative.",
                 field_errors={"amount_cents": "Reduce withdrawals before changing this entry."},
@@ -262,14 +180,7 @@ class ResilienceJarService:
         return updated
 
     def delete_contribution(self, user_id: str, contribution_id: str) -> None:
-        existing = next(
-            (
-                contribution
-                for contribution in self._contributions.list_for_user(user_id)
-                if contribution.id == contribution_id
-            ),
-            None,
-        )
+        existing = self._contributions.get(user_id, contribution_id)
         if existing is None:
             self._not_found()
         if (
@@ -277,20 +188,23 @@ class ResilienceJarService:
             and self._ledger_balance(user_id) - existing.amount_cents < 0
         ):
             raise DomainError(
+                409,
                 "insufficient_jar_balance",
                 "This deposit cannot be deleted while later withdrawals depend on it.",
-                status_code=409,
             )
         if not self._contributions.delete(user_id, contribution_id):
             self._not_found()
 
     def _ledger_balance(self, user_id: str, *, excluding_contribution_id: str | None = None) -> int:
-        return sum(
-            contribution.amount_cents
-            if contribution.entry_type == "deposit"
-            else -contribution.amount_cents
-            for contribution in self._contributions.list_for_user(user_id)
-            if contribution.id != excluding_contribution_id
+        """``B``, optionally with one entry's effect backed out of it."""
+        balance = self._financial_context.get_emergency_fund_balance_cents(user_id)
+        if excluding_contribution_id is None:
+            return balance
+        existing = self._contributions.get(user_id, excluding_contribution_id)
+        if existing is None:
+            return balance
+        return balance - (
+            existing.amount_cents if existing.entry_type == "deposit" else -existing.amount_cents
         )
 
     def _get_or_create_plan(self, user_id: str) -> JarPlan:
@@ -327,148 +241,25 @@ class ResilienceJarService:
             expense_change_cents=change,
         )
 
-    @staticmethod
-    def _parse_enum(enum_type: type, value: object, field: str) -> object:
-        try:
-            return enum_type(value)
-        except (TypeError, ValueError):
-            choices = ", ".join(item.value for item in enum_type)
+    def _checked_date(self, value: date) -> date:
+        if value > self._today():
             raise DomainError(
-                "validation_error",
-                "One or more fields are invalid.",
-                field_errors={field: f"Choose one of: {choices}."},
-            ) from None
-
-    def _parse_goal(self, value: object) -> AmountGoal | CoverageGoal:
-        if not isinstance(value, dict):
-            raise DomainError(
-                "validation_error",
-                "One or more fields are invalid.",
-                field_errors={"goal": "Goal must be an object."},
-            )
-        mode = value.get("mode")
-        if mode == "amount":
-            self._reject_unknown_fields(value, {"mode", "amount_cents"}, prefix="goal.")
-            if "amount_cents" not in value:
-                self._required("goal.amount_cents")
-            amount = self._positive_integer(value["amount_cents"], "goal.amount_cents")
-            return AmountGoal(amount_cents=amount)
-        if mode == "coverage":
-            self._reject_unknown_fields(value, {"mode", "weeks"}, prefix="goal.")
-            if "weeks" not in value:
-                self._required("goal.weeks")
-            weeks = self._positive_integer(value["weeks"], "goal.weeks")
-            if weeks > 52:
-                raise DomainError(
-                    "validation_error",
-                    "One or more fields are invalid.",
-                    field_errors={"goal.weeks": "Use a whole number from 1 to 52."},
-                )
-            return CoverageGoal(weeks=weeks)
-        raise DomainError(
-            "validation_error",
-            "One or more fields are invalid.",
-            field_errors={"goal.mode": "Choose amount or coverage."},
-        )
-
-    def _contribution_date(self, value: object) -> date:
-        if not isinstance(value, str):
-            self._invalid_date()
-        try:
-            parsed = date.fromisoformat(value)
-        except ValueError:
-            self._invalid_date()
-        if parsed > self._today():
-            raise DomainError(
+                422,
                 "validation_error",
                 "One or more fields are invalid.",
                 field_errors={"contribution_date": "Contribution date cannot be in the future."},
             )
-        return parsed
-
-    @staticmethod
-    def _note(value: object) -> str | None:
-        if value is None:
-            return None
-        if not isinstance(value, str):
-            raise DomainError(
-                "validation_error",
-                "One or more fields are invalid.",
-                field_errors={"note": "Note must be text."},
-            )
-        note = value.strip()
-        if len(note) > 200:
-            raise DomainError(
-                "validation_error",
-                "One or more fields are invalid.",
-                field_errors={"note": "Note must be 200 characters or fewer."},
-            )
-        return note or None
-
-    @staticmethod
-    def _positive_integer(value: object, field: str) -> int:
-        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
-            raise DomainError(
-                "validation_error",
-                "One or more fields are invalid.",
-                field_errors={field: "Use a positive whole number of cents."},
-            )
         return value
-
-    @staticmethod
-    def _non_negative_integer(value: object, field: str) -> int:
-        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
-            raise DomainError(
-                "validation_error",
-                "One or more fields are invalid.",
-                field_errors={field: "Use zero or a positive whole number of cents."},
-            )
-        return value
-
-    @staticmethod
-    def _reject_unknown_fields(
-        payload: dict[str, Any], allowed: set[str], *, prefix: str = ""
-    ) -> None:
-        unknown = sorted(set(payload) - allowed)
-        if unknown:
-            raise DomainError(
-                "validation_error",
-                "One or more fields are not supported.",
-                field_errors={f"{prefix}{field}": "Unknown field." for field in unknown},
-            )
-
-    @staticmethod
-    def _require_object(payload: object) -> None:
-        if not isinstance(payload, dict):
-            raise DomainError(
-                "validation_error",
-                "Request body must be an object.",
-                field_errors={"body": "Use a JSON object."},
-            )
-
-    @staticmethod
-    def _required(field: str) -> None:
-        raise DomainError(
-            "validation_error",
-            "A required field is missing.",
-            field_errors={field: "This field is required."},
-        )
-
-    @staticmethod
-    def _invalid_date() -> None:
-        raise DomainError(
-            "validation_error",
-            "One or more fields are invalid.",
-            field_errors={"contribution_date": "Use an ISO date in YYYY-MM-DD format."},
-        )
 
     @staticmethod
     def _not_found() -> None:
-        raise DomainError(
-            "contribution_not_found",
-            "Contribution was not found.",
-            status_code=404,
-        )
+        raise DomainError(404, "contribution_not_found", "Contribution was not found.")
+
+
+def _goal_from_input(goal: AmountGoalInput | CoverageGoalInput) -> Goal:
+    if isinstance(goal, AmountGoalInput):
+        return AmountGoal(amount_cents=goal.amount_cents)
+    return CoverageGoal(weeks=goal.weeks)
 
 
 def singapore_today() -> date:

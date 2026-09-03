@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173` for the Foundation overview. The shared navigation links to weekly entries, Income Reality, Emergency Fund, Setback Planner, Scheme Navigator, CSV import, and assumptions. Browser back/forward navigation is supported.
+Open `http://localhost:5173` for the Foundation overview. The shared navigation links to Transactions, Income overview, Emergency fund, Savings, Setback planner, Schemes, Profile, and Financial details. The menu button is always visible and the side navigation collapses on every viewport. Browser back/forward navigation is supported.
 
 Available checks:
 
@@ -28,7 +28,7 @@ npm run build
 - Put genuinely cross-feature TypeScript types in `src/types/`; feature-only types stay with their feature.
 - Put browser and end-to-end tests in `tests/`; colocate focused component tests with their source when the test tooling is selected.
 
-The shell owns providers and routing while feature-specific UI remains isolated. The Emergency Fund fixture adapter can be replaced with a database-backed implementation without changing its page contract.
+The shell owns providers and routing while feature-specific UI remains isolated. All features call FastAPI through the single `src/lib/api.ts` client, which prefixes `/api/v1`, injects the Supabase bearer token, retries once after a refreshed 401, and parses the shared error envelope into `ApiError`. The Emergency Fund fixture adapter remains only for tests.
 
 ## Visual system and mobile behaviour
 

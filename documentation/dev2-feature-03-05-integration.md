@@ -11,8 +11,8 @@ This integration repairs the shared files produced by merging all five feature b
 - The Foundation shell owns routing and onboarding. It now links to Income Reality, `/resilience-jar`, `/resilience-jar/plan`, `/scenario-simulator`, and `/scheme-navigator` through React Router.
 - The merged frontend manifest retains Foundation dependencies and tooling while adding Recharts for the Emergency Fund visualisation.
 - The shared shell wraps every route in `ChatProvider` and mounts one `ChatWidget`, while the Scheme Navigator publishes its questionnaire answers and deterministic results into that context.
-- The Emergency Fund continues to use its synthetic browser-local adapter. The Scenario Simulator continues to call `POST /scenario-simulator/simulate`.
-- The FastAPI shell mounts the Scheme Navigator under `/api/scheme-navigator`, the Scenario Simulator router, and the synthetic Emergency Fund router under `/api/v1/resilience-jar`.
+- The Emergency Fund is now backed by PostgreSQL through `SqlPlanRepository`, `SqlContributionRepository`, and `SqlFinancialContextRepository`; the browser-local fixture adapter is kept only for offline demos. The Scenario Simulator continues to call `POST /scenario-simulator/simulate`.
+- Every router is mounted under the single `/api/v1` prefix in `backend/app/main.py`: Foundation Input at `/api/v1/foundation`, Income Reality at `/api/v1/income-reality`, Scheme Navigator at `/api/v1/scheme-navigator`, the Scenario Simulator at `/api/v1/scenario-simulator`, Savings Goals at `/api/v1/savings-goals`, and the Emergency Fund at `/api/v1/resilience-jar`.
 - The frontend keeps React 19, Tailwind 4, TypeScript 5.9, and Vite 8. The invalid duplicated manifest, entry point, TypeScript config, and Vite config were reconciled into one canonical configuration.
 - Backend modules use package-relative imports so the documented `backend.app.main:app` launch and the test suite load the same module graph.
 - The backend keeps the established FastAPI/Pydantic versions and adds the Scheme Navigator's pytest, environment, trust-store, HTTP, and Groq dependencies.

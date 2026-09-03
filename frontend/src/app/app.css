@@ -1,71 +1,103 @@
-.site-header {
-  background: color-mix(in srgb, var(--paper) 96%, transparent);
-  border-bottom: 1px solid var(--stone);
-  box-shadow: 0 8px 24px rgba(38, 37, 30, .05);
+/*
+ * Layout contract
+ * ---------------
+ * A slim fixed top bar (`.app-topbar`, --topbar-height tall) owns the menu
+ * toggle and the brand at every viewport width. It sits above both the side
+ * nav and the page, so the toggle can never overlap a heading or the sync
+ * button. The side nav starts below the bar and slides in from the left; on
+ * desktop the main column is shifted right by the nav width only while the
+ * nav is open.
+ */
+
+.resilience-app {
+  --topbar-height: 4rem;
+  --side-nav-width: 16rem;
 }
 
-.site-header-inner {
+.app-topbar {
   align-items: center;
+  background: color-mix(in srgb, var(--paper) 96%, transparent);
+  border-bottom: 1px solid var(--stone);
   display: flex;
-  gap: 1rem;
-  margin: 0 auto;
-  max-width: 72rem;
-  min-height: 3.75rem;
-  padding: .65rem 1rem;
+  gap: .85rem;
+  /* A fixed height keeps the side nav's own `top` exactly flush with the bar. */
+  height: var(--topbar-height);
+  inset: 0 0 auto 0;
+  padding: 0 1rem;
+  position: fixed;
+  z-index: 60;
 }
 
 .site-brand {
   align-items: center;
   color: var(--ink);
   display: inline-flex;
-  flex: 1;
   gap: .65rem;
   min-width: 0;
   text-decoration: none;
 }
 
 .site-brand img { height: 2rem; width: 2rem; }
-.site-brand strong { font-weight: 500; letter-spacing: -.02em; }
+.site-brand strong { font-weight: 500; letter-spacing: -.02em; line-height: 1.25; }
 .site-brand span { color: var(--ash); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .7rem; }
 
+/* Visible at every width — the only control that opens and closes the nav. */
 .nav-toggle {
   background: var(--linen);
   border: 1px solid var(--stone);
   border-radius: 4px;
   color: var(--ink);
+  flex: 0 0 auto;
   font-size: .85rem;
   font-weight: 500;
   min-height: 2.75rem;
   padding: .45rem .7rem;
+  white-space: nowrap;
 }
 
-.site-nav { display: none; }
-.site-nav-open {
+.nav-toggle:hover { background: #dcdbd5; }
+
+/* Toggleable account-aware side navigation. */
+.side-nav {
   background: var(--paper);
-  border-top: 1px solid var(--stone);
-  display: grid;
-  gap: 2px;
+  border-right: 1px solid var(--stone);
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
   left: 0;
-  padding: .5rem 1rem .75rem;
-  position: absolute;
-  right: 0;
-  top: 100%;
+  overflow-y: auto;
+  padding: 1rem;
+  position: fixed;
+  top: var(--topbar-height);
+  transform: translateX(-100%);
+  transition: transform .2s ease;
+  width: var(--side-nav-width);
+  z-index: 45;
 }
 
-.site-nav a {
-  border-radius: 4px;
-  color: var(--ash);
-  font-size: .9rem;
-  font-weight: 500;
-  padding: .65rem .75rem;
-  text-decoration: none;
+.side-nav-open { transform: translateX(0); }
+.side-nav nav { display: grid; gap: .25rem; }
+.side-nav nav a { border-radius: .75rem; padding: .7rem .8rem; font-weight: 600; color: #334155; text-decoration: none; }
+.side-nav nav a.active, .side-nav nav a:hover, .side-nav nav a[aria-current="page"] { background: var(--linen); color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  .side-nav { transition: none; }
 }
 
-.site-nav a:hover,
-.site-nav a[aria-current="page"] { background: var(--linen); color: var(--ink); }
+/* Reserve room for the fixed bar so no heading sits underneath it. */
+.app-main {
+  padding-top: calc(var(--topbar-height) + 1.5rem);
+  transition: margin-left .2s ease;
+}
 
-@media (min-width: 48rem) {
-  .nav-toggle { display: none; }
-  .site-nav { align-items: center; display: flex; gap: .15rem; }
-  .site-brand { flex: 0 0 auto; }
+.sync-fab, .sync-panel { transition: left .2s ease; }
+
+@media (min-width: 1024px) {
+  .app-main-shifted { margin-left: var(--side-nav-width); }
+  .sync-shifted { left: calc(var(--side-nav-width) + 1rem); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-main, .sync-fab, .sync-panel { transition: none; }
 }

@@ -127,24 +127,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/foundation/imports/csv/template": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Csv Template */
-        get: operations["csv_template_api_v1_foundation_imports_csv_template_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/foundation/imports/csv/preview": {
+    "/api/v1/foundation/transactions": {
         parameters: {
             query?: never;
             header?: never;
@@ -153,9 +136,26 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Csv Preview */
-        post: operations["csv_preview_api_v1_foundation_imports_csv_preview_post"];
+        /** Transaction Create */
+        post: operations["transaction_create_api_v1_foundation_transactions_post"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/foundation/transactions/{transaction_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Transaction Delete */
+        delete: operations["transaction_delete_api_v1_foundation_transactions__transaction_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -193,6 +193,287 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scheme-navigator/questionnaire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Questionnaire
+         * @description Returns only the questions actually needed by the currently loaded
+         *     scheme rules, in a stable display order.
+         */
+        get: operations["get_questionnaire_api_v1_scheme_navigator_questionnaire_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scheme-navigator/evaluate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Evaluate
+         * @description Evaluates the submitted answers against every loaded scheme rule.
+         *
+         *     Any field a rule needs that is absent from ``answers`` yields a
+         *     ``missing_information`` result for that scheme rather than a guess.
+         */
+        post: operations["evaluate_api_v1_scheme_navigator_evaluate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scheme-navigator/explain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Explain Result
+         * @description Rephrases an already-decided result in plain language.
+         *
+         *     The status is decided by the evaluator and only described here. If the
+         *     model is unconfigured or unreachable, this returns a deterministic
+         *     explanation rather than an error.
+         */
+        post: operations["explain_result_api_v1_scheme_navigator_explain_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scheme-navigator/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Chat Turn
+         * @description Answers a scoped question about the loaded schemes and this app.
+         *
+         *     Degrades to a canned reply when the model is unconfigured or
+         *     unreachable, so the chat panel never surfaces a server error.
+         */
+        post: operations["chat_turn_api_v1_scheme_navigator_chat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scenario-simulator/simulate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Estimate cash flow and emergency-buffer runway for one financial shock */
+        post: operations["simulate_scenario_api_v1_scenario_simulator_simulate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/savings-goals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Goals */
+        get: operations["list_goals_api_v1_savings_goals_get"];
+        put?: never;
+        /** Create Goal */
+        post: operations["create_goal_api_v1_savings_goals_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/savings-goals/{goal_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Goal */
+        delete: operations["delete_goal_api_v1_savings_goals__goal_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Goal */
+        patch: operations["patch_goal_api_v1_savings_goals__goal_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/savings-goals/{goal_id}/contributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Contribution */
+        post: operations["add_contribution_api_v1_savings_goals__goal_id__contributions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/savings-goals/{goal_id}/contributions/{contribution_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Contribution */
+        delete: operations["delete_contribution_api_v1_savings_goals__goal_id__contributions__contribution_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/resilience-jar/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Summary */
+        get: operations["get_summary_api_v1_resilience_jar_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/resilience-jar/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Plan */
+        patch: operations["patch_plan_api_v1_resilience_jar_plan_patch"];
+        trace?: never;
+    };
+    "/api/v1/resilience-jar/opening-balance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Opening Balance */
+        put: operations["set_opening_balance_api_v1_resilience_jar_opening_balance_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/resilience-jar/contributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Contribution */
+        post: operations["create_contribution_api_v1_resilience_jar_contributions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/resilience-jar/withdrawals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Withdrawal */
+        post: operations["create_withdrawal_api_v1_resilience_jar_withdrawals_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/resilience-jar/contributions/{contribution_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Contribution */
+        delete: operations["delete_contribution_api_v1_resilience_jar_contributions__contribution_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Contribution */
+        patch: operations["update_contribution_api_v1_resilience_jar_contributions__contribution_id__patch"];
         trace?: never;
     };
     "/health": {
@@ -233,6 +514,16 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AmountGoalInput */
+        AmountGoalInput: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            mode: "amount";
+            /** Amount Cents */
+            amount_cents: number;
+        };
         /** AssumptionsIn */
         AssumptionsIn: {
             /**
@@ -246,47 +537,109 @@ export interface components {
              */
             cpf_rate_bps: number;
         };
-        /** Body_csv_preview_api_v1_foundation_imports_csv_preview_post */
-        Body_csv_preview_api_v1_foundation_imports_csv_preview_post: {
-            /** File */
-            file: string;
+        /** BaselineFinancesPayload */
+        BaselineFinancesPayload: {
+            /** Weekly Gross Earnings Cents */
+            weekly_gross_earnings_cents: number;
+            /** Weekly Variable Work Costs Cents */
+            weekly_variable_work_costs_cents: number;
+            /** Weekly Fixed Work Costs Cents */
+            weekly_fixed_work_costs_cents: number;
+            /** Weekly Essential Expenses Cents */
+            weekly_essential_expenses_cents: number;
+            /** Emergency Savings Cents */
+            emergency_savings_cents: number;
         };
-        /** CsvPreviewResponse */
-        CsvPreviewResponse: {
-            /** Filename */
-            fileName: string;
-            /** Filesha256 */
-            fileSha256: string;
-            /** Rows */
-            rows: components["schemas"]["CsvPreviewRow"][];
-            /** Validcount */
-            validCount: number;
-            /** Invalidcount */
-            invalidCount: number;
+        /** BaselineSummaryResponse */
+        BaselineSummaryResponse: {
+            /** Weekly Gross Earnings Cents */
+            weekly_gross_earnings_cents: number;
+            /** Weekly Work Costs Cents */
+            weekly_work_costs_cents: number;
+            /** Weekly Net Work Income Cents */
+            weekly_net_work_income_cents: number;
+            /** Weekly Essential Expenses Cents */
+            weekly_essential_expenses_cents: number;
+            /** Weekly Surplus Cents */
+            weekly_surplus_cents: number;
+            /** Emergency Savings Cents */
+            emergency_savings_cents: number;
+            /** Emergency Savings Weeks Of Essentials */
+            emergency_savings_weeks_of_essentials: number | null;
+            /** Runway Weeks */
+            runway_weeks: number | null;
         };
-        /** CsvPreviewRow */
-        CsvPreviewRow: {
-            /** Rownumber */
-            rowNumber: number;
+        /** ChatMessage */
+        ChatMessage: {
             /**
-             * Status
+             * Role
              * @enum {string}
              */
-            status: "valid" | "invalid";
-            /** Weekstart */
-            weekStart?: string | null;
-            /** Recordtype */
-            recordType?: ("earning" | "variable_work_cost") | null;
-            /** Source */
-            source?: string | null;
-            /** Category */
-            category?: string | null;
-            /** Description */
-            description?: string | null;
-            /** Amountcents */
-            amountCents?: number | null;
-            /** Errors */
-            errors?: string[];
+            role: "user" | "assistant";
+            /** Content */
+            content: string;
+        };
+        /**
+         * ChatRequest
+         * @description A chatbot turn.
+         *
+         *     Unlike the explainer, this deliberately carries the user's ``answers``:
+         *     the assistant is expected to field questions like "why didn't I match
+         *     WIS?", which cannot be answered without them. That is a conscious
+         *     privacy trade -- see documentation/features/scheme-navigator.md.
+         */
+        ChatRequest: {
+            /** Messages */
+            messages?: components["schemas"]["ChatMessage"][];
+            /** Answers */
+            answers?: {
+                [key: string]: unknown;
+            };
+            /** Results */
+            results?: components["schemas"]["SchemeResult"][];
+        };
+        /** ChatResponse */
+        ChatResponse: {
+            /** Reply */
+            reply: string;
+            /** Is Ai Generated */
+            is_ai_generated: boolean;
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+        };
+        /** ContributionPatch */
+        ContributionPatch: {
+            /** Amount Cents */
+            amount_cents?: number | null;
+            /** Contribution Date */
+            contribution_date?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** ContributionWrite */
+        ContributionWrite: {
+            /** Amount Cents */
+            amount_cents: number;
+            /**
+             * Contribution Date
+             * Format: date
+             */
+            contribution_date: string;
+            /** Note */
+            note?: string | null;
+        };
+        /** CoverageGoalInput */
+        CoverageGoalInput: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            mode: "coverage";
+            /** Weeks */
+            weeks: number;
         };
         /** EarningInput */
         EarningInput: {
@@ -369,6 +722,55 @@ export interface components {
              */
             updatedAt: string;
         };
+        /** EvaluationRequest */
+        EvaluationRequest: {
+            /** Answers */
+            answers?: {
+                [key: string]: unknown;
+            };
+        };
+        /** EvaluationResponse */
+        EvaluationResponse: {
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            /** Results */
+            results: components["schemas"]["SchemeResult"][];
+        };
+        /**
+         * ExplanationRequest
+         * @description Asks for a plain-language explanation of an already-decided result.
+         *
+         *     The caller sends back a ``SchemeResult`` the evaluator produced. The
+         *     explainer never re-derives the status, so the request carries the
+         *     outcome rather than the answers that led to it.
+         */
+        ExplanationRequest: {
+            /** Rule Id */
+            rule_id: string;
+            /** Answers */
+            answers?: {
+                [key: string]: unknown;
+            };
+        };
+        /** ExplanationResponse */
+        ExplanationResponse: {
+            /** Summary */
+            summary: string;
+            /** Next Steps */
+            next_steps?: string[];
+            /** Source Urls */
+            source_urls?: string[];
+            /** Is Ai Generated */
+            is_ai_generated: boolean;
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+        };
         /** FoundationBootstrap */
         FoundationBootstrap: {
             profile: components["schemas"]["ProfileResponse"];
@@ -378,6 +780,8 @@ export interface components {
             essentialExpenses: components["schemas"]["EssentialExpenseResponse"][];
             /** Weeklyentries */
             weeklyEntries: components["schemas"]["WeeklyEntryResponse"][];
+            /** Transactions */
+            transactions?: components["schemas"]["TransactionResponse"][];
             /**
              * Syncedat
              * Format: date-time
@@ -428,6 +832,19 @@ export interface components {
              */
             cadence: "weekly" | "monthly";
         };
+        /** OfficialResourceResponse */
+        OfficialResourceResponse: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            /** Url */
+            url: string;
+            /** Last Reviewed */
+            last_reviewed: string;
+        };
         /** OnboardingRequest */
         OnboardingRequest: {
             /** Emergencysavingscents */
@@ -440,6 +857,28 @@ export interface components {
             firstWeekStart?: string | null;
             firstWeek?: components["schemas"]["WeeklyEntryUpsert"] | null;
         };
+        /** OpeningBalanceRequest */
+        OpeningBalanceRequest: {
+            /** Amount Cents */
+            amount_cents: number;
+        };
+        /** PlanPatch */
+        PlanPatch: {
+            recommendation_method?: components["schemas"]["RecommendationMethod"] | null;
+            target_frequency?: components["schemas"]["TargetFrequency"] | null;
+            /** Target Amount Cents */
+            target_amount_cents?: number | null;
+            /** Weekly Target Cents */
+            weekly_target_cents?: number | null;
+            status?: components["schemas"]["PlanStatus"] | null;
+            /** Goal */
+            goal?: (components["schemas"]["AmountGoalInput"] | components["schemas"]["CoverageGoalInput"]) | null;
+        };
+        /**
+         * PlanStatus
+         * @enum {string}
+         */
+        PlanStatus: "active" | "paused";
         /** PlatformEarningIn */
         PlatformEarningIn: {
             /** Platform */
@@ -453,6 +892,19 @@ export interface components {
             platform: string;
             /** Gross Cents */
             gross_cents: number;
+        };
+        /** PreparatoryActionResponse */
+        PreparatoryActionResponse: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Detail */
+            detail: string;
+            /** Severity */
+            severity: string;
+            /** Resource Ids */
+            resource_ids: string[];
         };
         /** ProfileResponse */
         ProfileResponse: {
@@ -469,12 +921,58 @@ export interface components {
             onboardingCompleted: boolean;
             /** Latestemergencysavingscents */
             latestEmergencySavingsCents: number;
+            /**
+             * Emergencyfundbalancecents
+             * @default 0
+             */
+            emergencyFundBalanceCents: number;
+            /** Displayname */
+            displayName?: string | null;
+            /** Phonenumber */
+            phoneNumber?: string | null;
+            /** Dateofbirth */
+            dateOfBirth?: string | null;
         };
         /** ProfileUpdate */
         ProfileUpdate: {
-            /** Latestemergencysavingscents */
-            latestEmergencySavingsCents: number;
+            /** Displayname */
+            displayName?: string | null;
+            /** Phonenumber */
+            phoneNumber?: string | null;
+            /** Dateofbirth */
+            dateOfBirth?: string | null;
         };
+        /**
+         * QuestionnaireField
+         * @description One prompt shown to the user. Derived from whichever scheme rules
+         *     actually reference it, not hand-written per scheme.
+         */
+        QuestionnaireField: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /**
+             * Field Type
+             * @enum {string}
+             */
+            field_type: "number" | "boolean" | "select" | "date";
+            /** Help Text */
+            help_text?: string | null;
+            /** Unit */
+            unit?: string | null;
+            /** Options */
+            options?: components["schemas"]["SelectOption"][] | null;
+            /** Min Value */
+            min_value?: number | null;
+            /** Max Value */
+            max_value?: number | null;
+        };
+        /**
+         * RecommendationMethod
+         * @enum {string}
+         */
+        RecommendationMethod: "conservative_4_week" | "latest_week";
         /** RecurringWorkCostInput */
         RecurringWorkCostInput: {
             /**
@@ -528,6 +1026,267 @@ export interface components {
              * @default true
              */
             isActive: boolean;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+        };
+        /** SavingsGoalContributionCreate */
+        SavingsGoalContributionCreate: {
+            /** Amountcents */
+            amountCents: number;
+            /**
+             * Contributedon
+             * Format: date
+             */
+            contributedOn: string;
+            /** Note */
+            note?: string | null;
+        };
+        /** SavingsGoalContributionResponse */
+        SavingsGoalContributionResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Amountcents */
+            amountCents: number;
+            /**
+             * Contributedon
+             * Format: date
+             */
+            contributedOn: string;
+            /** Note */
+            note: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+        };
+        /** SavingsGoalCreate */
+        SavingsGoalCreate: {
+            /** Name */
+            name: string;
+            /** Targetcents */
+            targetCents: number;
+            /** Targetdate */
+            targetDate?: string | null;
+        };
+        /** SavingsGoalListResponse */
+        SavingsGoalListResponse: {
+            /** Goals */
+            goals: components["schemas"]["SavingsGoalResponse"][];
+        };
+        /** SavingsGoalPatch */
+        SavingsGoalPatch: {
+            /** Name */
+            name?: string | null;
+            /** Targetcents */
+            targetCents?: number | null;
+            /** Targetdate */
+            targetDate?: string | null;
+            /** Status */
+            status?: ("active" | "completed" | "archived") | null;
+        };
+        /** SavingsGoalResponse */
+        SavingsGoalResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Targetcents */
+            targetCents: number;
+            /** Targetdate */
+            targetDate: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "completed" | "archived";
+            /** Savedcents */
+            savedCents: number;
+            /** Remainingcents */
+            remainingCents: number;
+            /** Reached */
+            reached: boolean;
+            /** Suggestedweeklycents */
+            suggestedWeeklyCents: number | null;
+            /** Contributions */
+            contributions: components["schemas"]["SavingsGoalContributionResponse"][];
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+        };
+        /** ScenarioResultResponse */
+        ScenarioResultResponse: {
+            baseline: components["schemas"]["BaselineSummaryResponse"];
+            scenario: components["schemas"]["ScenarioSummaryResponse"];
+            /** Weeks */
+            weeks: components["schemas"]["WeekProjectionResponse"][];
+            /** Actions */
+            actions: components["schemas"]["PreparatoryActionResponse"][];
+            /** Resources */
+            resources: components["schemas"]["OfficialResourceResponse"][];
+            /** Disclaimers */
+            disclaimers: string[];
+        };
+        /** ScenarioSummaryResponse */
+        ScenarioSummaryResponse: {
+            /** Horizon Weeks */
+            horizon_weeks: number;
+            /** Weeks Affected */
+            weeks_affected: number;
+            /** Recovery Weeks */
+            recovery_weeks: number;
+            /** Weekly Net Work Income During Shock Cents */
+            weekly_net_work_income_during_shock_cents: number;
+            /** Weekly Net Cash Flow During Shock Cents */
+            weekly_net_cash_flow_during_shock_cents: number;
+            /** Unexpected Cost Cents */
+            unexpected_cost_cents: number;
+            /** Total Income Lost Cents */
+            total_income_lost_cents: number;
+            /** Lowest Buffer Cents */
+            lowest_buffer_cents: number;
+            /** Lowest Buffer Week */
+            lowest_buffer_week: number;
+            /** Buffer Runway Weeks */
+            buffer_runway_weeks: number | null;
+            /** First Shortfall Week */
+            first_shortfall_week: number | null;
+            /** Total Shortfall Cents */
+            total_shortfall_cents: number;
+            /** Buffer At Horizon Cents */
+            buffer_at_horizon_cents: number;
+            /** Buffer Holds Through Horizon */
+            buffer_holds_through_horizon: boolean;
+            /** Full Income Resumes Week */
+            full_income_resumes_week: number | null;
+        };
+        /** SchemeResult */
+        SchemeResult: {
+            /** Rule Id */
+            rule_id: string;
+            /** Name */
+            name: string;
+            /** Agency */
+            agency: string;
+            status: components["schemas"]["SchemeStatus"];
+            /** Matched Facts */
+            matched_facts?: string[];
+            /** Unmatched Reasons */
+            unmatched_reasons?: string[];
+            /** Missing Fields */
+            missing_fields?: string[];
+            /** Official Source Url */
+            official_source_url: string;
+            /** Application Url */
+            application_url: string;
+            /**
+             * Last Reviewed Date
+             * Format: date
+             */
+            last_reviewed_date: string;
+            /** Simplified Note */
+            simplified_note: string;
+        };
+        /**
+         * SchemeStatus
+         * @enum {string}
+         */
+        SchemeStatus: "matched" | "not_matched" | "missing_information";
+        /** SelectOption */
+        SelectOption: {
+            /** Value */
+            value: string;
+            /** Label */
+            label: string;
+        };
+        /** ShockScenarioPayload */
+        ShockScenarioPayload: {
+            /** Income Reduction Percent */
+            income_reduction_percent: number;
+            /** Weeks Affected */
+            weeks_affected: number;
+            /**
+             * Unexpected Cost Cents
+             * @default 0
+             */
+            unexpected_cost_cents: number;
+            /**
+             * Recovery Weeks
+             * @default 0
+             */
+            recovery_weeks: number;
+            /** Horizon Weeks */
+            horizon_weeks?: number | null;
+        };
+        /** SimulationRequest */
+        SimulationRequest: {
+            baseline: components["schemas"]["BaselineFinancesPayload"];
+            scenario: components["schemas"]["ShockScenarioPayload"];
+        };
+        /**
+         * TargetFrequency
+         * @enum {string}
+         */
+        TargetFrequency: "weekly" | "monthly";
+        /** TransactionInput */
+        TransactionInput: {
+            /**
+             * Entrytype
+             * @enum {string}
+             */
+            entryType: "income" | "cost";
+            /** Amountcents */
+            amountCents: number;
+            /** Description */
+            description?: string | null;
+            /**
+             * Occurredon
+             * Format: date
+             */
+            occurredOn: string;
+        };
+        /** TransactionResponse */
+        TransactionResponse: {
+            /**
+             * Entrytype
+             * @enum {string}
+             */
+            entryType: "income" | "cost";
+            /** Amountcents */
+            amountCents: number;
+            /** Description */
+            description?: string | null;
+            /**
+             * Occurredon
+             * Format: date
+             */
+            occurredOn: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /**
              * Createdat
              * Format: date-time
@@ -602,6 +1361,29 @@ export interface components {
             essential_expenses_cents: number;
             /** Surplus Cents */
             surplus_cents: number;
+        };
+        /** WeekProjectionResponse */
+        WeekProjectionResponse: {
+            /** Week */
+            week: number;
+            /** Gross Earnings Cents */
+            gross_earnings_cents: number;
+            /** Work Costs Cents */
+            work_costs_cents: number;
+            /** Net Work Income Cents */
+            net_work_income_cents: number;
+            /** Essential Expenses Cents */
+            essential_expenses_cents: number;
+            /** One Off Cost Cents */
+            one_off_cost_cents: number;
+            /** Net Cash Flow Cents */
+            net_cash_flow_cents: number;
+            /** Buffer Open Cents */
+            buffer_open_cents: number;
+            /** Buffer Close Cents */
+            buffer_close_cents: number;
+            /** Shortfall Cents */
+            shortfall_cents: number;
         };
         /** WeeklyEntryIn */
         WeeklyEntryIn: {
@@ -1049,27 +1831,7 @@ export interface operations {
             };
         };
     };
-    csv_template_api_v1_foundation_imports_csv_template_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/plain": string;
-                };
-            };
-        };
-    };
-    csv_preview_api_v1_foundation_imports_csv_preview_post: {
+    transaction_create_api_v1_foundation_transactions_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -1078,18 +1840,47 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "multipart/form-data": components["schemas"]["Body_csv_preview_api_v1_foundation_imports_csv_preview_post"];
+                "application/json": components["schemas"]["TransactionInput"];
             };
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CsvPreviewResponse"];
+                    "application/json": components["schemas"]["TransactionResponse"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    transaction_delete_api_v1_foundation_transactions__transaction_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -1153,6 +1944,556 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IncomeRealityResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_questionnaire_api_v1_scheme_navigator_questionnaire_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionnaireField"][];
+                };
+            };
+        };
+    };
+    evaluate_api_v1_scheme_navigator_evaluate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvaluationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    explain_result_api_v1_scheme_navigator_explain_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExplanationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExplanationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    chat_turn_api_v1_scheme_navigator_chat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    simulate_scenario_api_v1_scenario_simulator_simulate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SimulationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScenarioResultResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_goals_api_v1_savings_goals_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavingsGoalListResponse"];
+                };
+            };
+        };
+    };
+    create_goal_api_v1_savings_goals_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavingsGoalCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavingsGoalResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_goal_api_v1_savings_goals__goal_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_goal_api_v1_savings_goals__goal_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavingsGoalPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavingsGoalResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_contribution_api_v1_savings_goals__goal_id__contributions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavingsGoalContributionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavingsGoalResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_contribution_api_v1_savings_goals__goal_id__contributions__contribution_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goal_id: string;
+                contribution_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_summary_api_v1_resilience_jar_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    patch_plan_api_v1_resilience_jar_plan_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_opening_balance_api_v1_resilience_jar_opening_balance_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OpeningBalanceRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_contribution_api_v1_resilience_jar_contributions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContributionWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_withdrawal_api_v1_resilience_jar_withdrawals_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContributionWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_contribution_api_v1_resilience_jar_contributions__contribution_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contribution_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_contribution_api_v1_resilience_jar_contributions__contribution_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contribution_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContributionPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

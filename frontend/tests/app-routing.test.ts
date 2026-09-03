@@ -14,6 +14,11 @@ test("plan settings has a separate route", () => {
   assert.equal(resolveAppRoute("/resilience-jar/plan/"), "plan");
 });
 
+test("savings has a separate route", () => {
+  assert.equal(resolveAppRoute("/savings"), "savings");
+  assert.equal(resolveAppRoute("/savings/"), "savings");
+});
+
 test("scenario simulator has a separate route", () => {
   assert.equal(resolveAppRoute("/scenario-simulator"), "scenario");
   assert.equal(resolveAppRoute("/scenario-simulator/"), "scenario");

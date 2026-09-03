@@ -53,6 +53,8 @@ def progress_dict(progress: Progress) -> dict[str, object]:
         "progress_percent": progress.progress_percent,
         "coverage_days": progress.coverage_days,
         "coverage_weeks": progress.coverage_weeks,
+        "goal_reached": progress.goal_reached,
+        "remaining_cents": progress.remaining_cents,
     }
 
 

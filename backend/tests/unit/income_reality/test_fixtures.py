@@ -12,8 +12,8 @@ frontend and to other workstreams that consume this contract.
 import json
 from pathlib import Path
 
-from app.features.income_reality.assumptions import IncomeAssumptions
-from app.features.income_reality.engine import (
+from backend.app.features.income_reality.assumptions import IncomeAssumptions
+from backend.app.features.income_reality.engine import (
     PlatformEarning,
     WeeklyEntry,
     calculate_income_reality,

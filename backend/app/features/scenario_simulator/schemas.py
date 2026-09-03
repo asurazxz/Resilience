@@ -8,19 +8,19 @@ from pydantic import BaseModel, Field
 
 
 class BaselineFinancesPayload(BaseModel):
-    weekly_gross_earnings_cents: int = Field(ge=0)
-    weekly_variable_work_costs_cents: int = Field(ge=0)
-    weekly_fixed_work_costs_cents: int = Field(ge=0)
-    weekly_essential_expenses_cents: int = Field(ge=0)
-    emergency_savings_cents: int = Field(ge=0)
+    weekly_gross_earnings_cents: int = Field(ge=0, le=100_000_000)
+    weekly_variable_work_costs_cents: int = Field(ge=0, le=100_000_000)
+    weekly_fixed_work_costs_cents: int = Field(ge=0, le=100_000_000)
+    weekly_essential_expenses_cents: int = Field(ge=0, le=100_000_000)
+    emergency_savings_cents: int = Field(ge=0, le=1_000_000_000)
 
 
 class ShockScenarioPayload(BaseModel):
     income_reduction_percent: int = Field(ge=0, le=100)
-    weeks_affected: int = Field(ge=0)
-    unexpected_cost_cents: int = Field(default=0, ge=0)
-    recovery_weeks: int = Field(default=0, ge=0)
-    horizon_weeks: int | None = Field(default=None, ge=1)
+    weeks_affected: int = Field(ge=0, le=52)
+    unexpected_cost_cents: int = Field(default=0, ge=0, le=100_000_000)
+    recovery_weeks: int = Field(default=0, ge=0, le=52)
+    horizon_weeks: int | None = Field(default=None, ge=1, le=52)
 
 
 class SimulationRequest(BaseModel):

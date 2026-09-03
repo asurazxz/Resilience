@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from app.features.scheme_navigator.chat import (
+from backend.app.features.scheme_navigator.chat import (
     FALLBACK_REPLY,
     SUPPORT_GO_WHERE_URL,
     SYSTEM_PROMPT,
@@ -19,15 +19,15 @@ from app.features.scheme_navigator.chat import (
     chat,
     unanswered_questions,
 )
-from app.features.scheme_navigator.evaluator import evaluate_all
-from app.features.scheme_navigator.rules import RULES
-from app.features.scheme_navigator.schemas import (
+from backend.app.features.scheme_navigator.evaluator import evaluate_all
+from backend.app.features.scheme_navigator.rules import RULES
+from backend.app.features.scheme_navigator.schemas import (
     ChatMessage,
     SchemeResult,
     SchemeStatus,
 )
-from app.features.scheme_navigator.sources import COMCARE_HOTLINE, snippets_for
-from app.integrations.ai.client import LLMUnavailableError
+from backend.app.features.scheme_navigator.sources import COMCARE_HOTLINE, snippets_for
+from backend.app.integrations.ai.client import LLMUnavailableError
 
 ANSWERS: dict[str, Any] = {
     "citizenship_status": "singapore_citizen",
@@ -423,8 +423,8 @@ def test_chatbot_and_explainer_keep_separate_context_policies(
     refactor collapses them, this fails.
     """
 
-    from app.features.scheme_navigator.explainer import build_prompt
-    from app.features.scheme_navigator.sources import snippets_for
+    from backend.app.features.scheme_navigator.explainer import build_prompt
+    from backend.app.features.scheme_navigator.sources import snippets_for
 
     wis = next(r for r in results if r.rule_id == "workfare-income-supplement")
 

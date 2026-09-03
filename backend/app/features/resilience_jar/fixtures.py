@@ -9,6 +9,7 @@ from .memory import (
     InMemoryPlanRepository,
 )
 from .models import WeeklySurplus
+from .schemas import ContributionWrite
 from .service import ResilienceJarService
 
 DEMO_USER_ID = "demo-user"
@@ -21,7 +22,7 @@ def build_demo_service() -> ResilienceJarService:
 
     plans = InMemoryPlanRepository()
     contributions = InMemoryContributionRepository()
-    context = InMemoryFinancialContextRepository()
+    context = InMemoryFinancialContextRepository(contributions)
     context.set_surpluses(
         DEMO_USER_ID,
         [
@@ -40,10 +41,10 @@ def build_demo_service() -> ResilienceJarService:
     )
     service.create_contribution(
         DEMO_USER_ID,
-        {
-            "amount_cents": 12_500,
-            "contribution_date": singapore_today.isoformat(),
-            "note": "First step",
-        },
+        ContributionWrite(
+            amount_cents=12_500,
+            contribution_date=singapore_today,
+            note="First step",
+        ),
     )
     return service

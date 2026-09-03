@@ -1,10 +1,11 @@
 from collections.abc import Generator
 from functools import lru_cache
 
-from backend.app.core.settings import get_settings
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
+
+from backend.app.core.settings import get_settings
 
 
 @lru_cache
@@ -19,6 +20,6 @@ def get_engine() -> Engine:
     )
 
 
-def get_session() -> Generator[Session, None, None]:
+def get_session() -> Generator[Session]:
     with Session(get_engine()) as session:
         yield session

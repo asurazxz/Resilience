@@ -5,7 +5,16 @@ export interface Profile {
   currency: "SGD";
   timezone: "Asia/Singapore";
   onboardingCompleted: boolean;
+  /**
+   * The opening balance only. Never displayed: the balance a user recognises is
+   * {@link Profile.emergencyFundBalanceCents}.
+   */
   latestEmergencySavingsCents: number;
+  /** Opening balance + deposits − withdrawals. The single displayed balance. */
+  emergencyFundBalanceCents: number;
+  displayName?: string | null;
+  phoneNumber?: string | null;
+  dateOfBirth?: string | null;
 }
 
 export interface RecurringWorkCost {
@@ -69,40 +78,42 @@ export interface WeeklyEntry {
   updatedAt?: string;
 }
 
+export interface Transaction {
+  id: string;
+  entryType: "income" | "cost";
+  amountCents: number;
+  description?: string | null;
+  occurredOn: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface FoundationBootstrap {
   profile: Profile;
   recurringWorkCosts: RecurringWorkCost[];
   essentialExpenses: EssentialExpense[];
   weeklyEntries: WeeklyEntry[];
+  transactions: Transaction[];
   syncedAt: string;
 }
 
-export interface CsvPreviewRow {
-  rowNumber: number;
-  status: "valid" | "invalid";
-  weekStart?: string | null;
-  recordType?: "earning" | "variable_work_cost" | null;
-  source?: string | null;
-  category?: string | null;
-  description?: string | null;
-  amountCents?: number | null;
-  errors: string[];
+export interface ApiFieldError {
+  path: string;
+  message: string;
 }
 
-export interface CsvPreview {
-  fileName: string;
-  fileSha256: string;
-  rows: CsvPreviewRow[];
-  validCount: number;
-  invalidCount: number;
+/**
+ * The backend's single error shape. Every route returns it under `error`.
+ * HTTP 401 responses carry the code `UNAUTHENTICATED`.
+ */
+export interface ApiErrorPayload {
+  code: string;
+  message: string;
+  details?: { serverRecord?: WeeklyEntry } & Record<string, unknown>;
+  fieldErrors?: ApiFieldError[];
+  requestId?: string;
 }
 
 export interface ApiErrorBody {
-  error: {
-    code: string;
-    message: string;
-    fieldErrors?: Array<{ path: string; message: string }>;
-    details?: { serverRecord?: WeeklyEntry };
-    requestId?: string;
-  };
+  error: ApiErrorPayload;
 }

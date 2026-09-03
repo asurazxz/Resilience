@@ -9,8 +9,8 @@ multiple platforms, zero income, costs exceeding earnings, optional CPF
 deductions, and multiple weeks.
 """
 
-from app.features.income_reality.assumptions import IncomeAssumptions
-from app.features.income_reality.engine import (
+from backend.app.features.income_reality.assumptions import IncomeAssumptions
+from backend.app.features.income_reality.engine import (
     PlatformEarning,
     WeeklyEntry,
     calculate_income_reality,

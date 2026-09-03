@@ -1,22 +1,21 @@
 /**
  * API adapter for the Scenario Simulator.
  *
- * Falls back to committed preview data when the backend is unreachable so the
- * journey stays demonstrable while Workstream 1's API shell is in progress.
- * The caller is told which source was used and must label preview data.
+ * Falls back to committed preview data only when the network itself is
+ * unreachable, so the journey stays demonstrable offline. The caller is told
+ * which source was used and must label preview data.
  */
 
 import { PREVIEW_RESULT } from './fixtures';
+import { apiRequest } from '../../lib/api';
 import type { ScenarioResult, SimulationRequest } from './types';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
 export type ResultSource = 'api' | 'preview';
 
 export interface SimulationOutcome {
   result: ScenarioResult;
   source: ResultSource;
-  /** Present when the API call failed and preview data was substituted. */
+  /** Present when the network was unreachable and preview data was substituted. */
   error?: string;
 }
 
@@ -25,27 +24,24 @@ export async function simulateScenario(
   signal?: AbortSignal,
 ): Promise<SimulationOutcome> {
   try {
-    const response = await fetch(`${API_BASE_URL}/scenario-simulator/simulate`, {
+    const result = await apiRequest<ScenarioResult>('/scenario-simulator/simulate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
       signal,
     });
-
-    if (!response.ok) {
-      const body = await response.json().catch(() => null);
-      throw new Error(body?.detail?.error?.message ?? `Request failed (${response.status})`);
-    }
-
-    return { result: (await response.json()) as ScenarioResult, source: 'api' };
+    return { result, source: 'api' };
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
       throw error;
     }
+    // A server validation or business error is never an excuse to show an
+    // unrelated financial preview as if it were a response to this input.
+    // Only a thrown fetch (TypeError) means the network was unreachable.
+    if (!(error instanceof TypeError)) throw error;
     return {
       result: PREVIEW_RESULT,
       source: 'preview',
-      error: error instanceof Error ? error.message : 'Could not reach the server.',
+      error: 'Could not reach the server.',
     };
   }
 }
