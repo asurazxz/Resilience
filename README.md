@@ -1,4 +1,15 @@
-# Resilience
+# Resilience: A finance tracker app unlike any
+![Landing Image](readme-assets\Resilience-landing-page.png)
+
+Singapore Management University Ellipsis Tech Series 2026 Hackathon
+Team Zephyrries:
+- https://github.com/asurazxz
+- https://github.com/damienlaww
+- https://github.com/AmirWVR
+- https://github.com/donnachong2025
+- https://github.com/cassser0le
+
+## Resilience
 
 A mobile-first PWA that helps Singapore platform workers plan around income that changes every week.
 
@@ -13,7 +24,8 @@ A delivery rider or private-hire driver earns a different amount every week. Alm
 The same workers are also the ones government support schemes are aimed at, and those schemes are hard to navigate: scattered across agencies, written in eligibility language, and easy to give up on before finding the one that applies.
 
 ## What Resilience does
-
+![Features 1](readme-assets\Resilience-features-1.png)
+![Features 2](readme-assets\Resilience-features-2.png)
 | Area | What the user gets |
 |---|---|
 | Transactions | Records income and costs against a date, or a date range — a month's insurance or a multi-day gig is spread evenly across every day it covers, so it lands in the weeks it actually belongs to. |
@@ -28,7 +40,7 @@ The same workers are also the ones government support schemes are aimed at, and 
 Everything sits behind Supabase email/password authentication. Access tokens are verified locally by the API.
 
 ## What makes it different
-
+![Features 3](readme-assets\Resilience-features-3.png)
 **Every displayed figure traces to a documented formula.** The emergency fund, the financial score and the weekly surplus are each specified in `documentation/features/`, down to the rounding. Nothing on screen is a number the user cannot follow back to their own inputs.
 
 **AI never calculates money and never decides eligibility.** The scheme evaluator is a pure function over versioned rules; the assistant receives its decisions and rephrases them. Switch the model off entirely and the whole core journey still works — the assistant answers from the evaluator's own matched facts and unmatched reasons instead of a generated summary.
@@ -37,14 +49,13 @@ Everything sits behind Supabase email/password authentication. Access tokens are
 
 **It works offline.** Bootstrap data is cached in IndexedDB and writes go into an ordered mutation queue with idempotency keys, replayed in sequence on reconnect. These users are frequently on patchy mobile data, which is exactly when they are between jobs and have a moment to record one.
 
-## Stack
-
-- **Client:** React 19, TypeScript 5.9, Vite 8, Tailwind CSS 4, React Router 7, Recharts, Dexie, vite-plugin-pwa.
-- **API:** Python 3.13 (3.12 supported), FastAPI, Pydantic, SQLAlchemy, psycopg. Every route is mounted under `/api/v1` and every failure renders one error envelope.
-- **Database:** Supabase-managed PostgreSQL, reached only through FastAPI. The browser never receives database credentials.
-- **AI:** Google Gemini (`gemini-3.6-flash`), optional. Configured by `GEMINI_API_KEY`; without it the assistant falls back to deterministic answers.
-
-Deployment, containers and CI are out of scope for this prototype.
+## Tech Stack
+| Area | What the user gets |
+|---|---|
+|Client|React 19, TypeScript 5.9, Vite 8, Tailwind CSS 4, React Router 7, Recharts, Dexie, vite-plugin-pwa.|
+|API|Python 3.13 (3.12 supported), FastAPI, Pydantic, SQLAlchemy, psycopg. Every route is mounted under `/api/v1` and every failure renders one error envelope.|
+|Database|Supabase-managed PostgreSQL, reached only through FastAPI. The browser never receives database credentials. Prototype deployment uses docker for local Supabase |
+|AI|Google Gemini (`gemini-3.6-flash`), optional. Configured by `GEMINI_API_KEY`; without it the assistant falls back to deterministic answers.|
 
 ## Getting started
 
