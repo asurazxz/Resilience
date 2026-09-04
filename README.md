@@ -262,8 +262,8 @@ See [`documentation/codebase-structure.md`](documentation/codebase-structure.md)
 - [Emergency fund and savings model](documentation/features/emergency-fund-model.md) — the single source of truth for the fund, weekly surplus, and date-range spread formulas.
 - [Financial score](documentation/features/financial-score.md)
 - [Foundation input](documentation/features/foundation-input.md) · [Income reality](documentation/features/income-reality.md) · [Emergency fund](documentation/features/resilience-jar.md) · [Savings goals](documentation/features/savings-goals.md) · [Scheme navigator](documentation/features/scheme-navigator.md) · [Setback planner](documentation/features/scenario-simulator.md)
-- [Integration record](documentation/dev2-feature-03-05-integration.md) and [initial scaffold](documentation/initial-scaffold.md) — historical context.
-- [`.agent/RULES.md`](.agent/RULES.md), [`.agent/session_log.md`](.agent/session_log.md), [`.agent/lessons_learnt.md`](.agent/lessons_learnt.md) — operating rules and project memory for coding agents.
+
+
 
 ## Contributing
 
