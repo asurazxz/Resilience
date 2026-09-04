@@ -90,6 +90,17 @@ describe("App route gate", () => {
     expect(screen.getByText(/Get started — it takes two minutes/i)).toBeInTheDocument();
   });
 
+  it("sends a newly signed-in user away from /signin and into onboarding", () => {
+    mockAuth();
+    mockFoundation({ data: bootstrap(false), bootstrapLoaded: true });
+    render(
+      <MemoryRouter initialEntries={["/signin"]}>
+        <App />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole("button", { name: "Save and continue" })).toBeInTheDocument();
+  });
+
   it("does not show the landing page when the bootstrap failed for a returning user with a cached completed profile", () => {
     mockAuth();
     // bootstrapLoaded is false (bootstrap never confirmed), but the cached

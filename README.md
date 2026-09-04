@@ -89,7 +89,7 @@ If only Python 3.12 is available, substitute it. If an existing `.venv` was crea
 ### 3. Install the backend dependencies
 
 ```bash
-python -m pip install -r backend/requirements-dev.txt
+.\.venv\Scripts\python.exe -m pip install -r backend/requirements-dev.txt
 ```
 
 `requirements-dev.txt` includes `requirements.txt` plus pytest and Ruff.
@@ -122,6 +122,7 @@ Both `.env` files are gitignored. Never commit one, and never paste a real key i
 | `CORS_ALLOW_ORIGINS` | Comma-separated extra allowed origins. | Optional |
 | `SUPABASE_URL` | Supabase project URL. Used to build the JWKS URL and the `/auth/v1/user` fallback. | Required to sign in |
 | `SUPABASE_PUBLISHABLE_KEY` | Publishable key sent as `apikey` on the remote token-check fallback. | Optional |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only key used to delete a signed-in user’s Supabase account. Never add it to the frontend environment. | Required to delete accounts |
 | `SUPABASE_JWT_SECRET` | HS256 secret. Local Supabase signs HS256, so this is what makes local sign-in work. Copy `JWT_SECRET` from `npx supabase status`. | Required locally |
 | `SUPABASE_JWT_AUDIENCE` | Expected `aud` claim. Defaults to `authenticated`. | Optional |
 | `DB_POOL_SIZE` | SQLAlchemy pool size. Defaults to `5`. | Optional |
@@ -156,14 +157,14 @@ npm run db:reset
 npx supabase status
 ```
 
-Copy `JWT_SECRET` into `SUPABASE_JWT_SECRET`, `PUBLISHABLE_KEY` into `VITE_SUPABASE_PUBLISHABLE_KEY`, and set `SUPABASE_URL` and `VITE_SUPABASE_URL` to `http://127.0.0.1:54321`.
+Copy `JWT_SECRET` into `SUPABASE_JWT_SECRET`, `PUBLISHABLE_KEY` into `VITE_SUPABASE_PUBLISHABLE_KEY`, and `SERVICE_ROLE_KEY` into the server-only `SUPABASE_SERVICE_ROLE_KEY`. Set `SUPABASE_URL` and `VITE_SUPABASE_URL` to `http://127.0.0.1:54321`.
 
 ### 6. Run the API
 
 In its own terminal, from the repository root, with the virtual environment active:
 
 ```bash
-python -m uvicorn backend.app.main:app --reload --port 8000
+npm run dev:backend
 ```
 
 Run it from the repository root, not from `backend/` — every module imports through the single `backend.app…` root.

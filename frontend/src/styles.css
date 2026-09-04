@@ -290,6 +290,32 @@ input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible
 }
 .button-secondary:hover { background: #313145; }
 
+.danger-zone {
+  background: rgba(153, 27, 27, 0.2);
+  border: 1px solid #b91c1c;
+}
+
+.danger-zone-label { color: #fca5a5; }
+
+.button-danger {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  background: #b91c1c;
+  border: 1px solid #ef4444;
+  border-radius: var(--radius-buttons);
+  color: var(--color-pure);
+  padding: 12px 18px;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color var(--motion-quick), opacity var(--motion-quick);
+}
+
+.button-danger:hover:not(:disabled) { background: #dc2626; }
+.button-danger:disabled { cursor: not-allowed; opacity: 0.65; }
+
 .button-pill {
   display: inline-flex;
   align-items: center;

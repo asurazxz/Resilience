@@ -348,6 +348,14 @@ def reset_demo_data(session: Session, user_id: UUID) -> FoundationBootstrap:
     return get_bootstrap(session, user_id)
 
 
+def delete_account(session: Session, user_id: UUID) -> None:
+    """Remove the profile and all application records that cascade from it."""
+    profile = session.get(Profile, user_id)
+    if profile is not None:
+        session.delete(profile)
+        session.commit()
+
+
 def _upsert_week(
     session: Session, user_id: UUID, week_start: date, payload: WeeklyEntryUpsert
 ) -> WeeklyEntry:

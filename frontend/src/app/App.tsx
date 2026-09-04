@@ -476,11 +476,14 @@ function Onboarding() {
 
 /** The former standalone Settings screen, now a section inside Profile. */
 function FinancialDetailsSection() {
-  const { data, saveAssumptions, resetData } = useFoundation();
+  const { data, saveAssumptions } = useFoundation();
+  const { deleteAccount } = useAuth();
+  const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [recurring, setRecurring] = useState(toEditable(data.recurringWorkCosts));
   const [essentials, setEssentials] = useState(toEditable(data.essentialExpenses));
   const [message, setMessage] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const save = async (event: FormEvent) => { event.preventDefault(); setMessage(""); try { const r = parseRows(recurring, true, true).map((item) => ({ ...item, category: item.category as RecurringWorkCost["category"], cadence: item.cadence ?? "weekly", isActive: true })); const e = parseRows(essentials, true, true).map((item) => ({ ...item, category: item.category as EssentialExpense["category"], cadence: item.cadence ?? "weekly", isActive: true })); await saveAssumptions(r, e); setMessage("Saved on this device. It will sync automatically."); } catch (cause) { setMessage(cause instanceof Error ? cause.message : "Could not save."); } };
   const total = (items: Array<{ isActive: boolean; cadence: "weekly" | "monthly"; amountCents: number }>) => items.filter((item) => item.isActive).reduce((sum, item) => sum + (item.cadence === "monthly" ? Math.round(item.amountCents * 12 / 52) : item.amountCents), 0);
   const display = (items: Array<{ id: string; label: string; amountCents: number; cadence: string }>) => (
@@ -493,6 +496,19 @@ function FinancialDetailsSection() {
       )) : <li className="py-2 body-text">No items added.</li>}
     </ul>
   );
+  const handleDeleteAccount = async () => {
+    if (!window.confirm("Delete your account and all of its financial data? This cannot be undone.")) return;
+    setDeleting(true);
+    setMessage("");
+    try {
+      const result = await deleteAccount();
+      if (result) throw new Error(result);
+      navigate("/", { replace: true });
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not delete your account.");
+      setDeleting(false);
+    }
+  };
   return (
     <section className="mt-10">
       <form onSubmit={save}>
@@ -532,10 +548,11 @@ function FinancialDetailsSection() {
           {message && <p className="note" role="status">{message}</p>}
         </div>
       </form>
-      <section className="mt-6 rounded-2xl p-5" style={{ background: "var(--surface-graphite)", border: "1px solid rgba(255,255,255,0.1)" }}>
-        <h3 className="subheading">Delete all my data</h3>
-        <p className="mt-3 body-text prose">Permanently deletes this account's profile, transactions and financial records. This cannot be undone, and you must be online.</p>
-        <button className="button-secondary mt-4" onClick={() => { if (confirm("Delete all of your data? This permanently removes your profile, transactions and financial records, and cannot be undone.")) void resetData().catch((error: Error) => setMessage(error.message)); }} type="button">Delete all my data</button>
+      <section className="danger-zone mt-6 rounded-2xl p-5">
+        <p className="eyebrow danger-zone-label">Danger zone</p>
+        <h3 className="mt-2 subheading">Delete account</h3>
+        <p className="mt-3 body-text prose">Permanently deletes your profile, transactions and financial records, then signs you out. This cannot be undone, and you must be online.</p>
+        <button className="button-danger mt-4" disabled={deleting} onClick={() => void handleDeleteAccount()} type="button">{deleting ? "Deleting account…" : "Delete account"}</button>
       </section>
     </section>
   );
@@ -593,6 +610,7 @@ export function App() {
     <ChatProvider>
       <Routes>
         <Route path="/onboarding" element={data.profile.onboardingCompleted ? <Navigate replace to="/" /> : <Onboarding />} />
+        <Route path="/signin" element={<Navigate replace to="/onboarding" />} />
         <Route path="*" element={bootstrapLoaded && !data.profile.onboardingCompleted ? <LandingPage /> : (
           <Routes>
             <Route path="/" element={<Overview />} />

@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     cors_allow_origins: str = ""
     supabase_url: str = ""
     supabase_publishable_key: str = ""
+    # Server-only key for destructive Auth Admin operations such as account deletion.
+    supabase_service_role_key: str = ""
     supabase_jwt_secret: str = ""
     supabase_jwt_audience: str = "authenticated"
     db_pool_size: int = Field(default=5, ge=1, le=20)

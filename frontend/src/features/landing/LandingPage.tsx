@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Line, LineChart, ResponsiveContainer } from "recharts";
 
 import { useAuth } from "../auth/AuthContext";
@@ -46,7 +47,13 @@ const SAMPLE_TREND = [420, 610, 380, 705, 540, 690, 615, 780].map((value, index)
 
 export function LandingPage() {
   const { user } = useAuth();
+  const location = useLocation();
   const ctaTo = user ? "/onboarding" : "/signin";
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   return (
     <div className="landing-page surface-abyss" style={{ minHeight: "100vh" }}>
       <header className="landing-nav nav-glass">

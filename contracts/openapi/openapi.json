@@ -740,6 +740,25 @@
         }
       }
     },
+    "/api/v1/foundation/account": {
+      "delete": {
+        "tags": [
+          "foundation-input"
+        ],
+        "summary": "Account Delete",
+        "operationId": "account_delete_api_v1_foundation_account_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/income-reality/breakdown": {
       "post": {
         "tags": [

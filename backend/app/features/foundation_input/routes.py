@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Header, Query
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
-from backend.app.core.auth import current_user_id
+from backend.app.core.auth import SettingsDep, current_user_id, delete_auth_user
 from backend.app.core.errors import DomainError
 from backend.app.db.models import EssentialExpense, RecurringWorkCost
 from backend.app.db.session import get_session
@@ -28,6 +28,7 @@ from backend.app.features.foundation_input.schemas import (
 from backend.app.features.foundation_input.service import (
     complete_onboarding,
     create_transaction,
+    delete_account,
     delete_owned,
     delete_transaction,
     delete_week,
@@ -194,3 +195,12 @@ def data_reset(
             "X-Confirm-Reset must be RESET DEMO DATA.",
         )
     return reset_demo_data(session, user_id)
+
+
+@router.delete("/account", status_code=204)
+async def account_delete(
+    session: SessionDep, user_id: UserDep, settings: SettingsDep
+) -> Response:
+    await delete_auth_user(user_id, settings)
+    delete_account(session, user_id)
+    return Response(status_code=204)

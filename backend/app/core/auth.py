@@ -96,6 +96,26 @@ async def _verify_remotely(token: str, settings: Settings) -> UUID:
         raise _unauthenticated("Invalid session identity.") from exc
 
 
+async def delete_auth_user(user_id: UUID, settings: Settings) -> None:
+    """Delete the authenticated user's Supabase Auth identity with a server-only key."""
+    if not settings.supabase_service_role_key:
+        raise HTTPException(status_code=503, detail="Account deletion is not configured.")
+    try:
+        response = await _get_http_client().delete(
+            f"{_issuer(settings)}/admin/users/{user_id}",
+            headers={
+                "apikey": settings.supabase_service_role_key,
+                "Authorization": f"Bearer {settings.supabase_service_role_key}",
+            },
+        )
+    except httpx.HTTPError as exc:
+        raise HTTPException(
+            status_code=503, detail="Authentication service is unavailable."
+        ) from exc
+    if response.status_code not in {200, 204}:
+        raise HTTPException(status_code=503, detail="Could not delete the account.")
+
+
 CredentialsDep = Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 

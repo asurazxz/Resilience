@@ -18,7 +18,8 @@ import pytest
 from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 
-from backend.app.core.auth import current_user_id
+from backend.app.core import auth
+from backend.app.core.auth import current_user_id, delete_auth_user
 from backend.app.core.settings import Settings, get_settings
 
 SECRET = "test-jwt-secret-with-at-least-32-characters"
@@ -118,3 +119,34 @@ def test_unconfigured_supabase_url_is_service_unavailable(
         assert raised.value.status_code == 503
     finally:
         get_settings.cache_clear()
+
+
+def test_delete_auth_user_uses_the_server_only_service_role_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class Response:
+        status_code = 204
+
+    class Client:
+        url = ""
+        headers: dict[str, str] = {}
+
+        async def delete(self, url: str, *, headers: dict[str, str]) -> Response:
+            self.url = url
+            self.headers = headers
+            return Response()
+
+    client = Client()
+    monkeypatch.setattr(auth, "_get_http_client", lambda: client)
+    settings = Settings(
+        supabase_url=SUPABASE_URL,
+        supabase_service_role_key="server-only-key",
+    )
+
+    asyncio.run(delete_auth_user(UUID(SUBJECT), settings))
+
+    assert client.url == f"{SUPABASE_URL}/auth/v1/admin/users/{SUBJECT}"
+    assert client.headers == {
+        "apikey": "server-only-key",
+        "Authorization": "Bearer server-only-key",
+    }

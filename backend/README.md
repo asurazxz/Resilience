@@ -24,8 +24,8 @@ Two modules are deliberately shared across features rather than owned by one:
 From the repository root, with a Python 3.13 or 3.12 virtual environment active and `backend/.env` created from `backend/.env.example`:
 
 ```bash
-python -m pip install -r backend/requirements-dev.txt
-python -m uvicorn backend.app.main:app --reload --port 8000
+.\.venv\Scripts\python.exe -m pip install -r backend/requirements-dev.txt
+npm run dev:backend
 python -m pytest backend/tests -q
 python -m ruff check backend
 python -m backend.scripts.export_openapi

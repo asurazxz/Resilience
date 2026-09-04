@@ -1,6 +1,6 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useRef, useState } from "react";
 
-import { setAccessTokenProvider, setUnauthorizedHandler } from "../../lib/api";
+import { apiRequest, setAccessTokenProvider, setUnauthorizedHandler } from "../../lib/api";
 import { clearOfflineData } from "../../lib/offline";
 
 const url = import.meta.env.VITE_SUPABASE_URL;
@@ -27,6 +27,7 @@ type AuthValue = {
   signIn(email: string, password: string): Promise<string | null>;
   signUp(email: string, password: string): Promise<string | null>;
   signOut(): Promise<void>;
+  deleteAccount(): Promise<string | null>;
 };
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -104,10 +105,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async signUp(email, password) {
       if (!url || !key) return "Authentication is not configured.";
       const response = await fetch(`${url}/auth/v1/signup`, { method: "POST", headers: { apikey: key, "Content-Type": "application/json" }, body: JSON.stringify({ email, password, options: { email_redirect_to: window.location.origin } }) });
-      if (!response.ok) return (await response.json().catch(() => ({}))).msg ?? "Could not create account.";
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({})) as { msg?: string; error_description?: string };
+        const message = payload.error_description ?? payload.msg ?? "Could not create account.";
+        return /password/i.test(message)
+          ? "Use at least 12 characters, including an uppercase letter, lowercase letter, number, and symbol."
+          : message;
+      }
       const payload = await response.json();
       if (payload.access_token) { storeSession(payload as Session); setSession(payload as Session); }
-      return null;
+      return payload.access_token ? null : "Check your inbox to confirm your account.";
     },
     async signOut() {
       const current = session;
@@ -116,6 +123,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(null);
       if (url && key && current?.access_token) {
         await fetch(`${url}/auth/v1/logout`, { method: "POST", headers: { apikey: key, Authorization: `Bearer ${current.access_token}` } }).catch(() => undefined);
+      }
+    },
+    async deleteAccount() {
+      const current = session;
+      if (!current) return "You are already signed out.";
+      try {
+        await apiRequest<void>("/foundation/account", { method: "DELETE" });
+        localStorage.removeItem(STORAGE_KEY);
+        await clearOfflineData(current.user.id);
+        sessionRef.current = null;
+        setSession(null);
+        return null;
+      } catch (error) {
+        return error instanceof Error ? error.message : "Could not delete your account.";
       }
     },
   }), [loading, session]);
